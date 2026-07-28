@@ -1,0 +1,1679 @@
+<title>MÍA — Negocios de mujeres mexicanas</title>
+
+<style>
+/* ---------------------------------------------------------------- tokens -- */
+:root{
+  --fondo:#FBF7F4; --fondo2:#F2EAE6; --superficie:#FFFFFF;
+  --texto:#241023; --texto2:#6B5A66; --linea:#E4D8D3;
+  --acento:#D6187F; --acento-tinta:#FFFFFF; --acento-suave:#FCE7F2;
+  --cobalto:#2D4EC8; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
+  --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
+  --r:4px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --fondo:#17101A; --fondo2:#201726; --superficie:#241B2C;
+    --texto:#F6EEF3; --texto2:#B4A2B0; --linea:#3A2C43;
+    --acento:#FF5BAE; --acento-tinta:#2A0A1C; --acento-suave:#3A1330;
+    --cobalto:#8AA0F5; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --fondo:#17101A; --fondo2:#201726; --superficie:#241B2C;
+  --texto:#F6EEF3; --texto2:#B4A2B0; --linea:#3A2C43;
+  --acento:#FF5BAE; --acento-tinta:#2A0A1C; --acento-suave:#3A1330;
+  --cobalto:#8AA0F5; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+:root[data-theme="light"]{
+  --fondo:#FBF7F4; --fondo2:#F2EAE6; --superficie:#FFFFFF;
+  --texto:#241023; --texto2:#6B5A66; --linea:#E4D8D3;
+  --acento:#D6187F; --acento-tinta:#FFFFFF; --acento-suave:#FCE7F2;
+  --cobalto:#2D4EC8; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
+  --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--texto);font-family:var(--sans);
+  font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--acento);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ------------------------------------------------------------ tipografía -- */
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:800;letter-spacing:-.022em;line-height:1.12}
+h1{font-size:clamp(2rem,6vw,3.1rem)}
+h2{font-size:clamp(1.3rem,3vw,1.8rem)}
+h3{font-size:1.06rem;letter-spacing:-.012em}
+p{margin:0}
+.eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--texto2)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.apagado{color:var(--texto2)}
+.pequeno{font-size:.85rem}
+
+/* ------------------------------------------------------------- estructura -- */
+.envoltura{max-width:1120px;margin:0 auto;padding:0 20px}
+.pila{display:flex;flex-direction:column}
+.g8{gap:8px}.g12{gap:12px}.g16{gap:16px}.g24{gap:24px}.g32{gap:32px}
+.fila{display:flex;align-items:center;flex-wrap:wrap}
+.entre{justify-content:space-between}
+main{min-height:60vh;padding-bottom:64px}
+section.bloque{padding:36px 0}
+
+/* ---------------------------------------------------------------- header -- */
+header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);
+  border-bottom:1px solid var(--linea)}
+.barra .envoltura{display:flex;align-items:center;justify-content:space-between;
+  gap:16px;min-height:62px}
+.marca{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
+.marca .glifo{width:30px;height:30px;background:var(--acento);border-radius:50% 50% 50% 2px;
+  flex-shrink:0}
+.marca .nombre{font-weight:800;font-size:1.32rem;letter-spacing:-.03em}
+nav.menu{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+nav.menu a{padding:7px 11px;border-radius:var(--r);text-decoration:none;
+  font-size:.9rem;font-weight:600;color:var(--texto2)}
+nav.menu a:hover{background:var(--fondo2);color:var(--texto)}
+nav.menu a.activo{color:var(--acento);background:var(--acento-suave)}
+
+/* ----------------------------------------------------------------- botón -- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 16px;border-radius:var(--r);border:1px solid transparent;
+  background:var(--acento);color:var(--acento-tinta);font:inherit;font-size:.92rem;
+  font-weight:700;cursor:pointer;text-decoration:none;line-height:1.2}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.linea{background:transparent;color:var(--texto);border-color:var(--linea)}
+.btn.linea:hover{background:var(--fondo2);filter:none}
+.btn.fantasma{background:transparent;color:var(--texto2);padding:7px 10px}
+.btn.fantasma:hover{background:var(--fondo2);color:var(--texto);filter:none}
+.btn.peligro{background:var(--peligro);color:#fff}
+.btn.chico{padding:6px 11px;font-size:.83rem}
+.btn.ancho{width:100%}
+
+/* ---------------------------------------------------------------- campos -- */
+label.campo{display:flex;flex-direction:column;gap:6px;font-size:.83rem;
+  font-weight:700;color:var(--texto2)}
+input,select,textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:var(--r);
+  border:1px solid var(--linea);background:var(--superficie);color:var(--texto);
+  width:100%;font-weight:400}
+textarea{min-height:110px;resize:vertical;line-height:1.5}
+input:disabled,textarea:disabled,select:disabled{background:var(--fondo2);
+  color:var(--texto2);cursor:not-allowed}
+.rejilla-campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+
+/* --------------------------------------------------------------- tarjeta -- */
+.tarjeta{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);box-shadow:var(--sombra)}
+.tarjeta.p16{padding:16px}.tarjeta.p20{padding:20px}.tarjeta.p24{padding:24px}
+
+/* ----------------------------------------------------------------- chips -- */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;
+  font-size:.72rem;font-weight:700;letter-spacing:.01em;background:var(--fondo2);
+  color:var(--texto2);border:1px solid var(--linea);white-space:nowrap}
+.chip.jade{background:color-mix(in srgb,var(--jade) 14%,transparent);color:var(--jade);
+  border-color:color-mix(in srgb,var(--jade) 32%,transparent)}
+.chip.sol{background:color-mix(in srgb,var(--sol) 16%,transparent);color:var(--sol);
+  border-color:color-mix(in srgb,var(--sol) 36%,transparent)}
+.chip.rosa{background:var(--acento-suave);color:var(--acento);
+  border-color:color-mix(in srgb,var(--acento) 30%,transparent)}
+.chip.cobalto{background:color-mix(in srgb,var(--cobalto) 14%,transparent);color:var(--cobalto);
+  border-color:color-mix(in srgb,var(--cobalto) 32%,transparent)}
+.chip.peligro{background:color-mix(in srgb,var(--peligro) 13%,transparent);color:var(--peligro);
+  border-color:color-mix(in srgb,var(--peligro) 32%,transparent)}
+
+/* ------------------------------------------------------------------ hero -- */
+.hero{background:var(--acento);color:var(--acento-tinta);padding:56px 0 48px}
+.hero h1{max-width:15ch}
+.hero p.entrada{max-width:46ch;font-size:1.06rem;opacity:.93;margin-top:14px}
+.hero .eyebrow{color:var(--acento-tinta);opacity:.75}
+.buscador{display:flex;gap:8px;margin-top:26px;max-width:560px;flex-wrap:wrap}
+.buscador input{flex:1 1 220px;border-color:transparent}
+.buscador .btn{background:var(--acento-tinta);color:var(--acento)}
+
+/* -------------------------------------------------------------- portadas -- */
+.portada{aspect-ratio:16/10;background:var(--fondo2);position:relative;overflow:hidden;
+  display:grid;place-items:center}
+.portada img{width:100%;height:100%;object-fit:cover}
+.portada .inicial{font-size:2.4rem;font-weight:800;color:#fff;opacity:.92;
+  letter-spacing:-.04em;text-shadow:0 2px 12px rgba(0,0,0,.22)}
+
+/* -------------------------------------------------------------- rejillas -- */
+.rejilla{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(258px,1fr))}
+.rejilla.planes{grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}
+.tarjeta-negocio{display:flex;flex-direction:column;overflow:hidden;text-decoration:none;
+  color:inherit;transition:transform .14s ease,box-shadow .14s ease}
+.tarjeta-negocio:hover{transform:translateY(-2px);
+  box-shadow:0 2px 4px rgba(36,16,35,.08),0 16px 32px -16px rgba(36,16,35,.3)}
+.tarjeta-negocio .cuerpo{padding:14px;display:flex;flex-direction:column;gap:7px;flex:1}
+
+/* --------------------------------------------------------------- estrellas -- */
+.estrellas{color:var(--sol);letter-spacing:.06em;font-size:.9rem}
+.selector-estrellas{display:flex;gap:2px}
+.selector-estrellas button{background:none;border:none;font-size:1.7rem;cursor:pointer;
+  padding:0 2px;color:var(--linea);line-height:1}
+.selector-estrellas button.on{color:var(--sol)}
+
+/* ------------------------------------------------------------------ shell -- */
+.shell{display:grid;grid-template-columns:220px 1fr;gap:26px;padding-top:26px}
+@media (max-width:860px){.shell{grid-template-columns:1fr;gap:16px}}
+.lateral{display:flex;flex-direction:column;gap:3px;align-self:start;position:sticky;top:78px}
+@media (max-width:860px){.lateral{position:static;flex-direction:row;flex-wrap:wrap;
+  border-bottom:1px solid var(--linea);padding-bottom:10px}}
+.lateral button{text-align:left;background:none;border:none;font:inherit;font-size:.9rem;
+  font-weight:600;color:var(--texto2);padding:9px 12px;border-radius:var(--r);cursor:pointer}
+.lateral button:hover{background:var(--fondo2);color:var(--texto)}
+.lateral button.activo{background:var(--acento);color:var(--acento-tinta)}
+
+/* ------------------------------------------------------------------ tabla -- */
+.tabla-envoltura{overflow-x:auto;border:1px solid var(--linea);border-radius:var(--r);
+  background:var(--superficie)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:560px}
+th,td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--linea);
+  vertical-align:middle}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--texto2);
+  font-weight:700;background:var(--fondo2);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--fondo2)}
+
+/* ---------------------------------------------------------------- métrica -- */
+.metricas{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.metrica{padding:15px;border:1px solid var(--linea);border-radius:var(--r);
+  background:var(--superficie);border-left:3px solid var(--acento)}
+.metrica .n{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.metrica .et{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--texto2);font-weight:700;margin-top:6px}
+.metrica.cobalto{border-left-color:var(--cobalto)}
+.metrica.jade{border-left-color:var(--jade)}
+.metrica.sol{border-left-color:var(--sol)}
+
+/* ------------------------------------------------------------------ aviso -- */
+.aviso{padding:12px 14px;border-radius:var(--r);font-size:.88rem;
+  border:1px solid var(--linea);background:var(--fondo2);display:flex;gap:9px}
+.aviso.candado{background:var(--acento-suave);
+  border-color:color-mix(in srgb,var(--acento) 26%,transparent);color:var(--texto)}
+.aviso.alerta{background:color-mix(in srgb,var(--sol) 12%,transparent);
+  border-color:color-mix(in srgb,var(--sol) 34%,transparent)}
+
+/* ------------------------------------------------------------------ plan --- */
+.plan{display:flex;flex-direction:column;gap:13px;padding:22px;border:1px solid var(--linea);
+  border-radius:var(--r);background:var(--superficie)}
+.plan.destacado{border:2px solid var(--acento);box-shadow:var(--sombra)}
+.plan .precio{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+.plan ul{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:7px;
+  font-size:.88rem}
+.plan li{display:flex;gap:8px;align-items:flex-start}
+.plan li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--acento);
+  margin-top:7px;flex-shrink:0}
+.plan li.no{color:var(--texto2)}
+.plan li.no::before{background:var(--linea)}
+
+/* ------------------------------------------------------------------ toast -- */
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;
+  background:var(--texto);color:var(--fondo);padding:11px 18px;border-radius:var(--r);
+  font-size:.88rem;font-weight:600;box-shadow:var(--sombra);max-width:88vw;
+  opacity:0;pointer-events:none;transition:opacity .2s ease}
+#toast.ver{opacity:1}
+
+/* ---------------------------------------------------------------- footer --- */
+footer{border-top:1px solid var(--linea);padding:26px 0;background:var(--fondo2);
+  font-size:.85rem;color:var(--texto2)}
+.separador{height:1px;background:var(--linea);border:none;margin:0}
+.galeria{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.galeria .foto{position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--linea)}
+.galeria .foto img{width:100%;height:100%;object-fit:cover}
+.galeria .foto .quitar{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.62);
+  color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-size:.74rem;
+  padding:3px 7px;font-weight:700}
+.galeria .foto.oculta img{filter:grayscale(1);opacity:.4}
+.galeria .foto .sello{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.68);
+  color:#fff;font-size:.68rem;padding:4px 6px;text-align:center;font-weight:700}
+</style>
+
+<header class="barra">
+  <div class="envoltura">
+    <a class="marca" href="#/directorio"><span class="glifo"></span><span class="nombre">MÍA</span></a>
+    <nav class="menu" id="menu"></nav>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>
+  <div class="envoltura pila g8">
+    <strong style="color:var(--texto)">MÍA</strong>
+    <span>Directorio de negocios de mujeres mexicanas.</span>
+    <span class="pequeno">Versión de demostración. La información que captures se guarda únicamente en este navegador.</span>
+  </div>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* =========================================================== ALMACENAMIENTO */
+const CLAVE = "mia_v1";
+let memoria = null; // respaldo si el navegador bloquea localStorage
+
+function leerCrudo(){
+  try { return localStorage.getItem(CLAVE); } catch { return memoria; }
+}
+function escribirCrudo(txt){
+  try { localStorage.setItem(CLAVE, txt); }
+  catch(e){
+    memoria = txt;
+    if(String(e && e.name).includes("Quota")){
+      avisar("Ya no cabe más en la memoria de este navegador. Borra alguna foto.");
+      return false;
+    }
+  }
+  return true;
+}
+
+/* ================================================================== PLANES */
+const PLANES = {
+  gratis: {
+    id:"gratis", nombre:"Semilla", etiqueta:"Gratis", precio:0,
+    resumen:"Para que tu negocio exista en línea desde hoy, sin pagar nada.",
+    limites:{ negocios:1, fotos:1, productos:0, descripcion:300 },
+    permisos:{ whatsapp:false, sitioWeb:false, redes:false, catalogo:false,
+      responder:false, estadisticas:false, prioridad:false, insignia:false }
+  },
+  emprende: {
+    id:"emprende", nombre:"Emprende", etiqueta:"$149 MXN al mes", precio:149,
+    resumen:"Para negocios que ya venden y quieren que las encuentren mejor.",
+    limites:{ negocios:2, fotos:6, productos:12, descripcion:1200 },
+    permisos:{ whatsapp:true, sitioWeb:true, redes:true, catalogo:true,
+      responder:true, estadisticas:true, prioridad:false, insignia:false }
+  },
+  impulsa: {
+    id:"impulsa", nombre:"Impulsa", etiqueta:"$349 MXN al mes", precio:349,
+    resumen:"Máxima visibilidad, verificación e insignia de MÍA.",
+    limites:{ negocios:5, fotos:20, productos:60, descripcion:3000 },
+    permisos:{ whatsapp:true, sitioWeb:true, redes:true, catalogo:true,
+      responder:true, estadisticas:true, prioridad:true, insignia:true }
+  }
+};
+const ORDEN_PLANES = ["gratis","emprende","impulsa"];
+
+const BENEFICIOS = [
+  ["Negocios que puedes registrar", p => String(p.limites.negocios)],
+  ["Fotografías", p => String(p.limites.fotos)],
+  ["Caracteres de descripción", p => p.limites.descripcion.toLocaleString("es-MX")],
+  ["Teléfono de contacto", () => true],
+  ["Botón de WhatsApp", p => p.permisos.whatsapp],
+  ["Sitio web", p => p.permisos.sitioWeb],
+  ["Redes sociales", p => p.permisos.redes],
+  ["Catálogo de productos", p => p.permisos.catalogo ? String(p.limites.productos) : false],
+  ["Responder reseñas", p => p.permisos.responder],
+  ["Estadísticas", p => p.permisos.estadisticas],
+  ["Aparece primero en búsquedas", p => p.permisos.prioridad],
+  ["Insignia Verificado por MÍA", p => p.permisos.insignia]
+];
+
+const CATEGORIAS = [
+  {id:"alimentos", nombre:"Comida y repostería"},
+  {id:"moda", nombre:"Moda y accesorios"},
+  {id:"belleza", nombre:"Belleza y bienestar"},
+  {id:"artesania", nombre:"Artesanía y arte popular"},
+  {id:"salud", nombre:"Salud y cuidado"},
+  {id:"educacion", nombre:"Educación y talleres"},
+  {id:"servicios", nombre:"Servicios profesionales"},
+  {id:"hogar", nombre:"Hogar y decoración"},
+  {id:"tecnologia", nombre:"Tecnología y diseño"},
+  {id:"turismo", nombre:"Turismo y experiencias"},
+  {id:"agro", nombre:"Campo y productos naturales"},
+  {id:"otros", nombre:"Otros giros"}
+];
+
+const ENTIDADES = ["Aguascalientes","Baja California","Baja California Sur","Campeche",
+"Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México",
+"Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León",
+"Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco",
+"Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"];
+
+const ESTADOS = {
+  borrador:{et:"Borrador", chip:""},
+  pendiente:{et:"Esperando revisión", chip:"sol"},
+  publicado:{et:"Publicado", chip:"jade"},
+  rechazado:{et:"Necesita cambios", chip:"peligro"},
+  suspendido:{et:"Suspendido por MÍA", chip:"peligro"}
+};
+
+/* ================================================================ SEMILLA */
+function semilla(){
+  const hoy = new Date();
+  const enMeses = m => new Date(hoy.getFullYear(), hoy.getMonth()+m, hoy.getDate())
+    .toISOString().slice(0,10);
+
+  const usuarios = [
+    {id:1, nombre:"Equipo MÍA", correo:"admin@mia.mx", clave:"mia2026", rol:"admin", estado:"activo"},
+    {id:2, nombre:"Lucía Márquez", correo:"lucia@mia.mx", clave:"demo1234", rol:"negocio", estado:"activo"},
+    {id:3, nombre:"Rosario Jiménez Cruz", correo:"rosario@mia.mx", clave:"demo1234", rol:"negocio", estado:"activo"},
+    {id:4, nombre:"Ana Sofía Rentería", correo:"anasofia@mia.mx", clave:"demo1234", rol:"negocio", estado:"activo"},
+    {id:5, nombre:"Daniela Ortiz", correo:"daniela@mia.mx", clave:"demo1234", rol:"usuario", estado:"activo"},
+    {id:6, nombre:"Carmen Solís", correo:"carmen@mia.mx", clave:"demo1234", rol:"usuario", estado:"activo"},
+    {id:7, nombre:"Beatriz Fuentes", correo:"beatriz@mia.mx", clave:"demo1234", rol:"negocio", estado:"activo"}
+  ];
+
+  const negocios = [
+    {id:1, duena:2, nombre:"Panadería La Higuera", slug:"panaderia-la-higuera",
+     categoria:"alimentos", entidad:"Oaxaca", municipio:"Oaxaca de Juárez",
+     descripcion:"Pan de yema, hojaldras y conchas horneadas cada madrugada en horno de leña. Trabajamos con trigo de productoras de la Sierra Norte y molemos nuestro propio cacao para el chocolate de agua. Aceptamos pedidos para fiestas, bautizos y desayunos de oficina con dos días de anticipación.",
+     direccion:"Calle Xicoténcatl 411, Centro", telefono:"951 123 4567", whatsapp:"951 123 4567",
+     sitio:"https://lahiguera.mx", instagram:"@lahiguera.oax", facebook:"panaderialahiguera", tiktok:"",
+     plan:"impulsa", vence:enMeses(7), estado:"publicado", verificado:true, destacado:true,
+     vistas:1284, fotos:["gen:1","gen:2","gen:3"],
+     productos:[
+       {id:1, nombre:"Pan de yema (pieza)", precio:18, desc:"Receta de la abuela, masa madre de 12 horas."},
+       {id:2, nombre:"Chocolate de agua (litro)", precio:95, desc:"Cacao molido en metate, canela y almendra."},
+       {id:3, nombre:"Caja de hojaldras (6)", precio:120, desc:"Para desayunar en familia."}
+     ]},
+    {id:2, duena:2, nombre:"Café Malinalli", slug:"cafe-malinalli",
+     categoria:"alimentos", entidad:"Veracruz", municipio:"Xalapa",
+     descripcion:"Cafetería de especialidad con grano de mujeres cafetaleras de Coatepec y Huatusco. Tostamos cada semana y pagamos precio justo directo a las productoras.",
+     direccion:"Av. Ávila Camacho 88", telefono:"228 887 1200", whatsapp:"228 887 1200",
+     sitio:"", instagram:"@cafemalinalli", facebook:"", tiktok:"@cafemalinalli",
+     plan:"impulsa", vence:enMeses(4), estado:"publicado", verificado:true, destacado:false,
+     vistas:642, fotos:["gen:4","gen:5"],
+     productos:[
+       {id:1, nombre:"Bolsa 250 g tueste medio", precio:180, desc:"Notas a caramelo y naranja."},
+       {id:2, nombre:"Taller de barismo", precio:650, desc:"Tres horas, grupo de 8 personas."}
+     ]},
+    {id:3, duena:3, nombre:"Telar Ndaxagua", slug:"telar-ndaxagua",
+     categoria:"artesania", entidad:"Oaxaca", municipio:"Teotitlán del Valle",
+     descripcion:"Tapetes de lana teñidos con grana cochinilla, añil y musgo, en telar de pedal. Cuarta generación de tejedoras zapotecas. Cada pieza lleva el nombre de quien la tejió y tarda entre tres semanas y cuatro meses.",
+     direccion:"Av. Juárez 22", telefono:"951 524 4180", whatsapp:"951 524 4180",
+     sitio:"https://ndaxagua.mx", instagram:"@telar.ndaxagua", facebook:"", tiktok:"",
+     plan:"emprende", vence:enMeses(2), estado:"publicado", verificado:false, destacado:false,
+     vistas:398, fotos:["gen:6","gen:7","gen:8"],
+     productos:[
+       {id:1, nombre:"Tapete 80 × 150 cm", precio:4800, desc:"Diseño grecas de Mitla, tintes naturales."},
+       {id:2, nombre:"Camino de mesa", precio:1250, desc:"Lana churra teñida con añil."}
+     ]},
+    {id:4, duena:4, nombre:"Estudio Ceiba", slug:"estudio-ceiba",
+     categoria:"tecnologia", entidad:"Jalisco", municipio:"Guadalajara",
+     descripcion:"Diseño de identidad y sitios web para negocios pequeños encabezados por mujeres. Trabajamos con planes de pago accesibles y entregamos todo documentado para que tú lo puedas mantener.",
+     direccion:"Colonia Americana", telefono:"33 2210 9944", whatsapp:"33 2210 9944",
+     sitio:"https://estudioceiba.mx", instagram:"@estudioceiba", facebook:"", tiktok:"",
+     plan:"emprende", vence:enMeses(5), estado:"publicado", verificado:false, destacado:false,
+     vistas:521, fotos:["gen:9","gen:10"],
+     productos:[
+       {id:1, nombre:"Identidad básica", precio:8500, desc:"Logotipo, colores y tipografías."},
+       {id:2, nombre:"Sitio de una página", precio:12000, desc:"Autoadministrable, con dominio incluido."}
+     ]},
+    // Plan gratuito con contenido de sobra: sirve para ver el bloqueo por membresía.
+    {id:5, duena:7, nombre:"Bordados Mitla", slug:"bordados-mitla",
+     categoria:"artesania", entidad:"Oaxaca", municipio:"San Pablo Villa de Mitla",
+     descripcion:"Blusas y rebozos bordados a mano con punto de cruz y deshilado. Taller familiar de seis bordadoras. Hacemos piezas por encargo con los colores que tú elijas y enviamos a todo México.",
+     direccion:"Calle Morelos 15", telefono:"951 568 0022", whatsapp:"951 568 0022",
+     sitio:"https://bordadosmitla.mx", instagram:"@bordadosmitla", facebook:"bordadosmitla", tiktok:"",
+     plan:"gratis", vence:null, estado:"publicado", verificado:false, destacado:false,
+     vistas:213, fotos:["gen:11","gen:12","gen:13","gen:14"],
+     productos:[
+       {id:1, nombre:"Blusa bordada", precio:950, desc:"Manta de algodón, bordado de tres semanas."},
+       {id:2, nombre:"Rebozo de bolita", precio:2400, desc:"Tejido en telar de cintura."}
+     ]},
+    // Membresía vencida: cae a las reglas del plan gratuito sin perder nada.
+    {id:6, duena:3, nombre:"Nutrición Raíz", slug:"nutricion-raiz",
+     categoria:"salud", entidad:"Ciudad de México", municipio:"Coyoacán",
+     descripcion:"Consulta nutricional con enfoque en alimentación mexicana real: nixtamal, frijol, quelites y temporada. Atención presencial y en línea, con planes que sí caben en el presupuesto familiar.",
+     direccion:"Av. México 190, Del Carmen", telefono:"55 4422 8890", whatsapp:"55 4422 8890",
+     sitio:"https://nutricionraiz.mx", instagram:"@nutricionraiz", facebook:"", tiktok:"",
+     plan:"emprende", vence:enMeses(-1), estado:"publicado", verificado:false, destacado:false,
+     vistas:167, fotos:["gen:15","gen:16","gen:17"],
+     productos:[
+       {id:1, nombre:"Primera consulta", precio:700, desc:"Incluye plan de alimentación."}
+     ]},
+    // Esperando revisión: le sirve a la organización para probar aprobar y rechazar.
+    {id:7, duena:7, nombre:"Velas Copal", slug:"velas-copal",
+     categoria:"hogar", entidad:"Puebla", municipio:"Cholula",
+     descripcion:"Velas de cera de soya con copal, lavanda y azahar, en frascos reutilizados.",
+     direccion:"", telefono:"222 331 0055", whatsapp:"", sitio:"", instagram:"", facebook:"", tiktok:"",
+     plan:"gratis", vence:null, estado:"pendiente", verificado:false, destacado:false,
+     vistas:0, fotos:["gen:18"], productos:[]},
+    {id:8, duena:4, nombre:"Zapatería Alondra", slug:"zapateria-alondra",
+     categoria:"moda", entidad:"Guanajuato", municipio:"León",
+     descripcion:"Calzado de piel hecho a mano, tallas 22 a 28, con hormas cómodas para estar de pie todo el día.",
+     direccion:"Blvd. Adolfo López Mateos 300", telefono:"477 210 8834", whatsapp:"477 210 8834",
+     sitio:"", instagram:"@zapateriaalondra", facebook:"", tiktok:"",
+     plan:"gratis", vence:null, estado:"pendiente", verificado:false, destacado:false,
+     vistas:0, fotos:["gen:19","gen:20"], productos:[]}
+  ];
+
+  const resenas = [
+    {id:1, negocio:1, usuario:5, cal:5, texto:"El pan de yema sabe igualito al de mi abuela. Pedí tres docenas para el bautizo de mi hija y llegaron calientitas.", respuesta:"¡Gracias Daniela! Nos dio mucho gusto ser parte de ese día.", estado:"publicada", fecha:"2026-05-14"},
+    {id:2, negocio:1, usuario:6, cal:4, texto:"Muy rico todo. El chocolate de agua es espectacular. Solo tardan un poco los sábados por la fila.", respuesta:"", estado:"publicada", fecha:"2026-06-02"},
+    {id:3, negocio:3, usuario:5, cal:5, texto:"Compré un tapete y es una obra de arte. Doña Rosario me explicó todo el proceso de teñido con grana.", respuesta:"Gracias por valorar el trabajo, Daniela.", estado:"publicada", fecha:"2026-04-21"},
+    {id:4, negocio:4, usuario:6, cal:5, texto:"Me hicieron el sitio de mi consultorio en dos semanas y me enseñaron a actualizarlo yo sola.", respuesta:"", estado:"publicada", fecha:"2026-06-18"},
+    {id:5, negocio:5, usuario:5, cal:5, texto:"La blusa que me bordaron quedó preciosa y llegó antes de lo prometido.", respuesta:"", estado:"publicada", fecha:"2026-06-25"},
+    {id:6, negocio:2, usuario:6, cal:4, texto:"Buen café y muy buen ambiente para trabajar por las mañanas.", respuesta:"", estado:"publicada", fecha:"2026-07-01"},
+    {id:7, negocio:1, usuario:6, cal:1, texto:"COMPRA SEGUIDORES BARATOS EN MI PAGINA WWW.EJEMPLO", respuesta:"", estado:"oculta", fecha:"2026-07-10"}
+  ];
+
+  return {
+    usuarios, negocios, resenas,
+    favoritos:[{usuario:5, negocio:1},{usuario:5, negocio:3},{usuario:6, negocio:2}],
+    bitacora:[], sesion:null,
+    siguiente:{usuario:8, negocio:9, resena:8}
+  };
+}
+
+let D = cargar();
+
+function cargar(){
+  const crudo = leerCrudo();
+  if(!crudo) { const d = semilla(); escribirCrudo(JSON.stringify(d)); return d; }
+  try {
+    const d = JSON.parse(crudo);
+    if(!d || !Array.isArray(d.usuarios)) throw new Error("corrupto");
+    return d;
+  } catch { const d = semilla(); escribirCrudo(JSON.stringify(d)); return d; }
+}
+function guardar(){ return escribirCrudo(JSON.stringify(D)); }
+
+function reiniciar(){
+  if(!confirm("Esto borra todo lo que hayas capturado y deja MÍA como recién instalada. ¿Continuamos?")) return;
+  D = semilla(); guardar(); location.hash = "#/directorio"; pintar();
+  avisar("Listo, MÍA quedó como nueva.");
+}
+
+/* ================================================================ UTILIDAD */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const $ = id => document.getElementById(id);
+const val = id => ($(id) ? $(id).value.trim() : "");
+
+function avisar(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("ver");
+  clearTimeout(avisar._t); avisar._t = setTimeout(() => t.classList.remove("ver"), 3200);
+}
+
+const pesos = n => (n === null || n === undefined || n === "") ? ""
+  : "$" + Number(n).toLocaleString("es-MX", {minimumFractionDigits:0, maximumFractionDigits:2});
+
+function fecha(iso){
+  if(!iso) return "";
+  const d = new Date(iso + (iso.length === 10 ? "T12:00:00" : ""));
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString("es-MX", {day:"numeric", month:"long", year:"numeric"});
+}
+
+function slugificar(txt){
+  const base = String(txt).normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "negocio";
+  let s = base, n = 2;
+  while(D.negocios.some(x => x.slug === s)) s = base + "-" + (n++);
+  return s;
+}
+
+const catNombre = id => (CATEGORIAS.find(c => c.id === id) || {nombre:"Otros giros"}).nombre;
+const usuarioPorId = id => D.usuarios.find(u => u.id === id);
+const negocioPorId = id => D.negocios.find(n => n.id === id);
+
+function anotar(accion, detalle){
+  D.bitacora.unshift({
+    id: Date.now(), actor: D.sesion, accion, detalle,
+    cuando: new Date().toISOString()
+  });
+  D.bitacora = D.bitacora.slice(0, 200);
+}
+
+/* ============================================================== MEMBRESÍA */
+/** Reglas que le tocan a un negocio hoy. Si venció, cae a las del plan gratuito. */
+function reglas(n){
+  const contratado = PLANES[n.plan] ? n.plan : "gratis";
+  const vencida = contratado !== "gratis" && n.vence
+    && new Date(n.vence + "T23:59:59") < new Date();
+  const efectivo = vencida ? "gratis" : contratado;
+  return {
+    contratado, efectivo, vencida,
+    limites: PLANES[efectivo].limites,
+    permisos: PLANES[efectivo].permisos
+  };
+}
+
+/** Lo que el público alcanza a ver: aquí se recorta todo lo que exceda el plan. */
+function publico(n){
+  const r = reglas(n);
+  return {
+    fotos: (n.fotos || []).slice(0, r.limites.fotos),
+    descripcion: (n.descripcion || "").slice(0, r.limites.descripcion),
+    whatsapp: r.permisos.whatsapp ? n.whatsapp : "",
+    sitio: r.permisos.sitioWeb ? n.sitio : "",
+    redes: r.permisos.redes
+      ? {instagram:n.instagram, facebook:n.facebook, tiktok:n.tiktok}
+      : {instagram:"", facebook:"", tiktok:""},
+    productos: r.permisos.catalogo ? (n.productos || []).slice(0, r.limites.productos) : [],
+    verificado: n.verificado && r.permisos.insignia,
+    destacado: n.destacado && r.permisos.prioridad,
+    reglas: r
+  };
+}
+
+/** Avisos para la dueña sobre lo que su plan le está ocultando. */
+function bloqueos(n){
+  const r = reglas(n), L = [];
+  if(r.vencida) L.push("Tu membresía " + PLANES[r.contratado].nombre + " venció el " +
+    fecha(n.vence) + ". Mientras tanto MÍA aplica las reglas del plan gratuito. Nada se borró: al renovar vuelve a aparecer todo.");
+  const fotos = (n.fotos || []).length;
+  if(fotos > r.limites.fotos)
+    L.push((fotos - r.limites.fotos) + " de tus " + fotos + " fotografías no se muestran. Tu plan permite " + r.limites.fotos + ".");
+  const prods = (n.productos || []).length;
+  if(prods && !r.permisos.catalogo)
+    L.push("Tu catálogo de " + prods + " producto(s) está oculto. El catálogo empieza en el plan Emprende.");
+  else if(prods > r.limites.productos)
+    L.push((prods - r.limites.productos) + " producto(s) no se muestran. Tu plan permite " + r.limites.productos + ".");
+  if(n.whatsapp && !r.permisos.whatsapp) L.push("Tu botón de WhatsApp está oculto. Empieza en el plan Emprende.");
+  if(n.sitio && !r.permisos.sitioWeb) L.push("Tu sitio web está oculto. Empieza en el plan Emprende.");
+  if((n.instagram || n.facebook || n.tiktok) && !r.permisos.redes)
+    L.push("Tus redes sociales están ocultas. Empiezan en el plan Emprende.");
+  if((n.descripcion || "").length > r.limites.descripcion)
+    L.push("Tu descripción se muestra recortada a " + r.limites.descripcion + " caracteres.");
+  return L;
+}
+
+/* ================================================================= SESIÓN */
+const yo = () => D.sesion ? usuarioPorId(D.sesion) : null;
+const esAdmin = () => yo()?.rol === "admin";
+
+function entrar(correo, clave){
+  const u = D.usuarios.find(x => x.correo.toLowerCase() === String(correo).toLowerCase().trim());
+  if(!u || u.clave !== clave) return "Ese correo o esa contraseña no coinciden. Revísalos e inténtalo de nuevo.";
+  if(u.estado !== "activo") return "Esta cuenta está suspendida. Escribe a MÍA para reactivarla.";
+  D.sesion = u.id; guardar();
+  const destino = u.rol === "admin" ? "#/admin" : u.rol === "negocio" ? "#/panel" : "#/directorio";
+  location.hash = destino; pintar();
+  avisar("Bienvenida, " + u.nombre.split(" ")[0] + ".");
+  return null;
+}
+
+function salir(){
+  D.sesion = null; guardar(); location.hash = "#/directorio"; pintar();
+  avisar("Cerraste tu sesión.");
+}
+
+function accesoRapido(correo){
+  const u = D.usuarios.find(x => x.correo === correo);
+  if(u) entrar(u.correo, u.clave);
+}
+
+/* =============================================================== CALIFICAR */
+function resenasDe(id, todas){
+  return D.resenas.filter(r => r.negocio === id && (todas || r.estado === "publicada"));
+}
+function promedio(id){
+  const rs = resenasDe(id, false);
+  if(!rs.length) return null;
+  return Math.round((rs.reduce((a,r) => a + r.cal, 0) / rs.length) * 10) / 10;
+}
+const estrellasHtml = n => n
+  ? '<span class="estrellas" aria-label="' + n + ' de 5">' +
+    "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n)) + "</span>"
+  : '<span class="apagado pequeno">Sin reseñas</span>';
+
+/* ================================================================ PORTADA */
+/* Los negocios de ejemplo no traen fotos reales: se dibuja una portada de color
+   estable a partir de su nombre, para no depender de imágenes externas. */
+const TONOS = [
+  ["#D6187F","#7A0E4A"], ["#2D4EC8","#16276B"], ["#0B7A5E","#053F30"],
+  ["#C98A00","#6B4A00"], ["#B92A2A","#631515"], ["#6B3FA0","#361F52"]
+];
+function portadaHtml(n, alto){
+  const foto = publico(n).fotos[0];
+  const estilo = alto ? 'style="aspect-ratio:21/9"' : "";
+  if(foto && !String(foto).startsWith("gen:"))
+    return '<div class="portada" ' + estilo + '><img src="' + esc(foto) + '" alt="' + esc(n.nombre) + '"></div>';
+  const semillaColor = [...n.nombre].reduce((a,c) => a + c.charCodeAt(0), 0);
+  const [a,b] = TONOS[semillaColor % TONOS.length];
+  return '<div class="portada" ' + estilo +
+    ' data-fondo style="' + (alto ? "aspect-ratio:21/9;" : "") +
+    "background:linear-gradient(135deg," + a + "," + b + ')">' +
+    '<span class="inicial">' + esc(n.nombre.trim()[0] || "M") + "</span></div>";
+}
+
+/* ================================================================== RUTAS */
+function ruta(){
+  const h = (location.hash || "#/directorio").replace(/^#\/?/, "");
+  const partes = h.split("/").filter(Boolean);
+  return {vista: partes[0] || "directorio", arg: partes[1] ? decodeURIComponent(partes[1]) : null};
+}
+
+function menu(){
+  const u = yo(), r = ruta().vista;
+  const link = (h, t) => '<a href="#/' + h + '" class="' + (r === h ? "activo" : "") + '">' + t + "</a>";
+  let items = link("directorio", "Directorio") + link("planes", "Planes");
+  if(!u){
+    items += link("ayuda", "Cómo entrar") +
+      '<a href="#/entrar" class="btn chico" style="margin-left:6px">Entrar</a>';
+  } else {
+    if(u.rol === "admin")   items += link("admin", "Administración");
+    if(u.rol === "negocio") items += link("panel", "Mis negocios");
+    if(u.rol === "usuario") items += link("favoritos", "Favoritos");
+    items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
+  }
+  $("menu").innerHTML = items;
+}
+
+function pintar(){
+  const {vista, arg} = ruta();
+  const u = yo();
+  let html = "";
+
+  if(vista === "negocio")            html = vistaNegocio(arg);
+  else if(vista === "entrar")        html = vistaEntrar();
+  else if(vista === "ayuda")         html = vistaAyuda();
+  else if(vista === "planes")        html = vistaPlanes();
+  else if(vista === "favoritos")     html = vistaFavoritos();
+  else if(vista === "panel")         html = u && (u.rol === "negocio" || u.rol === "admin") ? vistaPanel() : sinAcceso();
+  else if(vista === "editar")        html = u ? vistaEditar(arg) : sinAcceso();
+  else if(vista === "admin")         html = esAdmin() ? vistaAdmin(arg) : sinAcceso();
+  else                               html = vistaDirectorio();
+
+  $("app").innerHTML = html;
+  menu();
+  window.scrollTo(0, 0);
+  if(typeof pintar._despues === "function"){ const f = pintar._despues; pintar._despues = null; f(); }
+}
+
+function sinAcceso(){
+  return '<div class="envoltura bloque pila g16" style="max-width:520px">' +
+    "<h2>Esta sección no es para tu tipo de cuenta</h2>" +
+    '<p class="apagado">En MÍA cada quien ve lo suyo: la organización administra, los negocios ' +
+    "editan su ficha y las visitantes dejan reseñas. Entra con la cuenta que corresponde.</p>" +
+    '<div class="fila g8"><a class="btn" href="#/entrar">Entrar</a>' +
+    '<a class="btn linea" href="#/ayuda">Ver las cuentas de prueba</a></div></div>';
+}
+
+/* ============================================================== DIRECTORIO */
+let filtro = {q:"", categoria:"", entidad:""};
+
+function ordenados(lista){
+  return lista.slice().sort((a,b) => {
+    const pa = publico(a), pb = publico(b);
+    if(pa.destacado !== pb.destacado) return pa.destacado ? -1 : 1;
+    const peso = x => ORDEN_PLANES.indexOf(publico(x).reglas.efectivo);
+    if(peso(a) !== peso(b)) return peso(b) - peso(a);
+    return (promedio(b.id) || 0) - (promedio(a.id) || 0);
+  });
+}
+
+function vistaDirectorio(){
+  const visibles = D.negocios.filter(n => n.estado === "publicado");
+  const res = ordenados(visibles.filter(n => {
+    const t = (n.nombre + " " + n.descripcion + " " + n.municipio).toLowerCase();
+    if(filtro.q && !t.includes(filtro.q.toLowerCase())) return false;
+    if(filtro.categoria && n.categoria !== filtro.categoria) return false;
+    if(filtro.entidad && n.entidad !== filtro.entidad) return false;
+    return true;
+  }));
+
+  const chips = CATEGORIAS.map(c => {
+    const activo = filtro.categoria === c.id;
+    return '<button class="chip ' + (activo ? "rosa" : "") + '" style="cursor:pointer" ' +
+      "onclick=\"filtrarCategoria('" + c.id + "')\">" + esc(c.nombre) + "</button>";
+  }).join("");
+
+  return (
+  '<section class="hero"><div class="envoltura">' +
+    '<p class="eyebrow">Directorio nacional</p>' +
+    "<h1>Negocios de mujeres mexicanas</h1>" +
+    '<p class="entrada">Aquí encuentras a quién comprarle. Cada negocio de este directorio ' +
+    "lo registró y lo administra una mujer.</p>" +
+    '<div class="buscador">' +
+      '<input id="q" placeholder="Busca pan, tapetes, contabilidad…" value="' + esc(filtro.q) + '" ' +
+        'onkeydown="if(event.key===\'Enter\')buscar()" aria-label="Buscar negocios">' +
+      '<button class="btn" onclick="buscar()">Buscar</button>' +
+    "</div>" +
+  "</div></section>" +
+
+  '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g12">' +
+      '<div class="fila entre g12">' +
+        '<p class="eyebrow">Filtrar por giro</p>' +
+        (filtro.categoria || filtro.entidad || filtro.q
+          ? '<button class="btn fantasma chico" onclick="limpiar()">Quitar filtros</button>' : "") +
+      "</div>" +
+      '<div class="fila g8">' + chips + "</div>" +
+      '<div style="max-width:280px"><label class="campo">Estado de la República' +
+        '<select onchange="filtrarEntidad(this.value)">' +
+          '<option value="">Toda la República</option>' +
+          ENTIDADES.map(e => '<option value="' + esc(e) + '"' +
+            (filtro.entidad === e ? " selected" : "") + ">" + esc(e) + "</option>").join("") +
+        "</select></label></div>" +
+    "</div>" +
+
+    '<hr class="separador">' +
+    '<p class="pequeno apagado">' + res.length +
+      (res.length === 1 ? " negocio encontrado" : " negocios encontrados") + "</p>" +
+
+    (res.length
+      ? '<div class="rejilla">' + res.map(tarjeta).join("") + "</div>"
+      : '<div class="tarjeta p24 pila g8"><h3>No encontramos negocios con esos filtros</h3>' +
+        '<p class="apagado pequeno">Prueba con otra palabra o quita los filtros.</p></div>') +
+  "</div>");
+}
+
+function tarjeta(n){
+  const p = publico(n), prom = promedio(n.id), rs = resenasDe(n.id, false).length;
+  return '<a class="tarjeta tarjeta-negocio" href="#/negocio/' + esc(n.slug) + '">' +
+    portadaHtml(n) +
+    '<div class="cuerpo">' +
+      '<div class="fila g8">' +
+        (p.destacado ? '<span class="chip rosa">Destacado</span>' : "") +
+        (p.verificado ? '<span class="chip jade">Verificado</span>' : "") +
+      "</div>" +
+      "<h3>" + esc(n.nombre) + "</h3>" +
+      '<p class="pequeno apagado">' + esc(catNombre(n.categoria)) + " · " +
+        esc(n.municipio) + ", " + esc(n.entidad) + "</p>" +
+      '<p class="pequeno" style="color:var(--texto2);flex:1">' +
+        esc(p.descripcion.slice(0, 96)) + (p.descripcion.length > 96 ? "…" : "") + "</p>" +
+      '<div class="fila g8">' + estrellasHtml(prom) +
+        (rs ? '<span class="pequeno apagado">(' + rs + ")</span>" : "") + "</div>" +
+    "</div></a>";
+}
+
+function buscar(){ filtro.q = val("q"); pintar(); }
+function filtrarCategoria(id){ filtro.categoria = filtro.categoria === id ? "" : id; pintar(); }
+function filtrarEntidad(v){ filtro.entidad = v; pintar(); }
+function limpiar(){ filtro = {q:"", categoria:"", entidad:""}; pintar(); }
+
+/* ================================================================= NEGOCIO */
+function vistaNegocio(slug){
+  const n = D.negocios.find(x => x.slug === slug);
+  if(!n) return '<div class="envoltura bloque"><h2>No encontramos ese negocio</h2>' +
+    '<p class="apagado">Puede que ya no esté publicado.</p>' +
+    '<p style="margin-top:14px"><a class="btn" href="#/directorio">Volver al directorio</a></p></div>';
+
+  const u = yo(), p = publico(n), mio = u && (n.duena === u.id || u.rol === "admin");
+  if(n.estado !== "publicado" && !mio)
+    return '<div class="envoltura bloque"><h2>Este negocio no está publicado</h2>' +
+      '<p class="apagado">Su ficha no está disponible en este momento.</p>' +
+      '<p style="margin-top:14px"><a class="btn" href="#/directorio">Volver al directorio</a></p></div>';
+
+  const prom = promedio(n.id), rs = resenasDe(n.id, false);
+  const esFav = u && D.favoritos.some(f => f.usuario === u.id && f.negocio === n.id);
+  const miResena = u ? rs.find(r => r.usuario === u.id) : null;
+
+  const contacto = [];
+  if(n.telefono) contacto.push('<a class="btn linea" href="tel:' + esc(n.telefono.replace(/\s/g,"")) + '">Llamar ' + esc(n.telefono) + "</a>");
+  if(p.whatsapp) contacto.push('<a class="btn" href="https://wa.me/52' + esc(p.whatsapp.replace(/\D/g,"")) + '" target="_blank" rel="noopener">WhatsApp</a>');
+  if(p.sitio)    contacto.push('<a class="btn linea" href="' + esc(p.sitio) + '" target="_blank" rel="noopener">Sitio web</a>');
+  const redes = [];
+  if(p.redes.instagram) redes.push("Instagram " + esc(p.redes.instagram));
+  if(p.redes.facebook)  redes.push("Facebook " + esc(p.redes.facebook));
+  if(p.redes.tiktok)    redes.push("TikTok " + esc(p.redes.tiktok));
+
+  return (
+  portadaHtml(n, true) +
+  '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g12">' +
+      '<div class="fila g8">' +
+        (p.destacado ? '<span class="chip rosa">Destacado</span>' : "") +
+        (p.verificado ? '<span class="chip jade">Verificado por MÍA</span>' : "") +
+        '<span class="chip">' + esc(catNombre(n.categoria)) + "</span>" +
+        (n.estado !== "publicado" ? '<span class="chip ' + ESTADOS[n.estado].chip + '">' +
+          esc(ESTADOS[n.estado].et) + "</span>" : "") +
+      "</div>" +
+      "<h1>" + esc(n.nombre) + "</h1>" +
+      '<div class="fila g12">' + estrellasHtml(prom) +
+        '<span class="pequeno apagado">' + rs.length +
+        (rs.length === 1 ? " reseña" : " reseñas") + "</span>" +
+        '<span class="pequeno apagado">·</span>' +
+        '<span class="pequeno apagado">' + esc(n.municipio) + ", " + esc(n.entidad) + "</span>" +
+      "</div>" +
+      '<p class="pequeno apagado">Atendido por ' + esc(usuarioPorId(n.duena)?.nombre || "—") + "</p>" +
+    "</div>" +
+
+    '<p style="max-width:66ch;white-space:pre-wrap">' + esc(p.descripcion) + "</p>" +
+
+    (n.direccion ? '<p class="pequeno apagado">📍 ' + esc(n.direccion) + "</p>" : "") +
+    '<div class="fila g8">' + contacto.join("") +
+      (u && u.rol === "usuario"
+        ? '<button class="btn ' + (esFav ? "" : "linea") + '" onclick="alternarFavorito(' + n.id + ')">' +
+          (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>"
+        : "") +
+    "</div>" +
+    (redes.length ? '<p class="pequeno apagado">' + redes.join(" · ") + "</p>" : "") +
+
+    (p.fotos.length > 1
+      ? '<div class="pila g12"><p class="eyebrow">Galería</p><div class="galeria">' +
+        p.fotos.map(f => '<div class="foto">' +
+          (String(f).startsWith("gen:")
+            ? '<div style="width:100%;height:100%;background:linear-gradient(135deg,' +
+              TONOS[Number(String(f).slice(4)) % TONOS.length].join(",") + ')"></div>'
+            : '<img src="' + esc(f) + '" alt="Fotografía de ' + esc(n.nombre) + '">') +
+          "</div>").join("") + "</div></div>"
+      : "") +
+
+    (p.productos.length
+      ? '<div class="pila g12"><p class="eyebrow">Productos y servicios</p>' +
+        '<div class="rejilla">' + p.productos.map(pr =>
+          '<div class="tarjeta p16 pila g8"><strong>' + esc(pr.nombre) + "</strong>" +
+          (pr.desc ? '<p class="pequeno apagado">' + esc(pr.desc) + "</p>" : "") +
+          (pr.precio ? '<p class="mono" style="font-weight:700">' + pesos(pr.precio) + "</p>" : "") +
+          "</div>").join("") + "</div></div>"
+      : "") +
+
+    '<hr class="separador">' +
+    '<div class="pila g16"><p class="eyebrow">Reseñas de clientas</p>' +
+      (u && u.rol === "usuario" ? formularioResena(n, miResena)
+        : !u ? '<div class="aviso">Para dejar una reseña necesitas ' +
+            '<a href="#/entrar" style="color:var(--acento);font-weight:700">entrar con tu correo</a>.</div>'
+        : "") +
+      (rs.length
+        ? rs.map(r => bloqueResena(r, n, u)).join("")
+        : '<p class="apagado pequeno">Este negocio todavía no tiene reseñas. Sé la primera.</p>') +
+    "</div>" +
+  "</div>");
+}
+
+function formularioResena(n, mia){
+  const cal = mia ? mia.cal : 0;
+  return '<div class="tarjeta p20 pila g12">' +
+    "<strong>" + (mia ? "Edita tu reseña" : "Deja tu reseña") + "</strong>" +
+    '<div class="selector-estrellas" id="sel">' +
+      [1,2,3,4,5].map(i => '<button type="button" class="' + (i <= cal ? "on" : "") +
+        '" onclick="elegirEstrella(' + i + ')" aria-label="' + i + ' estrellas">★</button>').join("") +
+    "</div>" +
+    '<input type="hidden" id="cal" value="' + cal + '">' +
+    '<textarea id="texto" placeholder="Cuéntanos cómo te fue.">' + esc(mia ? mia.texto : "") + "</textarea>" +
+    '<div class="fila g8"><button class="btn" onclick="guardarResena(' + n.id + ')">' +
+      (mia ? "Actualizar reseña" : "Publicar reseña") + "</button>" +
+      (mia ? '<button class="btn linea" onclick="borrarResena(' + mia.id + ')">Borrar</button>' : "") +
+    "</div></div>";
+}
+
+function bloqueResena(r, n, u){
+  const puedeResponder = u && (u.id === n.duena || u.rol === "admin") && reglas(n).permisos.responder;
+  const autor = usuarioPorId(r.usuario);
+  return '<div class="tarjeta p16 pila g8">' +
+    '<div class="fila entre g8"><strong class="pequeno">' + esc(autor?.nombre || "Usuaria") + "</strong>" +
+      '<span class="pequeno apagado">' + esc(fecha(r.fecha)) + "</span></div>" +
+    estrellasHtml(r.cal) +
+    "<p>" + esc(r.texto) + "</p>" +
+    (r.respuesta
+      ? '<div style="border-left:3px solid var(--acento);padding-left:11px;margin-top:4px">' +
+        '<p class="eyebrow">Respuesta del negocio</p><p class="pequeno">' + esc(r.respuesta) + "</p></div>"
+      : "") +
+    (puedeResponder && !r.respuesta
+      ? '<div class="pila g8" style="margin-top:6px">' +
+        '<textarea id="resp' + r.id + '" style="min-height:64px" placeholder="Responde con amabilidad…"></textarea>' +
+        '<div><button class="btn chico" onclick="responder(' + r.id + ')">Responder</button></div></div>'
+      : "") +
+    (u && (u.id === n.duena) && !reglas(n).permisos.responder
+      ? '<p class="pequeno apagado">Responder reseñas empieza en el plan Emprende.</p>' : "") +
+    "</div>";
+}
+
+function elegirEstrella(i){
+  $("cal").value = i;
+  [...$("sel").children].forEach((b, k) => b.classList.toggle("on", k < i));
+}
+
+function guardarResena(negocioId){
+  const u = yo(); if(!u) return;
+  const cal = Number(val("cal"));
+  if(!cal) return avisar("Elige de 1 a 5 estrellas.");
+  const texto = val("texto");
+  if(texto.length < 4) return avisar("Escribe unas palabras sobre tu experiencia.");
+  const ya = D.resenas.find(r => r.negocio === negocioId && r.usuario === u.id);
+  if(ya){ ya.cal = cal; ya.texto = texto; }
+  else D.resenas.push({id: D.siguiente.resena++, negocio:negocioId, usuario:u.id, cal,
+    texto, respuesta:"", estado:"publicada", fecha:new Date().toISOString().slice(0,10)});
+  guardar(); pintar(); avisar(ya ? "Actualizamos tu reseña." : "Publicamos tu reseña. Gracias.");
+}
+
+function borrarResena(id){
+  D.resenas = D.resenas.filter(r => r.id !== id);
+  guardar(); pintar(); avisar("Borramos tu reseña.");
+}
+
+function responder(id){
+  const t = $("resp" + id).value.trim();
+  if(!t) return avisar("Escribe tu respuesta.");
+  const r = D.resenas.find(x => x.id === id);
+  r.respuesta = t; guardar(); pintar(); avisar("Publicamos tu respuesta.");
+}
+
+function alternarFavorito(id){
+  const u = yo(); if(!u) return;
+  const i = D.favoritos.findIndex(f => f.usuario === u.id && f.negocio === id);
+  if(i >= 0){ D.favoritos.splice(i,1); avisar("Lo quitamos de tus favoritos."); }
+  else { D.favoritos.push({usuario:u.id, negocio:id}); avisar("Lo guardamos en tus favoritos."); }
+  guardar(); pintar();
+}
+
+/* =============================================================== FAVORITOS */
+function vistaFavoritos(){
+  const u = yo();
+  if(!u) return sinAcceso();
+  const lista = D.favoritos.filter(f => f.usuario === u.id)
+    .map(f => negocioPorId(f.negocio)).filter(n => n && n.estado === "publicado");
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Tus favoritos</h1>' +
+    '<p class="apagado">Los negocios que guardaste para no perderlos de vista.</p></div>' +
+    (lista.length
+      ? '<div class="rejilla">' + lista.map(tarjeta).join("") + "</div>"
+      : '<div class="tarjeta p24 pila g12"><h3>Todavía no guardas ninguno</h3>' +
+        '<p class="apagado pequeno">Abre cualquier negocio y toca “Guardar en favoritos”.</p>' +
+        '<div><a class="btn" href="#/directorio">Ver el directorio</a></div></div>') +
+    "</div>";
+}
+
+/* =================================================================== PANEL */
+/* Cuántos negocios puede tener: manda la mejor membresía vigente que traiga,
+   no la del primero de la lista. Si venció, cuenta como plan gratuito. */
+function planDeLaDuena(usuarioId){
+  let mejor = "gratis";
+  for(const n of D.negocios.filter(x => x.duena === usuarioId)){
+    const e = reglas(n).efectivo;
+    if(ORDEN_PLANES.indexOf(e) > ORDEN_PLANES.indexOf(mejor)) mejor = e;
+  }
+  return mejor;
+}
+
+function vistaPanel(){
+  const u = yo();
+  const mios = D.negocios.filter(n => n.duena === u.id);
+  const plan = planDeLaDuena(u.id);
+  const tope = PLANES[plan].limites.negocios;
+  const puedeMas = mios.length < tope;
+
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="fila entre g12">' +
+      '<div class="pila g8"><p class="eyebrow">Panel de negocio</p>' +
+      "<h1>Mis negocios</h1></div>" +
+      (puedeMas
+        ? '<button class="btn" onclick="nuevoNegocio()">Registrar un negocio</button>'
+        : '<span class="chip sol">Tu plan permite ' + tope + " negocio(s)</span>") +
+    "</div>" +
+
+    (mios.length === 0
+      ? '<div class="tarjeta p24 pila g12"><h3>Registra tu primer negocio</h3>' +
+        '<p class="apagado pequeno">Es gratis. Llenas tus datos, lo mandas a revisión y MÍA lo publica ' +
+        "en el directorio.</p><div><button class=\"btn\" onclick=\"nuevoNegocio()\">Empezar</button></div></div>"
+      : '<div class="pila g16">' + mios.map(fichaPanel).join("") + "</div>") +
+  "</div>";
+}
+
+function fichaPanel(n){
+  const r = reglas(n), av = bloqueos(n), prom = promedio(n.id);
+  return '<div class="tarjeta p20 pila g12">' +
+    '<div class="fila entre g12">' +
+      '<div class="pila g8" style="flex:1;min-width:200px">' +
+        '<div class="fila g8">' +
+          '<span class="chip ' + ESTADOS[n.estado].chip + '">' + esc(ESTADOS[n.estado].et) + "</span>" +
+          '<span class="chip ' + (r.vencida ? "peligro" : "cobalto") + '">' +
+            esc(PLANES[r.contratado].nombre) + (r.vencida ? " · vencido" : "") + "</span>" +
+          (n.verificado && r.permisos.insignia ? '<span class="chip jade">Verificado</span>' : "") +
+        "</div>" +
+        "<h3>" + esc(n.nombre) + "</h3>" +
+        '<p class="pequeno apagado">' + esc(catNombre(n.categoria)) + " · " +
+          esc(n.municipio || "Sin municipio") + "</p>" +
+      "</div>" +
+      '<div class="fila g8">' +
+        '<button class="btn linea chico" onclick="location.hash=\'#/editar/' + n.id + '\'">Editar</button>' +
+        (n.estado === "publicado"
+          ? '<a class="btn fantasma chico" href="#/negocio/' + esc(n.slug) + '">Ver ficha</a>' : "") +
+      "</div>" +
+    "</div>" +
+
+    (n.estado === "borrador"
+      ? '<div class="aviso">Este negocio todavía no lo ve nadie. Cuando esté listo, mándalo a revisión.' +
+        '<button class="btn chico" style="margin-left:auto" onclick="mandarRevision(' + n.id + ')">Mandar a revisión</button></div>'
+      : "") +
+    (n.estado === "rechazado" && n.nota
+      ? '<div class="aviso alerta"><div><strong>MÍA pidió cambios:</strong> ' + esc(n.nota) +
+        '<br><button class="btn chico" style="margin-top:8px" onclick="mandarRevision(' + n.id + ')">Volver a mandar</button></div></div>'
+      : "") +
+    (n.estado === "suspendido"
+      ? '<div class="aviso alerta">MÍA detuvo la publicación de este negocio' +
+        (n.nota ? ": " + esc(n.nota) : ".") + " Escríbeles para resolverlo.</div>"
+      : "") +
+
+    (av.length
+      ? '<div class="aviso candado"><div><strong>Tu plan está ocultando cosas:</strong><ul style="margin:6px 0 0;padding-left:18px">' +
+        av.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>" +
+        '<a class="btn chico" style="margin-top:9px" href="#/planes">Ver planes</a></div></div>'
+      : "") +
+
+    (r.permisos.estadisticas
+      ? '<div class="metricas">' +
+          metrica(n.vistas, "Visitas") +
+          metrica(D.favoritos.filter(f => f.negocio === n.id).length, "Favoritos", "cobalto") +
+          metrica(resenasDe(n.id, false).length, "Reseñas", "jade") +
+          metrica(prom ? prom.toFixed(1) : "—", "Calificación", "sol") +
+        "</div>"
+      : '<p class="pequeno apagado">Las estadísticas de tu negocio empiezan en el plan Emprende.</p>') +
+  "</div>";
+}
+
+const metrica = (n, et, tono) => '<div class="metrica ' + (tono || "") + '">' +
+  '<div class="n">' + esc(n) + '</div><div class="et">' + esc(et) + "</div></div>";
+
+function nuevoNegocio(){
+  const u = yo();
+  const mios = D.negocios.filter(n => n.duena === u.id);
+  const plan = planDeLaDuena(u.id);
+  if(mios.length >= PLANES[plan].limites.negocios)
+    return avisar("Tu plan " + PLANES[plan].nombre + " permite " + PLANES[plan].limites.negocios + " negocio(s).");
+  const id = D.siguiente.negocio++;
+  D.negocios.push({id, duena:u.id, nombre:"Mi negocio", slug:slugificar("mi-negocio-" + id),
+    categoria:"otros", entidad:"", municipio:"", descripcion:"", direccion:"", telefono:"",
+    whatsapp:"", sitio:"", instagram:"", facebook:"", tiktok:"", plan:"gratis", vence:null,
+    estado:"borrador", verificado:false, destacado:false, vistas:0, fotos:[], productos:[], nota:""});
+  guardar(); location.hash = "#/editar/" + id; pintar();
+}
+
+function mandarRevision(id){
+  const n = negocioPorId(id);
+  if(!n.nombre.trim() || n.nombre === "Mi negocio") return avisar("Ponle nombre a tu negocio antes de mandarlo.");
+  if(!n.descripcion.trim()) return avisar("Escribe de qué se trata tu negocio antes de mandarlo.");
+  if(!n.entidad) return avisar("Elige el estado de la República donde estás.");
+  n.estado = "pendiente"; n.nota = "";
+  anotar("Negocio enviado a revisión", n.nombre);
+  guardar(); pintar(); avisar("Lo mandamos a revisión. MÍA te avisa cuando lo publique.");
+}
+
+/* ================================================================== EDITOR */
+function vistaEditar(id){
+  const n = negocioPorId(Number(id)), u = yo();
+  if(!n) return sinAcceso();
+  if(n.duena !== u.id && u.rol !== "admin") return sinAcceso();
+
+  const r = reglas(n), L = r.limites, P = r.permisos;
+  const cerrado = (texto) => '<p class="pequeno apagado">🔒 ' + texto + "</p>";
+
+  return '<div class="envoltura bloque pila g24" style="max-width:780px">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="#/panel">← Volver a mis negocios</a>' +
+      "<h1>" + esc(n.nombre) + "</h1>" +
+      '<div class="fila g8"><span class="chip ' + ESTADOS[n.estado].chip + '">' +
+        esc(ESTADOS[n.estado].et) + '</span><span class="chip cobalto">Plan ' +
+        esc(PLANES[r.contratado].nombre) + "</span></div></div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Datos del negocio</p>' +
+      '<div class="rejilla-campos">' +
+        '<label class="campo">Nombre<input id="f_nombre" value="' + esc(n.nombre) + '"></label>' +
+        '<label class="campo">Giro<select id="f_categoria">' +
+          CATEGORIAS.map(c => '<option value="' + c.id + '"' +
+            (n.categoria === c.id ? " selected" : "") + ">" + esc(c.nombre) + "</option>").join("") +
+        "</select></label>" +
+        '<label class="campo">Estado<select id="f_entidad"><option value="">Elige…</option>' +
+          ENTIDADES.map(e => '<option value="' + esc(e) + '"' +
+            (n.entidad === e ? " selected" : "") + ">" + esc(e) + "</option>").join("") +
+        "</select></label>" +
+        '<label class="campo">Municipio<input id="f_municipio" value="' + esc(n.municipio) + '"></label>' +
+      "</div>" +
+      '<label class="campo">Descripción <span class="apagado">(' + L.descripcion + " caracteres con tu plan)</span>" +
+        '<textarea id="f_descripcion" maxlength="' + L.descripcion + '">' + esc(n.descripcion) + "</textarea></label>" +
+      '<label class="campo">Dirección<input id="f_direccion" value="' + esc(n.direccion) + '"></label>' +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Contacto</p>' +
+      '<div class="rejilla-campos">' +
+        '<label class="campo">Teléfono<input id="f_telefono" value="' + esc(n.telefono) + '"></label>' +
+        '<label class="campo">WhatsApp' +
+          '<input id="f_whatsapp" value="' + esc(n.whatsapp) + '"' + (P.whatsapp ? "" : " disabled") + "></label>" +
+        '<label class="campo">Sitio web' +
+          '<input id="f_sitio" value="' + esc(n.sitio) + '"' + (P.sitioWeb ? "" : " disabled") + "></label>" +
+        '<label class="campo">Instagram' +
+          '<input id="f_instagram" value="' + esc(n.instagram) + '"' + (P.redes ? "" : " disabled") + "></label>" +
+        '<label class="campo">Facebook' +
+          '<input id="f_facebook" value="' + esc(n.facebook) + '"' + (P.redes ? "" : " disabled") + "></label>" +
+        '<label class="campo">TikTok' +
+          '<input id="f_tiktok" value="' + esc(n.tiktok) + '"' + (P.redes ? "" : " disabled") + "></label>" +
+      "</div>" +
+      (!P.whatsapp ? cerrado("WhatsApp, sitio web y redes sociales empiezan en el plan Emprende.") : "") +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Fotografías</p>' +
+      '<p class="pequeno apagado">Tu plan muestra ' + L.fotos +
+        (L.fotos === 1 ? " fotografía." : " fotografías.") + " Tienes " + (n.fotos || []).length + ".</p>" +
+      ((n.fotos || []).length
+        ? '<div class="galeria">' + n.fotos.map((f, i) =>
+            '<div class="foto' + (i >= L.fotos ? " oculta" : "") + '">' +
+            (String(f).startsWith("gen:")
+              ? '<div style="width:100%;height:100%;background:linear-gradient(135deg,' +
+                TONOS[Number(String(f).slice(4)) % TONOS.length].join(",") + ')"></div>'
+              : '<img src="' + esc(f) + '" alt="">') +
+            '<button class="quitar" onclick="quitarFoto(' + n.id + "," + i + ')">Quitar</button>' +
+            (i >= L.fotos ? '<span class="sello">No se muestra</span>' : "") +
+            "</div>").join("") + "</div>"
+        : "") +
+      '<label class="btn linea" style="align-self:flex-start">Subir fotografía' +
+        '<input type="file" accept="image/*" style="display:none" onchange="subirFoto(' + n.id + ',this)"></label>' +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Catálogo</p>' +
+      (P.catalogo
+        ? '<p class="pequeno apagado">Hasta ' + L.productos + " productos con tu plan. Tienes " +
+            (n.productos || []).length + ".</p>" +
+          ((n.productos || []).length
+            ? '<div class="pila g8">' + n.productos.map((p, i) =>
+                '<div class="fila entre g8 tarjeta p16"><div><strong>' + esc(p.nombre) + "</strong>" +
+                (p.precio ? ' <span class="mono">' + pesos(p.precio) + "</span>" : "") +
+                (p.desc ? '<p class="pequeno apagado">' + esc(p.desc) + "</p>" : "") + "</div>" +
+                '<button class="btn fantasma chico" onclick="quitarProducto(' + n.id + "," + i + ')">Quitar</button></div>'
+              ).join("") + "</div>"
+            : '<p class="pequeno apagado">Todavía no agregas productos.</p>') +
+          '<div class="rejilla-campos">' +
+            '<label class="campo">Producto o servicio<input id="p_nombre" placeholder="Pan de yema"></label>' +
+            '<label class="campo">Precio<input id="p_precio" type="number" min="0" placeholder="18"></label>' +
+          "</div>" +
+          '<label class="campo">Descripción corta<input id="p_desc" placeholder="Receta de la abuela."></label>' +
+          '<div><button class="btn linea" onclick="agregarProducto(' + n.id + ')">Agregar al catálogo</button></div>'
+        : cerrado("El catálogo de productos empieza en el plan Emprende.")) +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g12"><p class="eyebrow">Tu membresía</p>' +
+      "<p><strong>" + esc(PLANES[r.contratado].nombre) + "</strong> · " +
+        esc(PLANES[r.contratado].etiqueta) +
+        (n.vence ? '<span class="apagado"> · ' + (r.vencida ? "venció" : "vigente hasta") +
+          " el " + esc(fecha(n.vence)) + "</span>" : "") + "</p>" +
+      (bloqueos(n).length
+        ? '<div class="aviso candado"><ul style="margin:0;padding-left:18px">' +
+          bloqueos(n).map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></div>"
+        : '<p class="pequeno apagado">Tu plan cubre todo lo que tienes capturado.</p>') +
+      '<div><a class="btn" href="#/planes">Ver y cambiar de plan</a></div>' +
+    "</div>" +
+
+    '<div class="fila g8">' +
+      '<button class="btn" onclick="guardarNegocio(' + n.id + ')">Guardar cambios</button>' +
+      (n.estado === "borrador" || n.estado === "rechazado"
+        ? '<button class="btn linea" onclick="mandarRevision(' + n.id + ')">Mandar a revisión</button>' : "") +
+    "</div>" +
+  "</div>";
+}
+
+function guardarNegocio(id){
+  const n = negocioPorId(id), P = reglas(n).permisos;
+  const nombre = val("f_nombre");
+  if(!nombre) return avisar("El negocio necesita un nombre.");
+  if(nombre !== n.nombre){ n.nombre = nombre; n.slug = slugificar(nombre); }
+  n.categoria = val("f_categoria");
+  n.entidad = val("f_entidad");
+  n.municipio = val("f_municipio");
+  n.descripcion = val("f_descripcion");
+  n.direccion = val("f_direccion");
+  n.telefono = val("f_telefono");
+  // Los campos bloqueados no se sobrescriben: lo capturado con un plan mayor se respeta.
+  if(P.whatsapp) n.whatsapp = val("f_whatsapp");
+  if(P.sitioWeb) n.sitio = val("f_sitio");
+  if(P.redes){ n.instagram = val("f_instagram"); n.facebook = val("f_facebook"); n.tiktok = val("f_tiktok"); }
+  guardar(); pintar(); avisar("Guardamos los cambios.");
+}
+
+function subirFoto(id, input){
+  const archivo = input.files && input.files[0];
+  if(!archivo) return;
+  const lector = new FileReader();
+  lector.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 900;
+      let {width:w, height:h} = img;
+      if(w > max || h > max){ const k = Math.min(max/w, max/h); w = Math.round(w*k); h = Math.round(h*k); }
+      const lienzo = document.createElement("canvas");
+      lienzo.width = w; lienzo.height = h;
+      lienzo.getContext("2d").drawImage(img, 0, 0, w, h);
+      const n = negocioPorId(id);
+      n.fotos = n.fotos || [];
+      n.fotos.push(lienzo.toDataURL("image/jpeg", 0.72));
+      if(guardar()){ pintar(); avisar("Subimos tu fotografía."); }
+      else { n.fotos.pop(); pintar(); }
+    };
+    img.onerror = () => avisar("No pudimos leer esa imagen. Intenta con otra.");
+    img.src = ev.target.result;
+  };
+  lector.readAsDataURL(archivo);
+}
+
+function quitarFoto(id, i){
+  const n = negocioPorId(id);
+  n.fotos.splice(i, 1); guardar(); pintar(); avisar("Quitamos la fotografía.");
+}
+
+function agregarProducto(id){
+  const n = negocioPorId(id), L = reglas(n).limites;
+  const nombre = val("p_nombre");
+  if(!nombre) return avisar("Escribe el nombre del producto.");
+  n.productos = n.productos || [];
+  if(n.productos.length >= L.productos)
+    return avisar("Tu plan permite " + L.productos + " productos.");
+  n.productos.push({id:Date.now(), nombre, precio: val("p_precio") ? Number(val("p_precio")) : null, desc: val("p_desc")});
+  guardar(); pintar(); avisar("Agregamos el producto.");
+}
+
+function quitarProducto(id, i){
+  const n = negocioPorId(id);
+  n.productos.splice(i, 1); guardar(); pintar(); avisar("Quitamos el producto.");
+}
+
+/* ================================================================== PLANES */
+function vistaPlanes(){
+  const u = yo();
+  const mios = u ? D.negocios.filter(n => n.duena === u.id) : [];
+  const actual = mios.length ? planDeLaDuena(u.id) : null;
+
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g8"><p class="eyebrow">Membresías</p>' +
+      "<h1>Elige hasta dónde quiere llegar tu negocio</h1>" +
+      '<p class="apagado" style="max-width:60ch">Puedes estar en MÍA sin pagar nada. Los planes ' +
+      "de paga abren más espacio, más formas de que te contacten y mejor lugar en las búsquedas.</p></div>" +
+
+    '<div class="rejilla planes">' + ORDEN_PLANES.map(k => {
+      const p = PLANES[k], esActual = actual === k;
+      return '<div class="plan' + (k === "emprende" ? " destacado" : "") + '">' +
+        '<div class="fila entre g8"><p class="eyebrow">' + esc(p.nombre) + "</p>" +
+          (esActual ? '<span class="chip rosa">Tu plan</span>' : "") +
+          (k === "emprende" && !esActual ? '<span class="chip cobalto">Más elegido</span>' : "") + "</div>" +
+        '<div class="precio">' + (p.precio ? "$" + p.precio : "Gratis") +
+          (p.precio ? '<span style="font-size:.86rem;font-weight:600;color:var(--texto2)"> MXN/mes</span>' : "") + "</div>" +
+        '<p class="pequeno apagado">' + esc(p.resumen) + "</p>" +
+        "<ul>" + BENEFICIOS.map(([et, f]) => {
+          const v = f(p);
+          if(v === false) return '<li class="no">' + esc(et) + "</li>";
+          return "<li>" + esc(et) + (typeof v === "string" ? ": <strong>" + esc(v) + "</strong>" : "") + "</li>";
+        }).join("") + "</ul>" +
+        (u && u.rol === "negocio" && mios.length
+          ? '<button class="btn' + (esActual ? " linea" : "") + '"' + (esActual ? " disabled" : "") +
+            ' onclick="cambiarPlan(\'' + k + '\')">' +
+            (esActual ? "Es tu plan actual" : "Cambiar a " + esc(p.nombre)) + "</button>"
+          : "") +
+        "</div>";
+    }).join("") + "</div>" +
+
+    '<div class="aviso">Al bajar de plan no se borra nada: lo que exceda el nuevo límite deja de ' +
+    "mostrarse y regresa completo en cuanto vuelvas a subir.</div>" +
+  "</div>";
+}
+
+function cambiarPlan(plan){
+  const u = yo();
+  const mios = D.negocios.filter(n => n.duena === u.id);
+  if(!mios.length) return avisar("Primero registra un negocio.");
+  const vence = plan === "gratis" ? null
+    : new Date(Date.now() + 30*864e5).toISOString().slice(0,10);
+  mios.forEach(n => { n.plan = plan; n.vence = vence; });
+  anotar("Cambio de plan", u.nombre + " → " + PLANES[plan].nombre);
+  guardar(); pintar();
+  avisar("Tu plan ahora es " + PLANES[plan].nombre + ". (Demostración: no se cobró nada.)");
+}
+
+/* ================================================================== ENTRAR */
+function vistaEntrar(){
+  return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Entrar a MÍA</h1></div>' +
+
+    '<div class="tarjeta p20 pila g12">' +
+      '<label class="campo">Correo electrónico<input id="e_correo" type="email" ' +
+        'placeholder="tucorreo@ejemplo.com" autocomplete="username"></label>' +
+      '<label class="campo">Contraseña<input id="e_clave" type="password" ' +
+        'autocomplete="current-password" onkeydown="if(event.key===\'Enter\')hacerEntrar()"></label>' +
+      '<button class="btn ancho" onclick="hacerEntrar()">Entrar</button>' +
+      '<p id="e_error" class="pequeno" style="color:var(--peligro)"></p>' +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g12">' +
+      '<p class="eyebrow">¿Todavía no tienes cuenta?</p>' +
+      '<label class="campo">Tu nombre<input id="r_nombre" placeholder="María López"></label>' +
+      '<label class="campo">Correo electrónico<input id="r_correo" type="email"></label>' +
+      '<label class="campo">Contraseña<input id="r_clave" type="password" ' +
+        'placeholder="Mínimo 8 caracteres"></label>' +
+      '<label class="campo">¿Para qué te registras?' +
+        '<select id="r_rol">' +
+          '<option value="usuario">Quiero comprar, reseñar y guardar favoritos</option>' +
+          '<option value="negocio">Quiero registrar mi negocio</option>' +
+        "</select></label>" +
+      '<button class="btn linea ancho" onclick="hacerRegistro()">Crear mi cuenta</button>' +
+      '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p>' +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g12">' +
+      '<p class="eyebrow">Cuentas de prueba</p>' +
+      '<p class="pequeno apagado">Entra con un toque para conocer cada tipo de cuenta.</p>' +
+      botonDemo("admin@mia.mx", "Organización MÍA", "Administra todo el directorio") +
+      botonDemo("lucia@mia.mx", "Dueña de negocio", "Plan Impulsa, con dos negocios") +
+      botonDemo("beatriz@mia.mx", "Dueña con plan gratuito", "Verás qué le bloquea el plan") +
+      botonDemo("daniela@mia.mx", "Clienta registrada", "Reseñas y favoritos") +
+    "</div>" +
+  "</div>";
+}
+
+const botonDemo = (correo, titulo, nota) =>
+  '<button class="btn linea ancho" style="justify-content:flex-start;text-align:left;padding:12px 14px" ' +
+  "onclick=\"accesoRapido('" + correo + "')\"><span><strong>" + esc(titulo) + "</strong>" +
+  '<br><span class="pequeno apagado" style="font-weight:500">' + esc(nota) + "</span></span></button>";
+
+function hacerEntrar(){
+  const err = entrar(val("e_correo"), val("e_clave"));
+  if(err && $("e_error")) $("e_error").textContent = err;
+}
+
+function hacerRegistro(){
+  const nombre = val("r_nombre"), correo = val("r_correo").toLowerCase(),
+        clave = val("r_clave"), rol = val("r_rol");
+  const decir = m => { if($("r_error")) $("r_error").textContent = m; };
+  if(nombre.length < 2) return decir("Escribe tu nombre.");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return decir("Ese correo no parece válido.");
+  if(clave.length < 8) return decir("La contraseña necesita al menos 8 caracteres.");
+  if(D.usuarios.some(u => u.correo.toLowerCase() === correo))
+    return decir("Ya existe una cuenta con ese correo. Entra con tu contraseña.");
+  const u = {id: D.siguiente.usuario++, nombre, correo, clave, rol, estado:"activo"};
+  D.usuarios.push(u); D.sesion = u.id;
+  anotar("Cuenta creada", nombre + " (" + rol + ")");
+  guardar();
+  location.hash = rol === "negocio" ? "#/panel" : "#/directorio";
+  pintar(); avisar("Tu cuenta quedó lista, " + nombre.split(" ")[0] + ".");
+}
+
+/* =================================================================== AYUDA */
+function vistaAyuda(){
+  const paso = (n, t, d) => '<div class="fila g12" style="align-items:flex-start">' +
+    '<span class="chip rosa mono" style="margin-top:2px">' + n + "</span>" +
+    "<div><strong>" + esc(t) + '</strong><p class="pequeno apagado">' + esc(d) + "</p></div></div>";
+
+  return '<div class="envoltura bloque pila g32" style="max-width:760px">' +
+    '<div class="pila g8"><p class="eyebrow">Guía rápida</p>' +
+      "<h1>Cómo se entra a MÍA</h1>" +
+      '<p class="apagado">MÍA tiene tres tipos de cuenta. Todas entran por el mismo lugar, ' +
+      "pero cada una ve algo distinto.</p></div>" +
+
+    '<div class="tarjeta p24 pila g16">' +
+      '<p class="eyebrow">1 · La organización MÍA</p>' +
+      "<p>Es la cuenta de quienes administran el directorio. Puede editar y suspender cualquier " +
+      "negocio, cambiarle el plan, verificarlo, revisar los que están esperando aprobación, " +
+      "editar o suspender cuentas de usuarias y ocultar reseñas ofensivas.</p>" +
+      '<p class="mono pequeno">admin@mia.mx · mia2026</p>' +
+      '<div><button class="btn" onclick="accesoRapido(\'admin@mia.mx\')">Entrar como MÍA</button></div>' +
+    "</div>" +
+
+    '<div class="tarjeta p24 pila g16">' +
+      '<p class="eyebrow">2 · Dueña de negocio</p>' +
+      "<p>Registra su negocio, llena su ficha, sube fotos y catálogo, responde reseñas y ve sus " +
+      "estadísticas. Lo que puede hacer depende de su membresía: con el plan gratuito tiene lo " +
+      "básico, y al pagar se le abren más fotos, WhatsApp, redes, catálogo y mejor lugar en las búsquedas.</p>" +
+      '<p class="mono pequeno">lucia@mia.mx · demo1234 — plan Impulsa<br>' +
+      "beatriz@mia.mx · demo1234 — plan gratuito, con avisos de lo que le falta</p>" +
+      '<div class="fila g8">' +
+        '<button class="btn" onclick="accesoRapido(\'lucia@mia.mx\')">Entrar con plan de paga</button>' +
+        '<button class="btn linea" onclick="accesoRapido(\'beatriz@mia.mx\')">Entrar con plan gratuito</button>' +
+      "</div>" +
+    "</div>" +
+
+    '<div class="tarjeta p24 pila g16">' +
+      '<p class="eyebrow">3 · Clienta registrada</p>' +
+      "<p>Se registra solo con su correo. Busca negocios, los guarda en favoritos y deja reseñas " +
+      "con calificación. No puede editar fichas de negocios.</p>" +
+      '<p class="mono pequeno">daniela@mia.mx · demo1234</p>' +
+      '<div><button class="btn" onclick="accesoRapido(\'daniela@mia.mx\')">Entrar como clienta</button></div>' +
+    "</div>" +
+
+    '<hr class="separador">' +
+    '<div class="pila g16"><p class="eyebrow">Cómo registra su negocio una mujer</p>' +
+      paso(1, "Crea su cuenta", "En “Entrar”, elige la opción de registrar su negocio.") +
+      paso(2, "Llena su ficha", "Nombre, giro, estado, municipio, de qué se trata y su teléfono.") +
+      paso(3, "Manda a revisión", "El negocio queda en borrador hasta que ella lo envía.") +
+      paso(4, "MÍA lo revisa", "La organización lo publica o le pide cambios con una nota.") +
+      paso(5, "Queda publicado", "Aparece en el directorio y empieza a recibir reseñas y favoritos.") +
+    "</div>" +
+
+    '<div class="aviso alerta"><div><strong>Sobre esta demostración.</strong> Todo lo que captures ' +
+    "se guarda únicamente en este navegador, en este dispositivo. Nadie más lo ve y no viaja a " +
+    "ningún servidor. Sirve para probar MÍA completa y enseñarla; para que sea un directorio real " +
+    "y compartido en todo México hace falta publicarla en un servidor con base de datos." +
+    '<br><button class="btn linea chico" style="margin-top:10px" onclick="reiniciar()">Dejar MÍA como recién instalada</button></div></div>' +
+  "</div>";
+}
+
+/* =========================================================== ADMINISTRACIÓN */
+function vistaAdmin(seccion){
+  const s = seccion || "resumen";
+  const tabs = [["resumen","Resumen"],["negocios","Negocios"],["usuarias","Usuarias"],
+    ["resenas","Reseñas"],["bitacora","Bitácora"]];
+
+  return '<div class="envoltura shell">' +
+    '<aside class="lateral">' + tabs.map(([k, t]) =>
+      '<button class="' + (s === k ? "activo" : "") + '" onclick="location.hash=\'#/admin/' + k + '\'">' +
+      esc(t) + "</button>").join("") + "</aside>" +
+    '<div class="pila g24">' +
+      (s === "resumen"  ? adminResumen()  :
+       s === "negocios" ? adminNegocios() :
+       s === "usuarias" ? adminUsuarias() :
+       s === "resenas"  ? adminResenas()  : adminBitacora()) +
+    "</div></div>";
+}
+
+function adminResumen(){
+  const pub = D.negocios.filter(n => n.estado === "publicado").length;
+  const pend = D.negocios.filter(n => n.estado === "pendiente").length;
+  const susp = D.negocios.filter(n => n.estado === "suspendido").length;
+  const pagando = D.negocios.filter(n => reglas(n).efectivo !== "gratis").length;
+  const ingreso = D.negocios.reduce((a, n) => a + (reglas(n).vencida ? 0 : PLANES[n.plan].precio), 0);
+  const vencidas = D.negocios.filter(n => reglas(n).vencida);
+
+  return '<div class="pila g8"><p class="eyebrow">Organización MÍA</p>' +
+    "<h1>Resumen</h1></div>" +
+    '<div class="metricas">' +
+      metrica(pub, "Negocios publicados") +
+      metrica(pend, "Esperando revisión", "sol") +
+      metrica(pagando, "Con plan de paga", "jade") +
+      metrica(D.usuarios.length, "Cuentas", "cobalto") +
+      metrica(pesos(ingreso), "Ingreso mensual", "jade") +
+      metrica(susp, "Suspendidos") +
+    "</div>" +
+    (pend ? '<div class="aviso alerta">Hay ' + pend + " negocio(s) esperando tu revisión. " +
+      '<a href="#/admin/negocios" style="color:var(--acento);font-weight:700;margin-left:auto">Revisarlos</a></div>' : "") +
+    (vencidas.length ? '<div class="aviso">' + vencidas.length +
+      " negocio(s) con membresía vencida. Ya están operando con las reglas del plan gratuito.</div>" : "") +
+    '<div class="pila g12"><p class="eyebrow">Últimos movimientos</p>' +
+      (D.bitacora.length
+        ? '<div class="pila g8">' + D.bitacora.slice(0,6).map(b =>
+            '<div class="tarjeta p16 fila entre g8"><span class="pequeno"><strong>' +
+            esc(b.accion) + "</strong> — " + esc(b.detalle) + "</span>" +
+            '<span class="pequeno apagado mono">' + esc(new Date(b.cuando).toLocaleString("es-MX")) +
+            "</span></div>").join("") + "</div>"
+        : '<p class="pequeno apagado">Todavía no hay movimientos registrados.</p>') +
+    "</div>";
+}
+
+function adminNegocios(){
+  const filas = D.negocios.slice().sort((a,b) =>
+    (a.estado === "pendiente" ? -1 : 0) - (b.estado === "pendiente" ? -1 : 0)).map(n => {
+    const r = reglas(n);
+    return "<tr><td><strong>" + esc(n.nombre) + '</strong><br><span class="pequeno apagado">' +
+        esc(usuarioPorId(n.duena)?.nombre || "—") + " · " + esc(n.municipio || "—") + ", " +
+        esc(n.entidad || "—") + "</span></td>" +
+      '<td><span class="chip ' + ESTADOS[n.estado].chip + '">' + esc(ESTADOS[n.estado].et) + "</span></td>" +
+      '<td><select onchange="adminPlan(' + n.id + ',this.value)" style="min-width:118px">' +
+        ORDEN_PLANES.map(k => '<option value="' + k + '"' + (n.plan === k ? " selected" : "") + ">" +
+          esc(PLANES[k].nombre) + "</option>").join("") + "</select>" +
+        (r.vencida ? '<br><span class="chip peligro" style="margin-top:4px">Vencido</span>' : "") + "</td>" +
+      '<td class="mono">' + n.vistas + "</td>" +
+      '<td><div class="fila g8">' +
+        (n.estado === "pendiente"
+          ? '<button class="btn chico" onclick="adminAprobar(' + n.id + ')">Publicar</button>' +
+            '<button class="btn linea chico" onclick="adminRechazar(' + n.id + ')">Pedir cambios</button>'
+          : "") +
+        (n.estado === "publicado"
+          ? '<button class="btn linea chico" onclick="adminVerificar(' + n.id + ')">' +
+              (n.verificado ? "Quitar verificado" : "Verificar") + "</button>" +
+            '<button class="btn linea chico" onclick="adminDestacar(' + n.id + ')">' +
+              (n.destacado ? "Quitar destacado" : "Destacar") + "</button>" +
+            '<button class="btn peligro chico" onclick="adminSuspender(' + n.id + ')">Suspender</button>'
+          : "") +
+        (n.estado === "suspendido"
+          ? '<button class="btn chico" onclick="adminAprobar(' + n.id + ')">Reactivar</button>' : "") +
+        '<button class="btn fantasma chico" onclick="location.hash=\'#/editar/' + n.id + '\'">Editar</button>' +
+      "</div></td></tr>";
+  }).join("");
+
+  return '<div class="pila g8"><p class="eyebrow">Organización MÍA</p><h1>Negocios</h1>' +
+    '<p class="apagado pequeno">Publica los que están esperando, cámbiales el plan, ' +
+    "verifícalos o detén su publicación.</p></div>" +
+    '<div class="tabla-envoltura"><table><thead><tr><th>Negocio</th><th>Estado</th>' +
+    "<th>Plan</th><th>Visitas</th><th>Acciones</th></tr></thead><tbody>" + filas + "</tbody></table></div>";
+}
+
+function adminAprobar(id){
+  const n = negocioPorId(id);
+  n.estado = "publicado"; n.nota = "";
+  anotar("Negocio publicado", n.nombre); guardar(); pintar();
+  avisar(esc(n.nombre) + " quedó publicado.");
+}
+function adminRechazar(id){
+  const n = negocioPorId(id);
+  const nota = prompt("¿Qué necesita corregir " + n.nombre + "?", "Falta una fotografía clara del negocio.");
+  if(nota === null) return;
+  n.estado = "rechazado"; n.nota = nota;
+  anotar("Cambios solicitados", n.nombre + ": " + nota); guardar(); pintar();
+  avisar("Le pedimos cambios a " + n.nombre + ".");
+}
+function adminSuspender(id){
+  const n = negocioPorId(id);
+  const nota = prompt("Motivo de la suspensión de " + n.nombre + ":", "Información falsa en la ficha.");
+  if(nota === null) return;
+  n.estado = "suspendido"; n.nota = nota;
+  anotar("Negocio suspendido", n.nombre + ": " + nota); guardar(); pintar();
+  avisar("Suspendimos " + n.nombre + ".");
+}
+function adminVerificar(id){
+  const n = negocioPorId(id);
+  n.verificado = !n.verificado;
+  anotar(n.verificado ? "Negocio verificado" : "Verificación retirada", n.nombre);
+  guardar(); pintar();
+  avisar(n.verificado
+    ? (reglas(n).permisos.insignia
+        ? "Verificamos " + n.nombre + "."
+        : "Quedó verificado, pero la insignia solo se muestra con plan Impulsa.")
+    : "Le quitamos la verificación.");
+}
+function adminDestacar(id){
+  const n = negocioPorId(id);
+  n.destacado = !n.destacado;
+  anotar(n.destacado ? "Negocio destacado" : "Destacado retirado", n.nombre);
+  guardar(); pintar();
+  avisar(n.destacado
+    ? (reglas(n).permisos.prioridad
+        ? "Ahora aparece primero."
+        : "Quedó marcado, pero aparecer primero requiere plan Impulsa.")
+    : "Le quitamos el destacado.");
+}
+function adminPlan(id, plan){
+  const n = negocioPorId(id);
+  n.plan = plan;
+  n.vence = plan === "gratis" ? null : new Date(Date.now() + 30*864e5).toISOString().slice(0,10);
+  anotar("Plan cambiado", n.nombre + " → " + PLANES[plan].nombre);
+  guardar(); pintar(); avisar(n.nombre + " ahora tiene el plan " + PLANES[plan].nombre + ".");
+}
+
+function adminUsuarias(){
+  const rolEt = {admin:"Organización MÍA", negocio:"Dueña de negocio", usuario:"Clienta"};
+  const filas = D.usuarios.map(u => {
+    const suyos = D.negocios.filter(n => n.duena === u.id).length;
+    const esYo = u.id === D.sesion;
+    return "<tr><td><strong>" + esc(u.nombre) + '</strong><br><span class="pequeno apagado mono">' +
+        esc(u.correo) + "</span></td>" +
+      '<td><select onchange="adminRol(' + u.id + ',this.value)"' + (esYo ? " disabled" : "") +
+        ' style="min-width:140px">' +
+        Object.entries(rolEt).map(([k, t]) => '<option value="' + k + '"' +
+          (u.rol === k ? " selected" : "") + ">" + esc(t) + "</option>").join("") + "</select></td>" +
+      '<td><span class="chip ' + (u.estado === "activo" ? "jade" : "peligro") + '">' +
+        (u.estado === "activo" ? "Activa" : "Suspendida") + "</span></td>" +
+      '<td class="mono">' + suyos + "</td>" +
+      "<td>" + (esYo
+        ? '<span class="pequeno apagado">Eres tú</span>'
+        : '<button class="btn ' + (u.estado === "activo" ? "peligro" : "") + ' chico" onclick="adminSuspenderUsuaria(' +
+          u.id + ')">' + (u.estado === "activo" ? "Suspender" : "Reactivar") + "</button>") + "</td></tr>";
+  }).join("");
+
+  return '<div class="pila g8"><p class="eyebrow">Organización MÍA</p><h1>Usuarias</h1>' +
+    '<p class="apagado pequeno">Cambia el tipo de cuenta o suspende el acceso. Al suspender, ' +
+    "la sesión de esa persona deja de servir de inmediato.</p></div>" +
+    '<div class="tabla-envoltura"><table><thead><tr><th>Persona</th><th>Tipo de cuenta</th>' +
+    "<th>Estado</th><th>Negocios</th><th>Acción</th></tr></thead><tbody>" + filas + "</tbody></table></div>";
+}
+
+function adminRol(id, rol){
+  const u = usuarioPorId(id);
+  u.rol = rol; anotar("Tipo de cuenta cambiado", u.nombre + " → " + rol);
+  guardar(); pintar(); avisar("Actualizamos el tipo de cuenta de " + u.nombre + ".");
+}
+
+function adminSuspenderUsuaria(id){
+  const u = usuarioPorId(id);
+  u.estado = u.estado === "activo" ? "suspendido" : "activo";
+  anotar(u.estado === "activo" ? "Cuenta reactivada" : "Cuenta suspendida", u.nombre);
+  guardar(); pintar();
+  avisar(u.estado === "activo" ? "Reactivamos a " + u.nombre + "." : "Suspendimos a " + u.nombre + ".");
+}
+
+function adminResenas(){
+  const filas = D.resenas.slice().reverse().map(r => {
+    const n = negocioPorId(r.negocio), a = usuarioPorId(r.usuario);
+    return "<tr><td>" + estrellasHtml(r.cal) + "<p class=\"pequeno\" style=\"margin-top:4px\">" +
+        esc(r.texto.slice(0,120)) + (r.texto.length > 120 ? "…" : "") + "</p></td>" +
+      '<td class="pequeno">' + esc(n?.nombre || "—") + "</td>" +
+      '<td class="pequeno">' + esc(a?.nombre || "—") + "</td>" +
+      '<td><span class="chip ' + (r.estado === "publicada" ? "jade" : "peligro") + '">' +
+        (r.estado === "publicada" ? "Publicada" : "Oculta") + "</span></td>" +
+      '<td><button class="btn ' + (r.estado === "publicada" ? "peligro" : "") +
+        ' chico" onclick="adminOcultar(' + r.id + ')">' +
+        (r.estado === "publicada" ? "Ocultar" : "Publicar") + "</button></td></tr>";
+  }).join("");
+
+  return '<div class="pila g8"><p class="eyebrow">Organización MÍA</p><h1>Reseñas</h1>' +
+    '<p class="apagado pequeno">Oculta las reseñas ofensivas o con publicidad. ' +
+    "Una reseña oculta deja de contar para la calificación.</p></div>" +
+    '<div class="tabla-envoltura"><table><thead><tr><th>Reseña</th><th>Negocio</th>' +
+    "<th>Autora</th><th>Estado</th><th>Acción</th></tr></thead><tbody>" + filas + "</tbody></table></div>";
+}
+
+function adminOcultar(id){
+  const r = D.resenas.find(x => x.id === id);
+  r.estado = r.estado === "publicada" ? "oculta" : "publicada";
+  anotar(r.estado === "oculta" ? "Reseña ocultada" : "Reseña restituida",
+    negocioPorId(r.negocio)?.nombre || "");
+  guardar(); pintar();
+  avisar(r.estado === "oculta" ? "Ocultamos la reseña." : "La reseña volvió a publicarse.");
+}
+
+function adminBitacora(){
+  return '<div class="pila g8"><p class="eyebrow">Organización MÍA</p><h1>Bitácora</h1>' +
+    '<p class="apagado pequeno">Queda registro de cada acción administrativa.</p></div>' +
+    (D.bitacora.length
+      ? '<div class="tabla-envoltura"><table><thead><tr><th>Cuándo</th><th>Quién</th>' +
+        "<th>Acción</th><th>Detalle</th></tr></thead><tbody>" +
+        D.bitacora.map(b => '<tr><td class="mono pequeno">' +
+          esc(new Date(b.cuando).toLocaleString("es-MX")) + "</td>" +
+          '<td class="pequeno">' + esc(usuarioPorId(b.actor)?.nombre || "Sistema") + "</td>" +
+          "<td><strong>" + esc(b.accion) + "</strong></td>" +
+          '<td class="pequeno apagado">' + esc(b.detalle) + "</td></tr>").join("") +
+        "</tbody></table></div>"
+      : '<div class="tarjeta p24"><p class="apagado pequeno">Todavía no hay movimientos. ' +
+        "Publica o suspende un negocio y aparecerá aquí.</p></div>");
+}
+
+/* ================================================================= ARRANQUE */
+// Cuenta una visita cuando alguien abre la ficha de un negocio publicado.
+let ultimaVista = null;
+window.addEventListener("hashchange", () => {
+  const {vista, arg} = ruta();
+  if(vista === "negocio" && arg !== ultimaVista){
+    const n = D.negocios.find(x => x.slug === arg);
+    if(n && n.estado === "publicado"){ n.vistas++; guardar(); }
+    ultimaVista = arg;
+  }
+  pintar();
+});
+
+pintar();
+</script>
