@@ -34,8 +34,12 @@ distinto. La sección **Entrar** trae botones de acceso rápido.
 **Inicio · Productos y Servicios · Mapa · Blog · Sobre MÍA**
 
 Cada negocio pertenece a **una categoría principal** y puede estar en **hasta
-cinco subcategorías**. Las categorías Belleza, Repostería y Eventos son las que
-definió MÍA; las otras nueve son propuesta y se editan en `src/config.js`.
+cinco subcategorías**. Las 18 categorías —Belleza, Moda, Repostería y
+Alimentos, Eventos, Flores y Regalos, Hogar y Decoración, Salud y Bienestar,
+Fitness y Deporte, Educación, Arte y Diseño, Mascotas, Automotriz, Turismo,
+Maternidad e Infancia, Fotografía y Producción, Servicios Profesionales,
+Sustentabilidad, y Artesanías y Hecho a Mano— las definió MÍA, con sus
+subcategorías. Se ajustan desde `src/config.js` o desde `mia.html`.
 
 ## Planes
 

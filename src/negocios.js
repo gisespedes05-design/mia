@@ -117,7 +117,7 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     nombre: negocio.nombre,
     categoria: negocio.categoria,
     categoriaNombre: categoria.nombre,
-    categoriaIcono: categoria.nombre,
+    categoriaIcono: categoria.icono,
     descripcion: texto(negocio.descripcion, limites.caracteresDescripcion),
     entidad: negocio.entidad,
     municipio: negocio.municipio,

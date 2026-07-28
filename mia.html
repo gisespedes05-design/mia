@@ -340,33 +340,53 @@ const PLANES = {
 const ORDEN_PLANES = ["gratuito","suscripcion","membresia","crece"];
 
 /* ============================================================== CATEGORÍAS */
-/* Las tres primeras son las que definió MÍA. Las demás quedaron como
-   propuesta y se pueden cambiar desde este mismo listado. */
+/* Taxonomía definida por MÍA. */
 const CATEGORIAS = [
-  {id:"belleza", nombre:"Belleza", sub:["Maquillaje","Pestañas","Cejas","Uñas","Peinado",
-    "Barbería","Spa","Faciales","Masajes"]},
-  {id:"reposteria", nombre:"Repostería", sub:["Pasteles","Cupcakes","Galletas","Postres",
-    "Chocolatería"]},
-  {id:"eventos", nombre:"Eventos", sub:["Coctelería","Decoración","Florería","Fotografía",
-    "Video","DJ","Banquetes"]},
-  {id:"gastronomia", nombre:"Gastronomía", sub:["Comida corrida","Antojitos","Comida saludable",
-    "Catering","Cafetería","Panadería","Bebidas"]},
-  {id:"moda", nombre:"Moda", sub:["Ropa","Accesorios","Joyería","Calzado","Bolsas",
-    "Diseño a medida"]},
-  {id:"bienestar", nombre:"Salud y bienestar", sub:["Nutrición","Psicología","Yoga","Fitness",
-    "Terapias alternativas","Consulta médica"]},
-  {id:"hogar", nombre:"Hogar", sub:["Decoración","Limpieza","Organización","Jardinería",
-    "Mantenimiento"]},
-  {id:"educacion", nombre:"Educación", sub:["Clases particulares","Idiomas","Talleres",
-    "Cursos en línea","Música"]},
-  {id:"profesionales", nombre:"Servicios profesionales", sub:["Contabilidad","Legal",
-    "Diseño gráfico","Marketing","Desarrollo web","Traducción"]},
-  {id:"artesania", nombre:"Artesanía", sub:["Textiles","Cerámica","Bordado",
-    "Joyería artesanal","Arte popular"]},
-  {id:"mascotas", nombre:"Mascotas", sub:["Estética canina","Veterinaria","Guardería",
-    "Accesorios","Adiestramiento"]},
-  {id:"infantil", nombre:"Infantil", sub:["Ropa infantil","Juguetes","Fiestas infantiles",
-    "Guardería","Clases para niñas y niños"]}
+  {id:"belleza", nombre:"Belleza", icono:"💄", sub:["Maquillaje","Pestañas","Cejas","Uñas",
+    "Peinado","Barbería","Spa","Faciales","Masajes","Depilación","Micropigmentación",
+    "Tratamientos capilares","Skincare","Perfumería"]},
+  {id:"moda", nombre:"Moda", icono:"👗", sub:["Ropa para mujer","Boutique","Ropa infantil",
+    "Lencería","Bolsos","Zapatos","Accesorios","Bisutería","Joyería","Relojes"]},
+  {id:"reposteria", nombre:"Repostería y Alimentos", icono:"🍰", sub:["Pasteles","Cupcakes",
+    "Galletas","Postres","Chocolatería","Panadería","Repostería personalizada",
+    "Mesas de postres","Comida saludable","Catering","Comida casera","Snacks",
+    "Bebidas artesanales"]},
+  {id:"eventos", nombre:"Eventos", icono:"🎉", sub:["Coctelería","Mocktails","Decoración",
+    "Florería","Organización de eventos","Wedding Planner","Fotografía","Video","DJ",
+    "Audio e iluminación","Banquetes","Renta de mobiliario","Animación","Invitaciones",
+    "Recuerdos"]},
+  {id:"flores", nombre:"Flores y Regalos", icono:"🌸", sub:["Florerías","Arreglos florales",
+    "Plantas","Suculentas","Regalos personalizados","Globos","Cajas sorpresa",
+    "Velas artesanales"]},
+  {id:"hogar", nombre:"Hogar y Decoración", icono:"🏠", sub:["Decoración","Organización",
+    "Muebles","Artesanías","Cerámica","Cuadros","Textiles","Cortinas","Iluminación",
+    "Jardinería"]},
+  {id:"bienestar", nombre:"Salud y Bienestar", icono:"🩺", sub:["Nutrición","Psicología",
+    "Terapia","Medicina","Fisioterapia","Quiropráctica","Yoga","Pilates","Meditación"]},
+  {id:"fitness", nombre:"Fitness y Deporte", icono:"🏋️", sub:["Entrenamiento personal",
+    "Gimnasio","Yoga","Pilates","Danza","CrossFit","Running","Ciclismo","Artes marciales"]},
+  {id:"educacion", nombre:"Educación", icono:"📚", sub:["Idiomas","Regularización",
+    "Clases particulares","Cursos","Talleres","Música","Arte","Pintura","Manualidades",
+    "Programación","Robótica"]},
+  {id:"arte", nombre:"Arte y Diseño", icono:"🎨", sub:["Ilustración","Pintura","Escultura",
+    "Lettering","Caligrafía"]},
+  {id:"mascotas", nombre:"Mascotas", icono:"🐶", sub:["Estética canina","Veterinaria",
+    "Paseadores","Guardería","Adiestramiento","Accesorios","Alimentos","Hospedaje"]},
+  {id:"automotriz", nombre:"Automotriz", icono:"🚗", sub:["Mecánica","Hojalatería","Pintura",
+    "Estética automotriz","Lavado","Accesorios"]},
+  {id:"turismo", nombre:"Turismo", icono:"✈️", sub:["Agencia de viajes","Guías turísticos",
+    "Hospedaje","Experiencias","Transporte turístico"]},
+  {id:"infantil", nombre:"Maternidad e Infancia", icono:"👶", sub:["Ropa para bebés","Juguetes",
+    "Estimulación temprana","Lactancia","Guarderías","Fiestas infantiles"]},
+  {id:"fotografia", nombre:"Fotografía y Producción", icono:"📷", sub:["Fotografía de eventos",
+    "Fotografía de producto","Fotografía de retrato","Video","Edición","Drones"]},
+  {id:"profesionales", nombre:"Servicios Profesionales", icono:"⚖️", sub:["Abogadas",
+    "Contadoras","Arquitectas","Ingenieras","Traductoras","Notarias","Auditoría"]},
+  {id:"sustentabilidad", nombre:"Sustentabilidad", icono:"🌱", sub:["Productos ecológicos",
+    "Cosmética natural","Moda sostenible","Reciclaje","Huertos","Compostaje"]},
+  {id:"artesania", nombre:"Artesanías y Hecho a Mano", icono:"✨", sub:["Tejido","Bordado",
+    "Crochet","Macramé","Cerámica","Jabones artesanales","Velas","Papelería","Resina",
+    "Bisutería artesanal"]}
 ];
 
 const MAX_SUBCATEGORIAS = 5;
@@ -481,7 +501,7 @@ function semilla(){
         {id:2, titulo:"Promoción de temporada", texto:"Con el plan Gratuito solo se muestra la publicación más reciente. Esta quedó oculta, pero no se borró: al subir de plan vuelve a aparecer.", fecha:haceDias(30), destacada:false}
       ]}),
     n({id:5, duena:8, nombre:"Casa Cempasúchil", slug:"casa-cempasuchil", categoria:"artesania",
-      sub:["Textiles","Bordado","Arte popular"], ciudad:"Oaxaca de Juárez",
+      sub:["Bordado","Tejido"], ciudad:"Oaxaca de Juárez",
       descripcion:"Taller de textiles bordados a mano por doce artesanas de los Valles Centrales. Blusas, rebozos y piezas de decoración con tintes naturales.",
       direccion:"Jalatlaco", telefono:"951 220 4477",
       redes:{instagram:"@casacempasuchil", facebook:"", tiktok:"", whatsapp:"951 220 4477"},
@@ -490,7 +510,7 @@ function semilla(){
       productos:[{id:1, nombre:"Blusa bordada", precio:1450, desc:"Tres semanas de trabajo.", destacado:true}],
       publicaciones:[{id:1, titulo:"Taller abierto en noviembre", texto:"Recibimos visitas al taller con cita.", fecha:haceDias(20), destacada:false}]}),
     n({id:6, duena:3, nombre:"Contadora Ríos", slug:"contadora-rios", categoria:"profesionales",
-      sub:["Contabilidad","Legal"], ciudad:"Monterrey",
+      sub:["Contadoras"], ciudad:"Monterrey",
       descripcion:"Contabilidad y cumplimiento fiscal para negocios pequeños dirigidos por mujeres. Damos de alta tu RFC, te llevamos la declaración mensual y te explicamos en español, no en tecnicismos.",
       direccion:"San Pedro Garza García", telefono:"81 2277 9911",
       redes:{instagram:"@contadorarios", facebook:"", tiktok:"", whatsapp:"81 2277 9911"},
@@ -504,7 +524,7 @@ function semilla(){
       direccion:"García Ginerés", telefono:"999 330 2288",
       plan:"gratuito", vence:null, estado:"pendiente", vistas:0, fotos:["gen:20"], publicaciones:[]}),
     n({id:8, duena:8, nombre:"Estudio Raíz Yoga", slug:"estudio-raiz-yoga", categoria:"bienestar",
-      sub:["Yoga","Terapias alternativas"], ciudad:"Cuernavaca",
+      sub:["Yoga","Terapia"], ciudad:"Cuernavaca",
       descripcion:"Clases de hatha y vinyasa en grupos pequeños, con enfoque en mujeres que empiezan de cero.",
       direccion:"Tlaltenango", telefono:"777 190 6600",
       plan:"gratuito", vence:null, estado:"pendiente", vistas:0, fotos:[], publicaciones:[]})
@@ -823,7 +843,7 @@ function vistaInicio(){
       '<div class="rejilla cats">' + CATEGORIAS.slice(0,8).map(c => {
         const cuantos = publicados().filter(n => n.categoria === c.id).length;
         return '<a class="tarjeta-cat" href="#/directorio/' + c.id + '">' +
-          "<strong>" + esc(c.nombre) + "</strong>" +
+          "<strong>" + c.icono + " " + esc(c.nombre) + "</strong>" +
           '<span class="diminuto apagado">' + c.sub.slice(0,3).join(" · ") +
           (c.sub.length > 3 ? "…" : "") + "</span>" +
           '<span class="diminuto apagado">' + cuantos +
@@ -877,7 +897,7 @@ function tarjeta(n){
     '<div class="cuerpo">' +
       '<div class="fila g8">' +
         (p.verificado ? '<span class="chip jade">Verificado</span>' : "") +
-        '<span class="chip">' + esc(c.nombre) + "</span>" +
+        '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
       "</div>" +
       "<h3>" + esc(n.nombre) + "</h3>" +
       '<p class="diminuto apagado">' + esc((n.sub||[]).slice(0,3).join(" · ")) + "</p>" +
@@ -917,7 +937,7 @@ function vistaDirectorio(){
       '<div class="rejilla cats">' + CATEGORIAS.map(c => {
         const cuantos = publicados().filter(n => n.categoria === c.id).length;
         return '<a class="tarjeta-cat" href="#/directorio/' + c.id + '">' +
-          "<strong>" + esc(c.nombre) + '</strong><span class="diminuto apagado">' +
+          "<strong>" + c.icono + " " + esc(c.nombre) + '</strong><span class="diminuto apagado">' +
           c.sub.length + " subcategorías · " + cuantos +
           (cuantos === 1 ? " negocio" : " negocios") + "</span></a>";
       }).join("") + "</div></div>" +
@@ -937,7 +957,7 @@ function vistaCategoria(id){
 
   return '<div class="envoltura bloque pila g24">' +
     '<div class="pila g8"><a class="pequeno apagado" href="#/directorio">← Todas las categorías</a>' +
-      '<p class="eyebrow">Productos y Servicios</p><h1>' + esc(c.nombre) + "</h1>" +
+      '<p class="eyebrow">Productos y Servicios</p><h1>' + c.icono + " " + esc(c.nombre) + "</h1>" +
       '<p class="apagado">' + enCat.length +
       (enCat.length === 1 ? " negocio en esta categoría" : " negocios en esta categoría") + "</p></div>" +
 
@@ -977,7 +997,7 @@ function filtrosHtml(){
         '" placeholder="Palabra clave" onkeydown="if(event.key===\'Enter\')aplicarFiltros()"></label>' +
       '<label class="campo">Categoría<select id="fc" onchange="aplicarFiltros()">' +
         '<option value="">Todas</option>' + CATEGORIAS.map(x => '<option value="' + x.id + '"' +
-          (filtro.categoria === x.id ? " selected" : "") + ">" + esc(x.nombre) + "</option>").join("") +
+          (filtro.categoria === x.id ? " selected" : "") + ">" + esc(x.icono + " " + x.nombre) + "</option>").join("") +
       "</select></label>" +
       '<label class="campo">Subcategoría<select id="fs" onchange="aplicarFiltros()"' +
         (c ? "" : " disabled") + '><option value="">Todas</option>' +
@@ -1205,7 +1225,7 @@ function vistaNegocio(slug){
           (n.ciudad ? '<span class="pequeno apagado">· ' + esc(n.ciudad) + "</span>" : "") +
         "</div>" +
         '<div class="fila g8"><a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
-          c.id + '">' + esc(c.nombre) + "</a>" +
+          c.id + '">' + c.icono + " " + esc(c.nombre) + "</a>" +
           (n.sub||[]).map(s => '<span class="chip">' + esc(s) + "</span>").join("") + "</div>" +
       "</div>" +
     "</div>" +
@@ -1413,7 +1433,7 @@ function vistaRegistro(planId){
         '<input id="g_direccion" placeholder="Calle, número, colonia"></label>' +
       '<label class="campo">Categoría principal' +
         '<select id="g_categoria" onchange="pintarSub()"><option value="">Elige…</option>' +
-          CATEGORIAS.map(c => '<option value="' + c.id + '">' + esc(c.nombre) + "</option>").join("") +
+          CATEGORIAS.map(c => '<option value="' + c.id + '">' + esc(c.icono + " " + c.nombre) + "</option>").join("") +
         "</select></label>" +
       '<div class="pila g8"><span class="campo">Subcategorías <span class="apagado">' +
         "(elige hasta " + L.subcategorias + ')</span></span>' +
@@ -1742,7 +1762,7 @@ function vistaEditar(id){
       '<label class="campo">Teléfono<input id="f_telefono" value="' + esc(n.telefono||"") + '"></label>' +
       '<label class="campo">Categoría principal<select id="f_categoria" onchange="cambiarCategoria(' +
         n.id + ',this.value)">' + CATEGORIAS.map(x => '<option value="' + x.id + '"' +
-          (n.categoria === x.id ? " selected" : "") + ">" + esc(x.nombre) + "</option>").join("") +
+          (n.categoria === x.id ? " selected" : "") + ">" + esc(x.icono + " " + x.nombre) + "</option>").join("") +
         "</select></label>" +
       '<div class="pila g8"><span class="campo">Subcategorías <span class="apagado">(hasta ' +
         MAX_SUBCATEGORIAS + " · llevas " + (n.sub||[]).length + ')</span></span>' +
