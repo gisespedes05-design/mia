@@ -296,7 +296,7 @@ const PLANES = {
     excluye:["No aparece en el mapa"]
   },
   suscripcion: {
-    id:"suscripcion", nombre:"Suscripción", etiqueta:"$299 MXN al mes", precio:299, peso:1,
+    id:"suscripcion", nombre:"Suscripción", etiqueta:"$199 MXN al mes", precio:199, peso:1,
     resumen:"Para negocios que ya venden y quieren que las encuentren.",
     limites:{ subcategorias:5, publicaciones:Infinity, fotos:12, descripcion:2000 },
     permisos:{ logo:true, contacto:true, redes:true, mapa:true, productosDestacados:true,
@@ -308,7 +308,7 @@ const PLANES = {
     excluye:[]
   },
   membresia: {
-    id:"membresia", nombre:"Membresía", etiqueta:"$699 MXN al mes", precio:699, peso:2,
+    id:"membresia", nombre:"Membresía", etiqueta:"$599 MXN al mes", precio:599, peso:2,
     resumen:"Para negocios que quieren liderar su categoría dentro de MÍA.",
     limites:{ subcategorias:5, publicaciones:Infinity, fotos:30, descripcion:4000 },
     permisos:{ logo:true, contacto:true, redes:true, mapa:true, productosDestacados:true,
@@ -1357,9 +1357,10 @@ function vistaPlanes(){
       "</div>";
     }).join("") + "</div>" +
 
-    '<div class="aviso">El precio de <strong>Crece con MÍA</strong> es "desde": no se cobra ' +
-    "automático. Nos escribes, platicamos qué necesita tu negocio y armamos la propuesta a tu " +
-    "medida antes de activarlo.</div>" +
+    '<div class="aviso"><div><strong>Sobre el precio de Crece con MÍA.</strong> Los $2,500 son ' +
+    "el punto de partida, no una cuota fija: el precio final depende de los servicios que " +
+    "necesite tu negocio y del plan personalizado que armemos contigo. No se cobra automático — " +
+    "primero platicamos, después cotizamos y hasta entonces se activa.</div></div>" +
 
     '<div class="pila g16"><h2>Así funciona el registro</h2>' +
       '<div class="escalones">' +
@@ -1447,9 +1448,11 @@ function vistaRegistro(planId){
       (plan.cotizado ? "Cotización" : "Pago") + "</p>" +
       "<p><strong>" + esc(plan.etiqueta) + "</strong></p>" +
       '<p class="pequeno apagado">' + (plan.cotizado
-        ? "Este plan no se cobra automático. Al enviar, el equipo de MÍA te contacta para " +
-          "platicar el alcance y armar tu propuesta. El plan se activa cuando ambas partes " +
-          "están de acuerdo; mientras tanto tu perfil funciona con las reglas del plan Gratuito."
+        ? "Los $2,500 son el punto de partida. El precio final depende de los servicios que " +
+          "necesite tu negocio y del plan personalizado que armemos contigo, así que no se cobra " +
+          "automático: al enviar, el equipo de MÍA te contacta para platicar el alcance y " +
+          "cotizarte. El plan se activa cuando ambas partes están de acuerdo; mientras tanto tu " +
+          "perfil funciona con las reglas del plan Gratuito."
         : "Al enviar este formulario tu solicitud le llega a MÍA. El equipo te contacta para " +
           "confirmar el pago y en ese momento se activan los beneficios de tu plan. Mientras " +
           "tanto tu perfil funciona con las reglas del plan Gratuito.") + "</p></div>" : "") +

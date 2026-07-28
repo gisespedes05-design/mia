@@ -41,7 +41,7 @@ definió MÍA; las otras nueve son propuesta y se editan en `src/config.js`.
 
 | | Gratuito | Suscripción | Membresía | Crece con MÍA |
 |---|---|---|---|---|
-| Precio | $0 | $299/mes | $699/mes | Desde $2,500/mes |
+| Precio | $0 | $199/mes | $599/mes | Desde $2,500/mes |
 | Subcategorías | 5 | 5 | 5 | 5 |
 | Logo | ✓ | ✓ | ✓ | ✓ |
 | Publicaciones | 1 | ilimitadas | ilimitadas | ilimitadas |
@@ -58,8 +58,10 @@ definió MÍA; las otras nueve son propuesta y se editan en `src/config.js`.
 
 **Crece con MÍA** lleva todo lo de Membresía más estrategia de marketing,
 calendario de contenido, diseño, administración de redes sociales, reportes,
-reuniones y acompañamiento personalizado. Su precio es *desde*: no se cobra
-automático, MÍA cotiza el alcance y hasta entonces se activan los beneficios.
+reuniones y acompañamiento personalizado. Su precio es *desde*: los $2,500 son el punto de partida y el precio final
+depende de los servicios que necesite cada negocio y del plan personalizado que
+se le arme. No se cobra automático — MÍA cotiza el alcance y hasta entonces se
+activan los beneficios.
 
 ### Dos reglas que rigen todo
 

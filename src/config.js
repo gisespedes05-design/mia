@@ -53,8 +53,8 @@ export const PLANES = {
   suscripcion: {
     id: 'suscripcion',
     nombre: 'Suscripción',
-    etiqueta: '$299 MXN al mes',
-    precioMensual: 299,
+    etiqueta: '$199 MXN al mes',
+    precioMensual: 199,
     peso: 1,
     resumen: 'Para negocios que ya venden y quieren que las encuentren.',
     limites: { subcategorias: 5, publicaciones: Infinity, fotos: 12, caracteresDescripcion: 2000 },
@@ -74,8 +74,8 @@ export const PLANES = {
   membresia: {
     id: 'membresia',
     nombre: 'Membresía',
-    etiqueta: '$699 MXN al mes',
-    precioMensual: 699,
+    etiqueta: '$599 MXN al mes',
+    precioMensual: 599,
     peso: 2,
     resumen: 'Para negocios que quieren liderar su categoría dentro de MÍA.',
     limites: { subcategorias: 5, publicaciones: Infinity, fotos: 30, caracteresDescripcion: 4000 },
