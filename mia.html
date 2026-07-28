@@ -2054,7 +2054,9 @@ function adminResumen(){
 function adminSolicitudes(){
   const filas = D.solicitudes.slice().reverse().map(s =>
     "<tr><td><strong>" + esc(s.negocio || s.nombre) + '</strong><br><span class="diminuto apagado mono">' +
-      esc(s.correo) + (s.telefono ? " · " + esc(s.telefono) : "") + "</span></td>" +
+      esc(s.correo) + (s.telefono ? " · " + esc(s.telefono) : "") + "</span>" +
+      (s.mensaje ? '<p class="diminuto apagado" style="margin-top:4px;max-width:26ch">' +
+        esc(s.mensaje) + "</p>" : "") + "</td>" +
     '<td><span class="chip ' + (s.tipo === "crece" ? "cobalto" :
       s.tipo === "gratuito" ? "" : "rosa") + '">' + esc(s.plan) + "</span></td>" +
     '<td class="pequeno">' + esc(s.categoria || "—") +
@@ -2066,21 +2068,12 @@ function adminSolicitudes(){
       s.id + ')">' + (s.estado === "nueva" ? "Marcar atendida" : "Reabrir") + "</button></td></tr>").join("");
 
   return encabezado("Solicitudes",
-    "Cada formulario de plan deja aquí su registro. Descárgalas para pasarlas a tu hoja de cálculo.") +
-    '<div class="fila g8">' +
-      '<button class="btn" onclick="exportarSolicitudes()">Descargar para Google Sheets</button>' +
-      '<button class="btn linea" onclick="verCsv()">Ver y copiar</button>' +
-    "</div>" +
-    '<div class="aviso"><div>Esta página no puede escribir directo en tu hoja de cálculo: el ' +
-      "navegador bloquea las conexiones a otros sitios por seguridad. Descarga el archivo y en " +
-      "Google Sheets usa <strong>Archivo › Importar</strong>. En la versión con servidor esto se " +
-      "conecta solo.</div></div>" +
+    "Cada formulario de plan deja aquí su registro, listo para revisar y marcar como atendido.") +
     (D.solicitudes.length
       ? '<div class="tabla-envoltura"><table><thead><tr><th>Negocio</th><th>Plan</th>' +
         "<th>Categoría</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr></thead><tbody>" +
         filas + "</tbody></table></div>"
-      : vacio("Todavía no llegan solicitudes. Llena un formulario desde la sección de Planes para probarlo.")) +
-    '<div id="csv_caja"></div>';
+      : vacio("Todavía no llegan solicitudes. Llena un formulario desde la sección de Planes para probarlo."));
 }
 
 function alternarSolicitud(id){
@@ -2088,72 +2081,6 @@ function alternarSolicitud(id){
   s.estado = s.estado === "nueva" ? "atendida" : "nueva";
   anotar(s.estado === "atendida" ? "Solicitud atendida" : "Solicitud reabierta", s.negocio || s.nombre);
   guardar(); pintar();
-}
-
-const COLUMNAS = [["fecha","Fecha"],["plan","Plan"],["nombre","Nombre"],["correo","Correo"],
-  ["telefono","Teléfono"],["negocio","Negocio"],["ciudad","Ciudad"],["categoria","Categoría"],
-  ["subcategorias","Subcategorías"],["descripcion","Descripción"],["mensaje","Mensaje"],
-  ["estado","Estado"]];
-
-function armarCsv(){
-  const celda = v => {
-    const t = String(v ?? "").replace(/"/g,'""');
-    return /[",\n]/.test(t) ? '"' + t + '"' : t;
-  };
-  const lineas = [COLUMNAS.map(c => celda(c[1])).join(",")];
-  for(const s of D.solicitudes){
-    lineas.push(COLUMNAS.map(([k]) => celda(
-      k === "fecha" ? new Date(s.fecha).toLocaleString("es-MX") : s[k])).join(","));
-  }
-  return "﻿" + lineas.join("\r\n");   // BOM para que Sheets respete los acentos
-}
-
-async function exportarSolicitudes(){
-  if(!D.solicitudes.length) return avisar("Todavía no hay solicitudes que descargar.");
-  const csv = armarCsv();
-  const hoy = new Date().toISOString().slice(0,10);
-  if(!window.claude || !window.claude.downloads){
-    verCsv(); return avisar("Aquí no puedo descargar archivos. Te dejo el contenido para copiar.");
-  }
-  try {
-    await window.claude.downloads.save({filename:"solicitudes-mia-" + hoy + ".csv", data:csv});
-    avisar("Listo. En Google Sheets: Archivo › Importar › Subir.");
-  } catch(e){
-    if(e && e.code === "extension_not_enabled"){
-      try {
-        await window.claude.downloads.save({filename:"solicitudes-mia-" + hoy + ".txt", data:csv});
-        return avisar("Lo descargué como .txt. Google Sheets lo importa igual: Archivo › Importar.");
-      } catch(e2){ return manejarFalloDescarga(e2); }
-    }
-    manejarFalloDescarga(e);
-  }
-}
-
-function manejarFalloDescarga(e){
-  const code = e && e.code;
-  if(code === "declined") return avisar("Cancelaste la descarga.");
-  if(code === "rate_limited") return avisar("Espera un momento y vuelve a intentar.");
-  verCsv();
-  avisar("No pude descargarlo. Te dejo el contenido para que lo copies.");
-}
-
-function verCsv(){
-  const caja = $("csv_caja"); if(!caja) return;
-  if(!D.solicitudes.length) return avisar("Todavía no hay solicitudes.");
-  caja.innerHTML = '<div class="tarjeta p20 pila g12"><p class="eyebrow">Contenido para tu hoja</p>' +
-    '<p class="pequeno apagado">Cópialo y pégalo en Google Sheets, luego usa ' +
-    "Datos › Dividir el texto en columnas.</p>" +
-    '<textarea readonly style="min-height:180px;font-family:var(--mono);font-size:.8rem">' +
-    esc(armarCsv().replace(/^﻿/,"")) + "</textarea>" +
-    '<div><button class="btn linea chico" onclick="copiarCsv(this)">Copiar todo</button></div></div>';
-  caja.scrollIntoView({behavior:"smooth", block:"nearest"});
-}
-
-function copiarCsv(btn){
-  const ta = btn.closest(".tarjeta").querySelector("textarea");
-  ta.select(); ta.setSelectionRange(0, 999999);
-  try { document.execCommand("copy"); avisar("Copiado. Pégalo en tu hoja."); }
-  catch { avisar("Selecciona el texto y cópialo con Ctrl+C."); }
 }
 
 /* --------------------------------------------------------------- negocios */

@@ -85,10 +85,10 @@ Crece con MÍA sí pregunta en qué quieres que te acompañen).
 Plan elegido → Formulario de ese plan → Solicitud registrada → Revisión de MÍA → Perfil publicado
 ```
 
-Las solicitudes se ven en **Administración › Solicitudes** y se descargan en
-CSV para importarlas a Google Sheets (*Archivo › Importar*). La página publicada
-no puede escribir directo en la hoja porque el navegador bloquea las conexiones
-a otros sitios; la versión con servidor sí puede conectarse con la API.
+Las solicitudes se ven en **Administración › Solicitudes**: negocio, plan,
+categoría, fecha y estado, con lo que la dueña haya escrito para Crece con MÍA.
+No hay exportación a hojas de cálculo ni a ningún servicio externo — todo se
+revisa y se marca como atendido dentro de la misma página.
 
 ## Versión con servidor
 
