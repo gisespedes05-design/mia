@@ -1,9 +1,6 @@
 import { todos, uno } from './db.js';
 import { ErrorHttp } from './auth.js';
-import {
-  CATEGORIAS, ENTIDADES, ESTADOS_NEGOCIO, ESTADO_VISIBLE,
-  PLANES, reglasVigentes,
-} from './config.js';
+import { CATEGORIAS, ESTADOS_NEGOCIO, ESTADO_VISIBLE, PLANES, MAX_SUBCATEGORIAS, reglasVigentes } from './config.js';
 
 /* --------------------------------- utilidades ----------------------------- */
 
@@ -46,16 +43,45 @@ export function exigirCorreo(valor) {
   return correo;
 }
 
-export function normalizarUrl(valor) {
-  const v = texto(valor, 300);
-  if (!v) return '';
-  if (/^https?:\/\//i.test(v)) return v;
-  return `https://${v}`;
-}
-
 export function soloDigitos(valor, max = 20) {
   return String(valor ?? '').replace(/[^\d+\s()-]/g, '').trim().slice(0, max);
 }
+
+const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1];
+
+/** Hasta 5 subcategorías, y todas deben pertenecer a la categoría elegida. */
+export function normalizarSub(categoriaId, sub) {
+  const validas = new Set(cat(categoriaId).sub);
+  const limpio = [...new Set((Array.isArray(sub) ? sub : []).map((s) => texto(s, 60)))].filter((s) =>
+    validas.has(s)
+  );
+  if (!limpio.length) throw new ErrorHttp(400, 'Elige al menos una subcategoría.');
+  return limpio.slice(0, MAX_SUBCATEGORIAS);
+}
+
+export function normalizarRedes(redes = {}) {
+  return {
+    whatsapp: soloDigitos(redes.whatsapp, 20),
+    instagram: texto(redes.instagram, 60),
+    facebook: texto(redes.facebook, 60),
+    tiktok: texto(redes.tiktok, 60),
+  };
+}
+
+const parsearSub = (fila) => {
+  try {
+    return JSON.parse(fila.sub || '[]');
+  } catch {
+    return [];
+  }
+};
+const parsearRedes = (fila) => {
+  try {
+    return { whatsapp: '', instagram: '', facebook: '', tiktok: '', ...JSON.parse(fila.redes || '{}') };
+  } catch {
+    return { whatsapp: '', instagram: '', facebook: '', tiktok: '' };
+  }
+};
 
 /* ------------------------------- consultas base --------------------------- */
 
@@ -69,11 +95,17 @@ const CAMPOS = `
 `;
 
 export function obtenerNegocioPorId(id) {
-  return uno(`SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE n.id = $id`, { id: Number(id) });
+  return uno(
+    `SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE n.id = $id`,
+    { id: Number(id) }
+  );
 }
 
 export function obtenerNegocioPorSlug(slug) {
-  return uno(`SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE n.slug = $slug`, { slug });
+  return uno(
+    `SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE n.slug = $slug`,
+    { slug }
+  );
 }
 
 export function fotosDe(negocioId) {
@@ -82,7 +114,15 @@ export function fotosDe(negocioId) {
 
 export function productosDe(negocioId) {
   return todos(
-    `SELECT id, nombre, descripcion, precio, orden FROM productos WHERE negocio_id = $id ORDER BY orden, id`,
+    `SELECT id, nombre, descripcion, precio, destacado, orden FROM productos WHERE negocio_id = $id ORDER BY orden, id`,
+    { id: negocioId }
+  );
+}
+
+export function publicacionesDe(negocioId) {
+  return todos(
+    `SELECT id, titulo, texto, destacada, creado_en FROM publicaciones WHERE negocio_id = $id
+      ORDER BY destacada DESC, creado_en DESC`,
     { id: negocioId }
   );
 }
@@ -99,52 +139,61 @@ export function resenasDe(negocioId, { incluirOcultas = false } = {}) {
 }
 
 /* ----------------------- aplicación de límites del plan -------------------- */
+// Sólo tres cosas se recortan por plan: fotos, publicaciones y el largo de la
+// descripción. Los productos siempre se muestran completos: lo único que
+// depende del plan es si su insignia "destacado" se respeta.
 
-/**
- * Construye lo que el público puede ver de un negocio.
- * Todo lo que exceda el plan vigente se recorta AQUÍ, en el servidor.
- */
 export function vistaPublica(negocio, { conDetalle = false } = {}) {
   const reglas = reglasVigentes(negocio);
   const { limites, permisos } = reglas;
+  const categoria = cat(negocio.categoria);
 
-  const fotos = fotosDe(negocio.id).slice(0, limites.fotos).map((f) => `/subidas/${f.archivo}`);
-  const categoria = CATEGORIAS.find((c) => c.id === negocio.categoria) || CATEGORIAS.at(-1);
+  const fotos = fotosDe(negocio.id)
+    .slice(0, limites.fotos)
+    .map((f) => `/subidas/${f.archivo}`);
+  const redes = permisos.redes ? parsearRedes(negocio) : { whatsapp: '', instagram: '', facebook: '', tiktok: '' };
+
+  // Solo la más reciente y visible: alcanza para mostrarla en tarjetas y en
+  // el inicio sin tener que pedir el detalle completo del negocio.
+  const [ultima] = publicacionesDe(negocio.id);
+  const ultimaPublicacion = ultima ? { ...ultima, destacada: Boolean(ultima.destacada) && permisos.publicacionesDestacadas } : null;
 
   const base = {
     id: negocio.id,
     slug: negocio.slug,
     nombre: negocio.nombre,
+    estado: negocio.estado,
     categoria: negocio.categoria,
     categoriaNombre: categoria.nombre,
     categoriaIcono: categoria.icono,
+    sub: parsearSub(negocio),
     descripcion: texto(negocio.descripcion, limites.caracteresDescripcion),
-    entidad: negocio.entidad,
-    municipio: negocio.municipio,
+    ciudad: negocio.ciudad,
     telefono: negocio.telefono,
-    whatsapp: permisos.redes ? negocio.whatsapp : '',
-    sitioWeb: permisos.redes ? negocio.sitio_web : '',
-    redes: permisos.redes
-      ? { instagram: negocio.instagram, facebook: negocio.facebook, tiktok: negocio.tiktok }
-      : { instagram: '', facebook: '', tiktok: '' },
+    logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
+    redes,
     fotos,
     portada: fotos[0] || null,
     verificado: Boolean(negocio.verificado) && permisos.verificado,
-    destacado: Boolean(negocio.destacado) && permisos.prioridad,
     plan: reglas.planEfectivo,
     calificacion: negocio.calificacion ?? null,
     totalResenas: negocio.total_resenas ?? 0,
     propietaria: negocio.propietaria_nombre,
     creadoEn: negocio.creado_en,
+    ultimaPublicacion,
   };
 
   if (!conDetalle) return base;
+
+  const pubs = publicacionesDe(negocio.id);
+  const tope = limites.publicaciones === Infinity ? pubs.length : limites.publicaciones;
 
   return {
     ...base,
     direccion: negocio.direccion,
     vistas: negocio.vistas,
-    productos: permisos.productosDestacados ? productosDe(negocio.id).slice(0, limites.publicaciones) : [],
+    productos: productosDe(negocio.id).map((p) => ({ ...p, destacado: Boolean(p.destacado) && permisos.productosDestacados })),
+    publicaciones: pubs.slice(0, tope).map((p) => ({ ...p, destacada: Boolean(p.destacada) && permisos.publicacionesDestacadas })),
     resenas: resenasDe(negocio.id),
     puedeResponderResenas: permisos.responder,
   };
@@ -157,29 +206,44 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
 export function vistaPanel(negocio) {
   const reglas = reglasVigentes(negocio);
   const { limites, permisos } = reglas;
+  const redes = parsearRedes(negocio);
 
   const fotos = fotosDe(negocio.id);
+  const publicaciones = publicacionesDe(negocio.id);
   const productos = productosDe(negocio.id);
 
   const bloqueos = [];
-  if (fotos.length > limites.fotos) {
-    bloqueos.push(`${fotos.length - limites.fotos} fotografía(s) no se muestran: tu plan permite ${limites.fotos}.`);
-  }
-  if (!permisos.productosDestacados && productos.length) {
-    bloqueos.push(`Tu catálogo de ${productos.length} producto(s) está oculto: requiere plan Suscripción o superior.`);
-  } else if (productos.length > limites.publicaciones) {
-    bloqueos.push(`${productos.length - limites.publicaciones} producto(s) no se muestran: tu plan permite ${limites.publicaciones}.`);
-  }
-  if (!permisos.redes && negocio.whatsapp) bloqueos.push('Tu botón de WhatsApp está oculto: requiere plan Suscripción.');
-  if (!permisos.redes && negocio.sitio_web) bloqueos.push('Tu sitio web está oculto: requiere plan Suscripción.');
-  if (!permisos.redes && (negocio.instagram || negocio.facebook || negocio.tiktok)) {
-    bloqueos.push('Tus redes sociales están ocultas: requieren plan Emprende.');
-  }
-  if ((negocio.descripcion || '').length > limites.caracteresDescripcion) {
-    bloqueos.push(`Tu descripción se recorta a ${limites.caracteresDescripcion} caracteres con tu plan.`);
+  if (reglas.sinPago) {
+    bloqueos.push(
+      `MÍA todavía no confirma tu pago del plan ${PLANES[reglas.planContratado].nombre}. Mientras tanto tu perfil opera con las reglas del plan Gratuito.`
+    );
   }
   if (reglas.vencida) {
-    bloqueos.unshift(`Tu membresía ${PLANES[reglas.planContratado].nombre} venció el ${negocio.plan_vence}. Renueva para recuperar tus beneficios.`);
+    bloqueos.push(
+      `Tu plan ${PLANES[reglas.planContratado].nombre} venció el ${negocio.plan_vence}. Nada se borró: al renovar vuelve a aparecer todo.`
+    );
+  }
+  if (fotos.length > limites.fotos) {
+    bloqueos.push(
+      limites.fotos === 0
+        ? `Tus ${fotos.length} fotografías están ocultas. Las fotografías empiezan en el plan Suscripción.`
+        : `${fotos.length - limites.fotos} de tus ${fotos.length} fotografías no se muestran.`
+    );
+  }
+  if (limites.publicaciones !== Infinity && publicaciones.length > limites.publicaciones) {
+    bloqueos.push(
+      `${publicaciones.length - limites.publicaciones} de tus ${publicaciones.length} publicaciones no se muestran. El plan Gratuito incluye una.`
+    );
+  }
+  if (!permisos.redes && (redes.instagram || redes.facebook || redes.tiktok || redes.whatsapp)) {
+    bloqueos.push('Tus redes sociales y tu WhatsApp están ocultos. Empiezan en el plan Suscripción.');
+  }
+  if (!permisos.mapa) bloqueos.push('Tu negocio no aparece en el mapa. El mapa empieza en el plan Suscripción.');
+  if ((negocio.descripcion || '').length > limites.caracteresDescripcion) {
+    bloqueos.push(`Tu descripción se muestra recortada a ${limites.caracteresDescripcion} caracteres.`);
+  }
+  if (negocio.verificado && !permisos.verificado) {
+    bloqueos.push('MÍA te verificó, pero la insignia solo se muestra con Membresía.');
   }
 
   return {
@@ -187,29 +251,30 @@ export function vistaPanel(negocio) {
     slug: negocio.slug,
     nombre: negocio.nombre,
     categoria: negocio.categoria,
+    sub: parsearSub(negocio),
     descripcion: negocio.descripcion,
-    entidad: negocio.entidad,
-    municipio: negocio.municipio,
+    ciudad: negocio.ciudad,
     direccion: negocio.direccion,
     telefono: negocio.telefono,
-    whatsapp: negocio.whatsapp,
-    sitioWeb: negocio.sitio_web,
-    instagram: negocio.instagram,
-    facebook: negocio.facebook,
-    tiktok: negocio.tiktok,
+    logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
+    redes,
     estado: negocio.estado,
     notaRevision: negocio.nota_revision,
     verificado: Boolean(negocio.verificado),
-    destacado: Boolean(negocio.destacado),
     plan: reglas.planContratado,
     planEfectivo: reglas.planEfectivo,
     planVence: negocio.plan_vence,
+    pagoConfirmado: Boolean(negocio.pago_confirmado),
     membresiaVencida: reglas.vencida,
     limites,
     permisos,
     bloqueos,
-    fotos: fotos.map((f) => ({ id: f.id, url: `/subidas/${f.archivo}`, visible: f.orden < limites.fotos })),
+    fotos: fotos.map((f, i) => ({ id: f.id, url: `/subidas/${f.archivo}`, visible: i < limites.fotos })),
     productos,
+    publicaciones: publicaciones.map((p, i) => ({
+      ...p,
+      visible: limites.publicaciones === Infinity || i < limites.publicaciones,
+    })),
     resenas: resenasDe(negocio.id, { incluirOcultas: true }),
     estadisticas: permisos.estadisticas
       ? {
@@ -224,53 +289,59 @@ export function vistaPanel(negocio) {
 }
 
 /* --------------------------------- búsqueda -------------------------------- */
+// El directorio es pequeño (un negocio real, no un marketplace masivo), así
+// que se trae lo que cumple los filtros de SQL y se ordena/pagina en JS según
+// el plan EFECTIVO (que depende de si la membresía venció), igual que en la
+// demostración de mia.html.
 
-export function buscarNegocios({ q = '', categoria = '', entidad = '', pagina = 1, porPagina = 12 }) {
+export function buscarNegocios({ q = '', categoria = '', sub = '', ciudad = '', pagina = 1, porPagina = 12 }) {
   const filtros = [`n.estado = $visible`];
   const params = { visible: ESTADO_VISIBLE };
 
   if (q) {
-    filtros.push(`(n.nombre LIKE $q OR n.descripcion LIKE $q OR n.municipio LIKE $q)`);
+    filtros.push(`(n.nombre LIKE $q OR n.descripcion LIKE $q OR n.ciudad LIKE $q)`);
     params.q = `%${texto(q, 80)}%`;
   }
   if (categoria && CATEGORIAS.some((c) => c.id === categoria)) {
     filtros.push(`n.categoria = $categoria`);
     params.categoria = categoria;
   }
-  if (entidad && ENTIDADES.includes(entidad)) {
-    filtros.push(`n.entidad = $entidad`);
-    params.entidad = entidad;
+  if (ciudad) {
+    filtros.push(`n.ciudad = $ciudad`);
+    params.ciudad = texto(ciudad, 80);
   }
 
-  const donde = filtros.join(' AND ');
-  const total = uno(`SELECT COUNT(*) AS n FROM negocios n WHERE ${donde}`, params).n;
+  const filas = todos(
+    `SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE ${filtros.join(' AND ')}`,
+    params
+  ).filter((n) => !sub || parsearSub(n).includes(sub));
+
+  filas.sort((a, b) => {
+    const pa = PLANES[reglasVigentes(a).planEfectivo].peso;
+    const pb = PLANES[reglasVigentes(b).planEfectivo].peso;
+    if (pa !== pb) return pb - pa;
+    return (b.calificacion ?? 0) - (a.calificacion ?? 0) || String(b.creado_en).localeCompare(a.creado_en);
+  });
 
   const limite = Math.min(Math.max(Number(porPagina) || 12, 1), 48);
-  const salto = (Math.max(Number(pagina) || 1, 1) - 1) * limite;
-
-  // Los negocios con prioridad de búsqueda (plan Impulsa vigente) van primero.
-  const filas = todos(
-    `SELECT ${CAMPOS}
-       FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id
-      WHERE ${donde}
-      ORDER BY
-        (n.destacado = 1 AND n.plan = 'impulsa'
-          AND (n.plan_vence IS NULL OR n.plan_vence >= date('now'))) DESC,
-        (n.plan = 'impulsa' AND (n.plan_vence IS NULL OR n.plan_vence >= date('now'))) DESC,
-        (n.plan = 'emprende' AND (n.plan_vence IS NULL OR n.plan_vence >= date('now'))) DESC,
-        calificacion DESC NULLS LAST,
-        n.creado_en DESC
-      LIMIT $limite OFFSET $salto`,
-    { ...params, limite, salto }
-  );
+  const paginaActual = Math.max(Number(pagina) || 1, 1);
+  const salto = (paginaActual - 1) * limite;
 
   return {
-    total,
-    pagina: Math.max(Number(pagina) || 1, 1),
+    total: filas.length,
+    pagina: paginaActual,
     porPagina: limite,
-    paginas: Math.max(Math.ceil(total / limite), 1),
-    resultados: filas.map((n) => vistaPublica(n)),
+    paginas: Math.max(Math.ceil(filas.length / limite), 1),
+    resultados: filas.slice(salto, salto + limite).map((n) => vistaPublica(n)),
   };
+}
+
+/** Negocios visibles en el mapa: sólo los que su plan lo permite y tienen ciudad. */
+export function negociosEnMapa() {
+  const filas = todos(`SELECT ${CAMPOS} FROM negocios n JOIN usuarios u ON u.id = n.propietaria_id WHERE n.estado = $visible`, {
+    visible: ESTADO_VISIBLE,
+  }).filter((n) => reglasVigentes(n).permisos.mapa && n.ciudad);
+  return filas.map((n) => vistaPublica(n));
 }
 
 /* --------------------------------- permisos -------------------------------- */
