@@ -1,10 +1,11 @@
 // Configuración central de MÍA: roles, planes y catálogos.
-// Los límites de cada plan se aplican en el servidor (no sólo en la interfaz).
+// Esta es la única fuente de verdad de precios y límites: si cambia un plan,
+// se cambia aquí y el resto del sistema lo respeta.
 
 export const ROLES = {
   ADMIN: 'admin',      // La organización MÍA
   NEGOCIO: 'negocio',  // Dueña de uno o varios negocios
-  USUARIO: 'usuario',  // Visitante registrada: reseñas y favoritos
+  USUARIO: 'usuario',  // Clienta registrada: reseñas y favoritos
 };
 
 export const ESTADOS_NEGOCIO = {
@@ -12,139 +13,131 @@ export const ESTADOS_NEGOCIO = {
   PENDIENTE: 'pendiente',    // Enviado a revisión de MÍA
   PUBLICADO: 'publicado',    // Visible en el directorio
   RECHAZADO: 'rechazado',    // MÍA pidió cambios
-  SUSPENDIDO: 'suspendido',  // MÍA detuvo el acceso
+  SUSPENDIDO: 'suspendido',  // MÍA detuvo el perfil
 };
 
 // Un negocio sólo aparece en el directorio público en este estado.
 export const ESTADO_VISIBLE = ESTADOS_NEGOCIO.PUBLICADO;
 
+// Una empresa pertenece a una categoría principal y hasta cinco subcategorías.
+export const MAX_SUBCATEGORIAS = 5;
+
 /**
- * Planes de membresía.
+ * Planes de MÍA.
  *
- * `limites` define cuánto puede cargar un negocio.
- * `permisos` define qué funciones puede usar.
- *
- * Si la membresía vence, el negocio cae automáticamente a las reglas de
- * "gratis" sin perder su información: lo que exceda el límite se guarda
- * pero deja de mostrarse hasta que renueve.
+ * `limites` define cuánto puede cargar un negocio; `permisos`, qué funciones
+ * puede usar. Si la membresía vence o el pago no está confirmado, el negocio
+ * opera con las reglas del plan gratuito sin perder nada de lo capturado.
  */
 export const PLANES = {
-  gratis: {
-    id: 'gratis',
-    nombre: 'Semilla',
-    etiqueta: 'Gratis',
+  gratuito: {
+    id: 'gratuito',
+    nombre: 'Gratuito',
+    etiqueta: '$0',
     precioMensual: 0,
-    resumen: 'Para que tu negocio exista en línea desde hoy, sin pagar nada.',
-    limites: {
-      negocios: 1,
-      fotos: 1,
-      productos: 0,
-      caracteresDescripcion: 300,
-    },
+    peso: 0,
+    resumen: 'Para que tu negocio aparezca en el directorio desde hoy.',
+    limites: { subcategorias: 5, publicaciones: 1, fotos: 0, caracteresDescripcion: 400 },
     permisos: {
-      whatsapp: false,
-      sitioWeb: false,
-      redesSociales: false,
-      catalogo: false,
-      responderResenas: false,
-      estadisticas: false,
-      prioridadBusqueda: false,
-      insigniaVerificado: false,
+      logo: true, contacto: true, redes: false, mapa: false, productosDestacados: false,
+      verificado: false, prioridad: false, publicacionesDestacadas: false,
+      estadisticas: false, campanas: false, responder: false, acompanamiento: false,
     },
     incluye: [
-      '1 negocio publicado en el directorio',
-      '1 fotografía de portada',
-      'Descripción de hasta 300 caracteres',
-      'Teléfono de contacto',
-      'Recibe reseñas y favoritos',
+      'Perfil básico', 'Logo', 'Una publicación', 'Datos de contacto',
+      'Categoría principal', 'Hasta cinco subcategorías',
     ],
+    excluye: ['No aparece en el mapa'],
   },
 
-  emprende: {
-    id: 'emprende',
-    nombre: 'Emprende',
-    etiqueta: '$149 MXN / mes',
-    precioMensual: 149,
-    resumen: 'Para negocios que ya venden y quieren que las encuentren mejor.',
-    limites: {
-      negocios: 2,
-      fotos: 6,
-      productos: 12,
-      caracteresDescripcion: 1200,
-    },
+  suscripcion: {
+    id: 'suscripcion',
+    nombre: 'Suscripción',
+    etiqueta: '$299 MXN al mes',
+    precioMensual: 299,
+    peso: 1,
+    resumen: 'Para negocios que ya venden y quieren que las encuentren.',
+    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 12, caracteresDescripcion: 2000 },
     permisos: {
-      whatsapp: true,
-      sitioWeb: true,
-      redesSociales: true,
-      catalogo: true,
-      responderResenas: true,
-      estadisticas: true,
-      prioridadBusqueda: false,
-      insigniaVerificado: false,
+      logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
+      verificado: false, prioridad: false, publicacionesDestacadas: false,
+      estadisticas: false, campanas: false, responder: true, acompanamiento: false,
     },
     incluye: [
-      'Hasta 2 negocios',
-      'Galería de 6 fotografías',
-      'Descripción de hasta 1,200 caracteres',
-      'Botón de WhatsApp y sitio web',
-      'Redes sociales (Instagram, Facebook, TikTok)',
-      'Catálogo de hasta 12 productos o servicios',
-      'Responde públicamente a las reseñas',
-      'Estadísticas de visitas y favoritos',
+      'Todo lo del plan Gratuito', 'Fotografías', 'Publicaciones ilimitadas',
+      'Redes sociales', 'Descripción ampliada', 'Aparición en el mapa',
+      'Mejor posicionamiento', 'Productos destacados',
     ],
+    excluye: [],
   },
 
-  impulsa: {
-    id: 'impulsa',
-    nombre: 'Impulsa',
-    etiqueta: '$349 MXN / mes',
-    precioMensual: 349,
-    resumen: 'Máxima visibilidad, verificación e insignia de MÍA.',
-    limites: {
-      negocios: 5,
-      fotos: 20,
-      productos: 60,
-      caracteresDescripcion: 3000,
-    },
+  membresia: {
+    id: 'membresia',
+    nombre: 'Membresía',
+    etiqueta: '$699 MXN al mes',
+    precioMensual: 699,
+    peso: 2,
+    resumen: 'Para negocios que quieren liderar su categoría dentro de MÍA.',
+    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 30, caracteresDescripcion: 4000 },
     permisos: {
-      whatsapp: true,
-      sitioWeb: true,
-      redesSociales: true,
-      catalogo: true,
-      responderResenas: true,
-      estadisticas: true,
-      prioridadBusqueda: true,
-      insigniaVerificado: true,
+      logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
+      verificado: true, prioridad: true, publicacionesDestacadas: true,
+      estadisticas: true, campanas: true, responder: true, acompanamiento: false,
     },
     incluye: [
-      'Hasta 5 negocios',
-      'Galería de 20 fotografías',
-      'Descripción de hasta 3,000 caracteres',
-      'Todo lo del plan Emprende',
-      'Aparece primero en las búsquedas de su categoría',
-      'Insignia "Verificado por MÍA"',
-      'Estadísticas ampliadas',
+      'Todo lo de Suscripción', 'Perfil verificado', 'Prioridad en búsquedas',
+      'Publicaciones destacadas', 'Estadísticas',
+      'Participación en campañas de MÍA', 'Mayor visibilidad',
     ],
+    excluye: [],
+  },
+
+  // El plan más alto: todo lo de Membresía más los servicios de marketing.
+  // `cotizado` marca que el precio es "desde" y no se cobra automático: MÍA
+  // arma la propuesta y hasta entonces se activan los beneficios.
+  crece: {
+    id: 'crece',
+    nombre: 'Crece con MÍA',
+    etiqueta: 'Desde $2,500 MXN al mes',
+    precioMensual: 2500,
+    peso: 3,
+    cotizado: true,
+    resumen: 'Todo lo de Membresía más tu marketing llevado de manera profesional.',
+    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 40, caracteresDescripcion: 6000 },
+    permisos: {
+      logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
+      verificado: true, prioridad: true, publicacionesDestacadas: true,
+      estadisticas: true, campanas: true, responder: true, acompanamiento: true,
+    },
+    incluye: ['Todo lo de Membresía'],
+    servicios: [
+      'Estrategia de marketing', 'Calendario de contenido', 'Diseño',
+      'Administración de redes sociales', 'Reportes', 'Reuniones',
+      'Acompañamiento personalizado',
+    ],
+    excluye: [],
   },
 };
 
-export const PLAN_POR_DEFECTO = 'gratis';
-export const ORDEN_PLANES = ['gratis', 'emprende', 'impulsa'];
+export const PLAN_POR_DEFECTO = 'gratuito';
+export const ORDEN_PLANES = ['gratuito', 'suscripcion', 'membresia', 'crece'];
 
 /**
- * Devuelve las reglas que le tocan a un negocio ahora mismo.
- * Si la membresía está vencida, regresa las reglas del plan gratuito
- * pero conserva el nombre del plan contratado para poder avisarle a la dueña.
+ * Reglas que le tocan a un negocio ahora mismo. Si la membresía venció o el
+ * pago no está confirmado, devuelve las del plan gratuito pero conserva el
+ * nombre del plan contratado para poder avisarle a la dueña.
  */
 export function reglasVigentes(negocio) {
   const contratado = PLANES[negocio?.plan] ? negocio.plan : PLAN_POR_DEFECTO;
   const vencida = membresiaVencida(negocio);
-  const efectivo = vencida ? PLAN_POR_DEFECTO : contratado;
+  const sinPago = contratado !== PLAN_POR_DEFECTO && negocio?.pago_confirmado === 0;
+  const efectivo = vencida || sinPago ? PLAN_POR_DEFECTO : contratado;
   const plan = PLANES[efectivo];
   return {
     planContratado: contratado,
     planEfectivo: efectivo,
     vencida,
+    sinPago,
     limites: plan.limites,
     permisos: plan.permisos,
   };
@@ -158,21 +151,38 @@ export function membresiaVencida(negocio) {
   return new Date(negocio.plan_vence).getTime() < Date.now();
 }
 
+/**
+ * Categorías del directorio. Las tres primeras las definió MÍA; el resto son
+ * propuesta y se pueden ajustar desde aquí.
+ */
 export const CATEGORIAS = [
-  { id: 'alimentos', nombre: 'Comida y repostería', icono: '🍰' },
-  { id: 'moda', nombre: 'Moda y accesorios', icono: '👗' },
-  { id: 'belleza', nombre: 'Belleza y bienestar', icono: '💅' },
-  { id: 'artesania', nombre: 'Artesanía y arte popular', icono: '🧶' },
-  { id: 'salud', nombre: 'Salud y cuidado', icono: '🩺' },
-  { id: 'educacion', nombre: 'Educación y talleres', icono: '📚' },
-  { id: 'servicios', nombre: 'Servicios profesionales', icono: '💼' },
-  { id: 'hogar', nombre: 'Hogar y decoración', icono: '🏡' },
-  { id: 'tecnologia', nombre: 'Tecnología y diseño', icono: '💻' },
-  { id: 'turismo', nombre: 'Turismo y experiencias', icono: '🌵' },
-  { id: 'agro', nombre: 'Campo y productos naturales', icono: '🌽' },
-  { id: 'otros', nombre: 'Otros giros', icono: '✨' },
+  { id: 'belleza', nombre: 'Belleza',
+    sub: ['Maquillaje', 'Pestañas', 'Cejas', 'Uñas', 'Peinado', 'Barbería', 'Spa', 'Faciales', 'Masajes'] },
+  { id: 'reposteria', nombre: 'Repostería',
+    sub: ['Pasteles', 'Cupcakes', 'Galletas', 'Postres', 'Chocolatería'] },
+  { id: 'eventos', nombre: 'Eventos',
+    sub: ['Coctelería', 'Decoración', 'Florería', 'Fotografía', 'Video', 'DJ', 'Banquetes'] },
+  { id: 'gastronomia', nombre: 'Gastronomía',
+    sub: ['Comida corrida', 'Antojitos', 'Comida saludable', 'Catering', 'Cafetería', 'Panadería', 'Bebidas'] },
+  { id: 'moda', nombre: 'Moda',
+    sub: ['Ropa', 'Accesorios', 'Joyería', 'Calzado', 'Bolsas', 'Diseño a medida'] },
+  { id: 'bienestar', nombre: 'Salud y bienestar',
+    sub: ['Nutrición', 'Psicología', 'Yoga', 'Fitness', 'Terapias alternativas', 'Consulta médica'] },
+  { id: 'hogar', nombre: 'Hogar',
+    sub: ['Decoración', 'Limpieza', 'Organización', 'Jardinería', 'Mantenimiento'] },
+  { id: 'educacion', nombre: 'Educación',
+    sub: ['Clases particulares', 'Idiomas', 'Talleres', 'Cursos en línea', 'Música'] },
+  { id: 'profesionales', nombre: 'Servicios profesionales',
+    sub: ['Contabilidad', 'Legal', 'Diseño gráfico', 'Marketing', 'Desarrollo web', 'Traducción'] },
+  { id: 'artesania', nombre: 'Artesanía',
+    sub: ['Textiles', 'Cerámica', 'Bordado', 'Joyería artesanal', 'Arte popular'] },
+  { id: 'mascotas', nombre: 'Mascotas',
+    sub: ['Estética canina', 'Veterinaria', 'Guardería', 'Accesorios', 'Adiestramiento'] },
+  { id: 'infantil', nombre: 'Infantil',
+    sub: ['Ropa infantil', 'Juguetes', 'Fiestas infantiles', 'Guardería', 'Clases para niñas y niños'] },
 ];
 
+/** Entidades federativas, para el filtro por ubicación. */
 export const ENTIDADES = [
   'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
   'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango',

@@ -117,20 +117,20 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     nombre: negocio.nombre,
     categoria: negocio.categoria,
     categoriaNombre: categoria.nombre,
-    categoriaIcono: categoria.icono,
+    categoriaIcono: categoria.nombre,
     descripcion: texto(negocio.descripcion, limites.caracteresDescripcion),
     entidad: negocio.entidad,
     municipio: negocio.municipio,
     telefono: negocio.telefono,
-    whatsapp: permisos.whatsapp ? negocio.whatsapp : '',
-    sitioWeb: permisos.sitioWeb ? negocio.sitio_web : '',
-    redes: permisos.redesSociales
+    whatsapp: permisos.redes ? negocio.whatsapp : '',
+    sitioWeb: permisos.redes ? negocio.sitio_web : '',
+    redes: permisos.redes
       ? { instagram: negocio.instagram, facebook: negocio.facebook, tiktok: negocio.tiktok }
       : { instagram: '', facebook: '', tiktok: '' },
     fotos,
     portada: fotos[0] || null,
-    verificado: Boolean(negocio.verificado) && permisos.insigniaVerificado,
-    destacado: Boolean(negocio.destacado) && permisos.prioridadBusqueda,
+    verificado: Boolean(negocio.verificado) && permisos.verificado,
+    destacado: Boolean(negocio.destacado) && permisos.prioridad,
     plan: reglas.planEfectivo,
     calificacion: negocio.calificacion ?? null,
     totalResenas: negocio.total_resenas ?? 0,
@@ -144,9 +144,9 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     ...base,
     direccion: negocio.direccion,
     vistas: negocio.vistas,
-    productos: permisos.catalogo ? productosDe(negocio.id).slice(0, limites.productos) : [],
+    productos: permisos.productosDestacados ? productosDe(negocio.id).slice(0, limites.publicaciones) : [],
     resenas: resenasDe(negocio.id),
-    puedeResponderResenas: permisos.responderResenas,
+    puedeResponderResenas: permisos.responder,
   };
 }
 
@@ -165,14 +165,14 @@ export function vistaPanel(negocio) {
   if (fotos.length > limites.fotos) {
     bloqueos.push(`${fotos.length - limites.fotos} fotografía(s) no se muestran: tu plan permite ${limites.fotos}.`);
   }
-  if (!permisos.catalogo && productos.length) {
-    bloqueos.push(`Tu catálogo de ${productos.length} producto(s) está oculto: requiere plan Emprende o superior.`);
-  } else if (productos.length > limites.productos) {
-    bloqueos.push(`${productos.length - limites.productos} producto(s) no se muestran: tu plan permite ${limites.productos}.`);
+  if (!permisos.productosDestacados && productos.length) {
+    bloqueos.push(`Tu catálogo de ${productos.length} producto(s) está oculto: requiere plan Suscripción o superior.`);
+  } else if (productos.length > limites.publicaciones) {
+    bloqueos.push(`${productos.length - limites.publicaciones} producto(s) no se muestran: tu plan permite ${limites.publicaciones}.`);
   }
-  if (!permisos.whatsapp && negocio.whatsapp) bloqueos.push('Tu botón de WhatsApp está oculto: requiere plan Emprende.');
-  if (!permisos.sitioWeb && negocio.sitio_web) bloqueos.push('Tu sitio web está oculto: requiere plan Emprende.');
-  if (!permisos.redesSociales && (negocio.instagram || negocio.facebook || negocio.tiktok)) {
+  if (!permisos.redes && negocio.whatsapp) bloqueos.push('Tu botón de WhatsApp está oculto: requiere plan Suscripción.');
+  if (!permisos.redes && negocio.sitio_web) bloqueos.push('Tu sitio web está oculto: requiere plan Suscripción.');
+  if (!permisos.redes && (negocio.instagram || negocio.facebook || negocio.tiktok)) {
     bloqueos.push('Tus redes sociales están ocultas: requieren plan Emprende.');
   }
   if ((negocio.descripcion || '').length > limites.caracteresDescripcion) {
