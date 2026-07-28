@@ -1,0 +1,12 @@
+# Base de datos, fotos subidas y llave de sesión: nunca se versionan.
+data/mia.db
+data/mia.db-wal
+data/mia.db-shm
+data/.llave
+data/uploads/*
+!data/uploads/.gitkeep
+
+node_modules/
+.env
+.DS_Store
+*.log
