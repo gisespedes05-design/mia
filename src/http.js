@@ -160,7 +160,10 @@ export function crearManejador({ enrutador, dirPublico, dirSubidas }) {
         if (res.writableEnded) return undefined;
         const codigo = resultado?.__codigo ?? 200;
         const datos = resultado?.__codigo ? resultado.datos : resultado;
-        return responderJson(res, codigo, datos ?? {}, ctx.cookies);
+        // `null` es una respuesta válida a propósito (p. ej. "nadie con sesión
+        // iniciada"); solo se rellena con {} cuando el manejador no devolvió
+        // nada (undefined), para no mandar un cuerpo JSON inválido.
+        return responderJson(res, codigo, datos === undefined ? {} : datos, ctx.cookies);
       }
 
       // 3) Archivos estáticos del sitio

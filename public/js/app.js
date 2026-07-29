@@ -220,7 +220,7 @@ function menu() {
     '<a href="#/' + h + '" class="' + (v === h ? "activo" : "") + '">' + t + "</a>").join("");
   if (!YO) {
     items += '<a href="#/planes" class="' + (v === "planes" ? "activo" : "") + '">Planes</a>' +
-      '<a href="#/entrar" class="btn chico" style="margin-left:6px">Entrar</a>';
+      '<a href="#/entrar" class="btn chico" style="margin-left:6px">Iniciar sesión</a>';
   } else {
     if (YO.rol === "admin") items += '<a href="#/admin" class="' + (v === "admin" ? "activo" : "") + '">Administración</a>';
     if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
@@ -244,8 +244,7 @@ async function pintar() {
     else if (vista === "sobre") html = vistaSobre();
     else if (vista === "planes") html = vistaPlanes();
     else if (vista === "registro") html = vistaRegistro(arg);
-    else if (vista === "entrar") html = vistaEntrar();
-    else if (vista === "ayuda") html = vistaAyuda();
+    else if (vista === "entrar") html = vistaEntrar(arg);
     else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
     else if (vista === "panel") html = YO && (YO.rol === "negocio" || YO.rol === "admin") ? await vistaPanel() : sinAcceso();
     else if (vista === "editar") html = YO ? await vistaEditar(arg) : sinAcceso();
@@ -269,8 +268,7 @@ function sinAcceso() {
     "<h2>Esta sección no es para tu tipo de cuenta</h2>" +
     '<p class="apagado">En MÍA cada quien ve lo suyo: la organización administra, los negocios ' +
     "editan su perfil y las visitantes dejan reseñas y guardan favoritos.</p>" +
-    '<div class="fila g8"><a class="btn" href="#/entrar">Entrar</a>' +
-    '<a class="btn linea" href="#/ayuda">Ver las cuentas de prueba</a></div></div>';
+    '<div class="fila g8"><a class="btn" href="#/entrar">Iniciar sesión</a></div></div>';
 }
 
 const vacio = (msg) => '<div class="tarjeta p24 pila g8"><h3>Nada por aquí todavía</h3>' +
@@ -301,16 +299,6 @@ async function salir() {
   location.hash = "#/inicio";
   await pintar();
   avisar("Cerraste tu sesión.");
-}
-
-const CUENTAS_DEMO = {
-  "admin@mia.mx": "mia2026", "lucia@mia.mx": "demo1234", "beatriz@mia.mx": "demo1234",
-  "daniela@mia.mx": "demo1234", "rosario@mia.mx": "demo1234", "anasofia@mia.mx": "demo1234",
-  "carmen@mia.mx": "demo1234", "paulina@mia.mx": "demo1234",
-};
-async function accesoRapido(correo) {
-  const err = await entrar(correo, CUENTAS_DEMO[correo]);
-  if (err) avisar(err);
 }
 
 /* ==================================================================== MAPA */
@@ -1039,38 +1027,48 @@ async function enviarRegistro(planId) {
 }
 
 /* ==================================================================== ENTRAR */
-function vistaEntrar() {
+const TIPOS_ENTRADA = {
+  negocio: ["Negocio", "Entra con el correo y la contraseña de tu negocio."],
+  usuario: ["Usuaria", "Entra con el correo y la contraseña de tu cuenta."],
+  admin: ["Organización MÍA", "Entra con tu correo y contraseña de administradora."],
+};
+
+function vistaEntrar(tipo) {
+  const datos = TIPOS_ENTRADA[tipo];
+
+  const eleccion = '<div class="tarjeta p20 pila g12">' +
+    '<a class="btn ancho" href="#/entrar/negocio">Soy un negocio</a>' +
+    '<a class="btn linea ancho" href="#/entrar/usuario">Soy usuaria / clienta</a>' +
+    '<p class="pequeno apagado" style="text-align:center;margin-top:4px">¿Eres del equipo de MÍA? ' +
+    '<a href="#/entrar/admin">Entra aquí</a></p></div>';
+
+  const formulario = !datos ? "" : '<div class="tarjeta p20 pila g12">' +
+    '<p class="eyebrow">' + esc(datos[0]) + "</p>" +
+    '<p class="pequeno apagado">' + esc(datos[1]) + "</p>" +
+    '<label class="campo">Correo electrónico<input id="e_correo" type="email" autocomplete="username"></label>' +
+    '<label class="campo">Contraseña<input id="e_clave" type="password" autocomplete="current-password" ' +
+      'onkeydown="if(event.key===\'Enter\')hacerEntrar()"></label>' +
+    '<button class="btn ancho" onclick="hacerEntrar()">Entrar</button>' +
+    '<p id="e_error" class="pequeno" style="color:var(--peligro)"></p>' +
+    '<a class="pequeno" href="#/entrar">‹ Elegir otro tipo de cuenta</a>' +
+  "</div>";
+
   return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
-    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Entrar a MÍA</h1></div>' +
-    '<div class="tarjeta p20 pila g12">' +
-      '<label class="campo">Correo electrónico<input id="e_correo" type="email" autocomplete="username"></label>' +
-      '<label class="campo">Contraseña<input id="e_clave" type="password" autocomplete="current-password" ' +
-        'onkeydown="if(event.key===\'Enter\')hacerEntrar()"></label>' +
-      '<button class="btn ancho" onclick="hacerEntrar()">Entrar</button>' +
-      '<p id="e_error" class="pequeno" style="color:var(--peligro)"></p>' +
-    "</div>" +
-    '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Tienes un negocio?</p>' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Iniciar sesión</h1></div>' +
+    (datos ? formulario : eleccion) +
+    (datos ? "" :
+      '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Tienes un negocio?</p>' +
       '<p class="pequeno apagado">El registro se hace desde el plan que elijas: cada uno tiene ' +
       "su propio formulario.</p>" +
       '<a class="btn linea ancho" href="#/planes">Ver los planes y registrarme</a></div>' +
-    '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Solo quieres comprar?</p>' +
+      '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Solo quieres comprar?</p>' +
       '<label class="campo">Tu nombre<input id="r_nombre"></label>' +
       '<label class="campo">Correo electrónico<input id="r_correo" type="email"></label>' +
       '<label class="campo">Contraseña<input id="r_clave" type="password" placeholder="Mínimo 8 caracteres"></label>' +
       '<button class="btn linea ancho" onclick="hacerRegistroCliente()">Crear cuenta de clienta</button>' +
-      '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p></div>' +
-    '<div class="tarjeta p20 pila g12"><p class="eyebrow">Cuentas de prueba</p>' +
-      botonDemo("admin@mia.mx", "Organización MÍA", "Administra todo el directorio") +
-      botonDemo("lucia@mia.mx", "Negocio con Membresía", "Todo abierto, $599") +
-      botonDemo("beatriz@mia.mx", "Negocio con plan Gratuito", "Verás qué le bloquea el plan") +
-      botonDemo("daniela@mia.mx", "Clienta", "Reseñas y favoritos") +
-    "</div></div>";
+      '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p></div>') +
+    "</div>";
 }
-
-const botonDemo = (correo, titulo, nota) =>
-  '<button class="btn linea ancho" style="justify-content:flex-start;text-align:left;padding:12px 14px" ' +
-  "onclick=\"accesoRapido('" + correo + "')\"><span><strong>" + esc(titulo) + "</strong><br>" +
-  '<span class="diminuto apagado" style="font-weight:500">' + esc(nota) + "</span></span></button>";
 
 async function hacerEntrar() {
   const err = await entrar(val("e_correo"), val("e_clave"));
@@ -1088,34 +1086,6 @@ async function hacerRegistroCliente() {
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo crear tu cuenta."); }
 }
 
-/* ===================================================================== AYUDA */
-function vistaAyuda() {
-  return '<div class="envoltura bloque pila g32" style="max-width:760px">' +
-    '<div class="pila g8"><p class="eyebrow">Guía rápida</p><h1>Cómo se entra a MÍA</h1>' +
-      '<p class="apagado">Hay tres tipos de cuenta. Todas entran por el mismo lugar, ' +
-      "pero cada una ve algo distinto.</p></div>" +
-
-    '<div class="tarjeta p24 pila g16"><p class="eyebrow">1 · La organización MÍA</p>' +
-      "<p>Administra el directorio completo: publica o rechaza los perfiles que llegan, los " +
-      "suspende, les cambia el plan, confirma pagos, verifica negocios, administra cuentas, " +
-      "modera reseñas y escribe el blog.</p>" +
-      '<p class="mono pequeno">admin@mia.mx · mia2026</p>' +
-      '<div><button class="btn" onclick="accesoRapido(\'admin@mia.mx\')">Entrar como MÍA</button></div></div>' +
-
-    '<div class="tarjeta p24 pila g16"><p class="eyebrow">2 · Negocio</p>' +
-      "<p>Administra su perfil: logo, fotografías, descripción, productos, publicaciones y " +
-      "respuestas a reseñas. Lo que puede hacer depende de su plan.</p>" +
-      '<p class="mono pequeno">lucia@mia.mx · demo1234 — Membresía<br>' +
-      "beatriz@mia.mx · demo1234 — Gratuito, con los avisos de lo que le falta</p>" +
-      '<div class="fila g8"><button class="btn" onclick="accesoRapido(\'lucia@mia.mx\')">Entrar con Membresía</button>' +
-      '<button class="btn linea" onclick="accesoRapido(\'beatriz@mia.mx\')">Entrar con Gratuito</button></div></div>' +
-
-    '<div class="tarjeta p24 pila g16"><p class="eyebrow">3 · Clienta</p>' +
-      "<p>Se registra con su correo. Busca negocios, los guarda en favoritos y deja reseñas.</p>" +
-      '<p class="mono pequeno">daniela@mia.mx · demo1234</p>' +
-      '<div><button class="btn" onclick="accesoRapido(\'daniela@mia.mx\')">Entrar como clienta</button></div></div>' +
-  "</div>";
-}
 /* ============================================================ PANEL NEGOCIO */
 async function vistaPanel() {
   const mios = await api.get("/api/mis-negocios");
