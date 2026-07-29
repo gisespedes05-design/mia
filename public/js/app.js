@@ -129,8 +129,8 @@ const estrellasHtml = (v) => v
   : '<span class="apagado diminuto">Sin reseñas</span>';
 
 /* ---------------------------------------------------------------- imágenes */
-const TONOS = [["#D6187F", "#7A0E4A"], ["#2D4EC8", "#16276B"], ["#0B7A5E", "#053F30"],
-  ["#C98A00", "#6B4A00"], ["#B92A2A", "#631515"], ["#6B3FA0", "#361F52"]];
+const TONOS = [["#B35A8A", "#6B3459"], ["#7880AE", "#454B72"], ["#523F77", "#2E2247"],
+  ["#4A6E96", "#2A3F57"], ["#0B7A5E", "#053F30"], ["#B8860B", "#5C4406"]];
 const tonoDe = (txt) => TONOS[[...String(txt)].reduce((a, c) => a + c.charCodeAt(0), 0) % TONOS.length];
 
 function imagenHtml(src, alt, clase) {

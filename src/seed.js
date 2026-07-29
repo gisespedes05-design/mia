@@ -28,8 +28,8 @@ if (reset) {
 // Fotos de muestra: un degradado con la inicial del negocio, para que la
 // demostración se vea completa sin depender de fotos reales.
 const TONOS = [
-  ['#D6187F', '#7A0E4A'], ['#2D4EC8', '#16276B'], ['#0B7A5E', '#053F30'],
-  ['#C98A00', '#6B4A00'], ['#B92A2A', '#631515'], ['#6B3FA0', '#361F52'],
+  ['#B35A8A', '#6B3459'], ['#7880AE', '#454B72'], ['#523F77', '#2E2247'],
+  ['#4A6E96', '#2A3F57'], ['#0B7A5E', '#053F30'], ['#B8860B', '#5C4406'],
 ];
 
 function crearFotoDemo(nombreArchivo, letra, indiceTono) {

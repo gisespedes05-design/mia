@@ -1,8 +1,8 @@
 :root{
-  --fondo:#FBF7F4; --fondo2:#F2EAE6; --superficie:#FFFFFF;
-  --texto:#241023; --texto2:#6B5A66; --linea:#E4D8D3;
-  --acento:#D6187F; --acento-tinta:#FFFFFF; --acento-suave:#FCE7F2;
-  --cobalto:#2D4EC8; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
+  --fondo:#FBF8FA; --fondo2:#F3E7ED; --superficie:#FFFFFF;
+  --texto:#523F77; --texto2:#6B6693; --linea:#E6D9E3;
+  --acento:#B35A8A; --acento-tinta:#FFFFFF; --acento-suave:#F6B7C7;
+  --cobalto:#5B63A0; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
   --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
   --r:4px;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -10,25 +10,25 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --fondo:#17101A; --fondo2:#201726; --superficie:#241B2C;
-    --texto:#F6EEF3; --texto2:#B4A2B0; --linea:#3A2C43;
-    --acento:#FF5BAE; --acento-tinta:#2A0A1C; --acento-suave:#3A1330;
-    --cobalto:#8AA0F5; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+    --fondo:#1B1526; --fondo2:#241C33; --superficie:#2C2340;
+    --texto:#F3EDF7; --texto2:#B9AFCF; --linea:#453868;
+    --acento:#E58AB5; --acento-tinta:#2E1220; --acento-suave:#3D2438;
+    --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
     --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
-  --fondo:#17101A; --fondo2:#201726; --superficie:#241B2C;
-  --texto:#F6EEF3; --texto2:#B4A2B0; --linea:#3A2C43;
-  --acento:#FF5BAE; --acento-tinta:#2A0A1C; --acento-suave:#3A1330;
-  --cobalto:#8AA0F5; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+  --fondo:#1B1526; --fondo2:#241C33; --superficie:#2C2340;
+  --texto:#F3EDF7; --texto2:#B9AFCF; --linea:#453868;
+  --acento:#E58AB5; --acento-tinta:#2E1220; --acento-suave:#3D2438;
+  --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
   --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 :root[data-theme="light"]{
-  --fondo:#FBF7F4; --fondo2:#F2EAE6; --superficie:#FFFFFF;
-  --texto:#241023; --texto2:#6B5A66; --linea:#E4D8D3;
-  --acento:#D6187F; --acento-tinta:#FFFFFF; --acento-suave:#FCE7F2;
-  --cobalto:#2D4EC8; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
+  --fondo:#FBF8FA; --fondo2:#F3E7ED; --superficie:#FFFFFF;
+  --texto:#523F77; --texto2:#6B6693; --linea:#E6D9E3;
+  --acento:#B35A8A; --acento-tinta:#FFFFFF; --acento-suave:#F6B7C7;
+  --cobalto:#5B63A0; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
   --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
 }
 
