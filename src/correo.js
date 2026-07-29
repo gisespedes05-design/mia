@@ -3,10 +3,12 @@
 // módulo queda inerte — registrarse nunca debe depender de que el correo
 // salga bien.
 import { PLANES, WHATSAPP_MIA, enlaceWhatsApp } from './config.js';
+import { todos } from './db.js';
 
 const SENDGRID_LLAVE = process.env.SENDGRID_API_KEY || '';
 const REMITENTE = process.env.CORREO_REMITENTE || '';
 const REMITENTE_NOMBRE = process.env.CORREO_REMITENTE_NOMBRE || 'MÍA';
+const SITIO_URL = (process.env.SITIO_URL || '').replace(/\/$/, '');
 
 export const correoConfigurado = Boolean(SENDGRID_LLAVE && REMITENTE);
 
@@ -50,6 +52,66 @@ const botonWhatsApp = (mensaje, texto) => !WHATSAPP_MIA ? '' : `
        style="background:#B35A8A;color:#ffffff;padding:12px 22px;border-radius:8px;
        text-decoration:none;font-weight:700;display:inline-block">${texto}</a>
   </p>`;
+
+const botonSitio = (ruta, texto) => !SITIO_URL ? '' : `
+  <p style="margin-top:16px">
+    <a href="${SITIO_URL}${ruta}"
+       style="background:#B35A8A;color:#ffffff;padding:12px 22px;border-radius:8px;
+       text-decoration:none;font-weight:700;display:inline-block">${texto}</a>
+  </p>`;
+
+/* ============================================================ avisos masivos === */
+// Le llegan a toda clienta activa: negocio nuevo, negocio verificado, blog
+// nuevo. Nunca truenan la acción de la administradora que los dispara — por
+// eso nadie los espera (await) donde se llaman.
+
+function usuariasActivas() {
+  return todos(`SELECT correo, nombre FROM usuarios WHERE rol = 'usuario' AND estado = 'activo'`);
+}
+
+function avisarATodas(fabricarCorreo) {
+  try {
+    for (const u of usuariasActivas()) {
+      const { asunto, html } = fabricarCorreo(u);
+      enviarCorreo({ para: u.correo, asunto, html });
+    }
+  } catch (err) {
+    console.error('[MÍA] Error avisando a las usuarias:', err.message);
+  }
+}
+
+export function avisarNuevoNegocio(negocio) {
+  avisarATodas((u) => ({
+    asunto: `Nuevo negocio en MÍA: ${negocio.nombre}`,
+    html: ENVOLTURA(`
+      <h1 style="font-size:22px;margin:0 0 12px">Hola, ${u.nombre}</h1>
+      <p>Se acaba de unir a MÍA <strong>${negocio.nombre}</strong>${negocio.ciudad ? ` en ${negocio.ciudad}` : ''}.</p>
+      ${botonSitio(`/#/negocio/${negocio.slug}`, 'Conocer el negocio')}
+    `),
+  }));
+}
+
+export function avisarNegocioVerificado(negocio) {
+  avisarATodas((u) => ({
+    asunto: `${negocio.nombre} ya es un negocio verificado en MÍA`,
+    html: ENVOLTURA(`
+      <h1 style="font-size:22px;margin:0 0 12px">Hola, ${u.nombre}</h1>
+      <p><strong>${negocio.nombre}</strong> ya tiene el sello de verificado por MÍA.</p>
+      ${botonSitio(`/#/negocio/${negocio.slug}`, 'Ver su perfil')}
+    `),
+  }));
+}
+
+export function avisarNuevoArticulo(articulo) {
+  avisarATodas((u) => ({
+    asunto: `Nuevo en el blog de MÍA: ${articulo.titulo}`,
+    html: ENVOLTURA(`
+      <h1 style="font-size:22px;margin:0 0 12px">Hola, ${u.nombre}</h1>
+      <p>${articulo.resumen}</p>
+      ${botonSitio(`/#/blog/${articulo.slug}`, 'Leer el artículo')}
+    `),
+  }));
+}
 
 export function correoBienvenidaUsuaria(nombre) {
   return {

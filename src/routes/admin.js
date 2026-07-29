@@ -2,6 +2,7 @@ import { ejecutar, uno, todos, anotar } from '../db.js';
 import { ErrorHttp, exigirRol } from '../auth.js';
 import { ROLES, PLANES, ORDEN_PLANES, reglasVigentes } from '../config.js';
 import { obtenerNegocioPorId, vistaPanel, texto } from '../negocios.js';
+import { avisarNuevoNegocio, avisarNegocioVerificado } from '../correo.js';
 
 const soloAdmin = (ctx) => exigirRol(ctx, ROLES.ADMIN);
 
@@ -76,7 +77,11 @@ export function aprobar(ctx) {
   const negocio = negocioOFallo(ctx.params.id);
   ejecutar(`UPDATE negocios SET estado = 'publicado', nota_revision = '' WHERE id = $id`, { id: negocio.id });
   anotar(admin.id, 'Perfil publicado', negocio.nombre);
-  return vistaPanel(obtenerNegocioPorId(negocio.id));
+  const actualizado = obtenerNegocioPorId(negocio.id);
+  // Solo se avisa de negocios de paga (Suscripción en adelante): con muchas
+  // más usuarias que negocios Gratuito, avisar de cada uno sería demasiado.
+  if (actualizado.plan !== 'gratuito') avisarNuevoNegocio(actualizado);
+  return vistaPanel(actualizado);
 }
 
 export function rechazar(ctx) {
@@ -105,6 +110,7 @@ export function alternarVerificado(ctx) {
   ejecutar(`UPDATE negocios SET verificado = 1 - verificado WHERE id = $id`, { id: negocio.id });
   const actualizado = obtenerNegocioPorId(negocio.id);
   anotar(admin.id, actualizado.verificado ? 'Perfil verificado' : 'Verificación retirada', negocio.nombre);
+  if (actualizado.verificado) avisarNegocioVerificado(actualizado);
   return vistaPanel(actualizado);
 }
 

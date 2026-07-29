@@ -2,6 +2,7 @@ import { ejecutar, uno, todos, anotar } from '../db.js';
 import { ErrorHttp, exigirRol } from '../auth.js';
 import { ROLES } from '../config.js';
 import { texto } from '../negocios.js';
+import { avisarNuevoArticulo } from '../correo.js';
 
 const esAdmin = (usuario) => usuario?.rol === ROLES.ADMIN;
 
@@ -47,7 +48,9 @@ export function crear(ctx) {
     { slug, titulo, resumen, cuerpo: cuerpoTexto }
   );
   anotar(usuario.id, 'Artículo publicado', titulo);
-  return uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(r.lastInsertRowid) });
+  const articulo = uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(r.lastInsertRowid) });
+  avisarNuevoArticulo(articulo); // se crea publicado por defecto (ver esquema)
+  return articulo;
 }
 
 export function alternarPublicado(ctx) {
@@ -56,6 +59,7 @@ export function alternarPublicado(ctx) {
   if (!a) throw new ErrorHttp(404, 'Ese artículo ya no existe.');
   ejecutar(`UPDATE articulos SET publicado = 1 - publicado WHERE id = $id`, { id: a.id });
   anotar(usuario.id, a.publicado ? 'Artículo ocultado' : 'Artículo publicado', a.titulo);
+  if (!a.publicado) avisarNuevoArticulo(a); // pasó de oculto a publicado
   return { ...a, publicado: !a.publicado };
 }
 

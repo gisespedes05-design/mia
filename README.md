@@ -198,6 +198,30 @@ funcionando igual — simplemente no se manda el correo (queda anotado en los
 logs del servidor). Si falta `WHATSAPP_MIA`, el correo se manda pero sin el
 botón de WhatsApp.
 
+## Avisos a las clientas: negocios nuevos, verificados y blog
+
+Toda usuaria activa (rol clienta) recibe un correo cuando:
+
+- **Se publica un negocio nuevo con plan de pago** (Suscripción, Membresía o
+  Crece con MÍA — los de plan Gratuito no avisan, para no saturar el correo
+  de todas por cada alta gratuita).
+- **Un negocio se verifica** (el sello de verificado, plan Membresía o Crece).
+- **Se publica un artículo del blog** (tanto al crearlo como al des-ocultarlo).
+
+Estos avisos nunca bloquean la acción de la administradora que los dispara
+(publicar, verificar, escribir el blog) — se mandan en segundo plano y
+cualquier error solo queda anotado en los logs.
+
+Los enlaces dentro de estos correos (al negocio, al artículo) necesitan la
+variable `SITIO_URL` — sin ella, el correo se manda igual pero sin el botón
+para entrar directo. Ya se documentó arriba, en la sección de Stripe.
+
+**Importante sobre el volumen:** SendGrid en su plan gratis permite 100
+correos al día. Cada uno de estos avisos le llega a *todas* las usuarias
+activas, así que en cuanto haya varias decenas de usuarias, unos pocos avisos
+pueden agotar ese límite diario — en ese momento hay que subir de plan en
+SendGrid (es de paga por volumen).
+
 ## Mensajes entre usuarias y negocios
 
 Cualquier clienta con sesión iniciada puede escribirle a un negocio desde su
