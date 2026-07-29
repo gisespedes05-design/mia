@@ -224,7 +224,10 @@ function menu() {
   } else {
     if (YO.rol === "admin") items += '<a href="#/admin" class="' + (v === "admin" ? "activo" : "") + '">Administración</a>';
     if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
-    if (YO.rol === "usuario") items += '<a href="#/favoritos" class="' + (v === "favoritos" ? "activo" : "") + '">Favoritos</a>';
+    if (YO.rol === "usuario") {
+      items += '<a href="#/favoritos" class="' + (v === "favoritos" ? "activo" : "") + '">Favoritos</a>' +
+        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>';
+    }
     items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
   }
   $("menu").innerHTML = items;
@@ -247,6 +250,9 @@ async function pintar() {
     else if (vista === "registro") html = vistaRegistro(arg);
     else if (vista === "entrar") html = vistaEntrar(arg);
     else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
+    else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
+    else if (vista === "negocio-mensajes") html = YO && (YO.rol === "negocio" || YO.rol === "admin")
+      ? await vistaMensajesNegocio(arg) : sinAcceso();
     else if (vista === "panel") html = YO && (YO.rol === "negocio" || YO.rol === "admin") ? await vistaPanel() : sinAcceso();
     else if (vista === "editar") html = YO ? await vistaEditar(arg) : sinAcceso();
     else if (vista === "admin") html = esAdmin() ? await vistaAdmin(arg) : sinAcceso();
@@ -784,6 +790,13 @@ async function vistaNegocio(slug) {
     "</div>" +
     (redes.length ? '<p class="pequeno apagado">' + redes.join(" · ") + "</p>" : "") +
 
+    (YO && YO.rol === "usuario" ? '<div class="tarjeta p20 pila g12"><p class="eyebrow">Escríbele a este negocio</p>' +
+      '<textarea id="msg_cuerpo" style="min-height:80px" placeholder="Escribe tu mensaje…"></textarea>' +
+      '<p id="msg_error" class="pequeno" style="color:var(--peligro)"></p>' +
+      '<div><button class="btn" onclick="enviarMensajeNegocio(' + n.id + ')">Enviar mensaje</button></div></div>'
+      : !YO ? '<div class="aviso">Para escribirle a este negocio ' +
+          '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
+
     (n.fotos.length > 1 ? '<div class="pila g12"><p class="eyebrow">Fotografías</p>' +
       '<div class="galeria">' + n.fotos.map((f) =>
         '<div class="foto">' + imagenHtml(f, n.nombre) + "</div>").join("") + "</div></div>" : "") +
@@ -881,6 +894,18 @@ async function responder(id, negocioId) {
     await pintar();
     avisar("Publicamos tu respuesta.");
   } catch (err) { avisarError(err); }
+}
+
+async function enviarMensajeNegocio(negocioId) {
+  const cuerpo = val("msg_cuerpo");
+  const decir = (m) => { if ($("msg_error")) $("msg_error").textContent = m; };
+  if (cuerpo.length < 2) return decir("Escribe tu mensaje.");
+  try {
+    await api.post("/api/negocios/" + negocioId + "/mensajes", { cuerpo });
+    if ($("msg_cuerpo")) $("msg_cuerpo").value = "";
+    decir("");
+    avisar("Tu mensaje ya se envió. Te va a responder por aquí mismo.");
+  } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo enviar tu mensaje."); }
 }
 
 async function alternarFavorito(negocioId, eraFavorito) {
@@ -1145,6 +1170,73 @@ async function hacerRegistroCliente() {
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo crear tu cuenta."); }
 }
 
+/* =================================================================== MENSAJES */
+async function vistaBandejaMensajes() {
+  const lista = await api.get("/api/mis-mensajes");
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Tus mensajes</h1></div>' +
+    (lista.length ? '<div class="pila g12">' + lista.map((c) => filaConversacion(c, "usuario")).join("") + "</div>"
+      : vacio("Cuando le escribas a un negocio, tu conversación va a aparecer aquí.")) + "</div>";
+}
+
+async function vistaMensajesNegocio(negocioId) {
+  const lista = await api.get("/api/negocios/" + negocioId + "/mensajes");
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="fila entre g12"><div class="pila g8"><p class="eyebrow">Mi negocio</p><h1>Mensajes</h1></div>' +
+      '<a class="btn linea" href="#/panel">‹ Volver a mis perfiles</a></div>' +
+    (lista.length ? '<div class="pila g12">' + lista.map((c) => filaConversacion(c, "negocio")).join("") + "</div>"
+      : vacio("Todavía no tienes mensajes de clientas.")) + "</div>";
+}
+
+function filaConversacion(c, lado) {
+  const titulo = lado === "usuario" ? c.negocio_nombre : c.usuaria_nombre;
+  return '<a class="tarjeta p16 pila g4" href="#/mensajes/' + c.id +
+    '" style="text-decoration:none;color:inherit;display:block">' +
+    '<div class="fila entre g8"><strong>' + esc(titulo) + "</strong>" +
+    (c.no_leidos > 0 ? '<span class="chip rosa">' + c.no_leidos + " nuevo" + (c.no_leidos > 1 ? "s" : "") + "</span>" : "") +
+    "</div>" +
+    '<p class="pequeno apagado" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+      esc(c.ultimo_mensaje || "") + "</p>" +
+    '<span class="diminuto apagado">' + esc(fecha(c.ultimo_en)) + "</span>" +
+  "</a>";
+}
+
+async function vistaHiloMensaje(id) {
+  let d;
+  try { d = await api.get("/api/mensajes/" + id); }
+  catch {
+    return '<div class="envoltura bloque"><h2>No pudimos abrir esa conversación</h2>' +
+      '<p style="margin-top:14px"><a class="btn" href="#/inicio">Volver al inicio</a></p></div>';
+  }
+  const { conversacion: c, mensajes, lado, puedeResponder } = d;
+  const titulo = lado === "usuario" ? c.negocio_nombre : c.usuaria_nombre;
+  return '<div class="envoltura bloque pila g24" style="max-width:640px">' +
+    '<div class="pila g8"><p class="eyebrow">Mensajes</p><h1>' + esc(titulo) + "</h1></div>" +
+    '<div class="pila g8">' + mensajes.map((m) => burbujaMensaje(m, lado)).join("") + "</div>" +
+    (puedeResponder ? '<div class="tarjeta p20 pila g12">' +
+      '<textarea id="hilo_cuerpo" style="min-height:80px" placeholder="Escribe tu respuesta…"></textarea>' +
+      '<p id="hilo_error" class="pequeno" style="color:var(--peligro)"></p>' +
+      '<div><button class="btn" onclick="responderMensaje(' + c.id + ')">Enviar</button></div></div>'
+      : '<p class="diminuto apagado">Responder mensajes empieza en el plan Suscripción. Lo que ya recibiste no se pierde.</p>') +
+  "</div>";
+}
+
+const burbujaMensaje = (m, lado) => '<div class="tarjeta p16" style="max-width:80%' +
+  (m.autor === lado ? ";align-self:flex-end;background:var(--acento);color:#fff" : "") + '">' +
+  '<p style="white-space:pre-wrap">' + esc(m.cuerpo) + "</p>" +
+  '<span class="diminuto" style="opacity:.7">' + esc(fecha(m.creado_en)) + "</span></div>";
+
+async function responderMensaje(conversacionId) {
+  const cuerpo = val("hilo_cuerpo");
+  const decir = (m) => { if ($("hilo_error")) $("hilo_error").textContent = m; };
+  if (cuerpo.length < 2) return decir("Escribe tu respuesta.");
+  try {
+    await api.post("/api/mensajes/" + conversacionId + "/responder", { cuerpo });
+    await pintar();
+    avisar("Mensaje enviado.");
+  } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo enviar tu respuesta."); }
+}
+
 /* ============================================================ PANEL NEGOCIO */
 async function vistaPanel() {
   const mios = await api.get("/api/mis-negocios");
@@ -1175,6 +1267,7 @@ function fichaPanel(n) {
         "</div></div>" +
       '<div class="fila g8">' +
         '<button class="btn linea chico" onclick="location.hash=\'#/editar/' + n.id + '\'">Editar perfil</button>' +
+        '<a class="btn fantasma chico" href="#/negocio-mensajes/' + n.id + '">Mensajes</a>' +
         (n.estado === "publicado" ? '<a class="btn fantasma chico" href="#/negocio/' +
           esc(n.slug) + '">Ver perfil</a>' : "") +
       "</div></div>" +

@@ -198,6 +198,31 @@ funcionando igual — simplemente no se manda el correo (queda anotado en los
 logs del servidor). Si falta `WHATSAPP_MIA`, el correo se manda pero sin el
 botón de WhatsApp.
 
+## Mensajes entre usuarias y negocios
+
+Cualquier clienta con sesión iniciada puede escribirle a un negocio desde su
+perfil público. El negocio ve la conversación en **Mi negocio › Mensajes**, y
+puede responder si su plan lo permite (Suscripción en adelante — igual que
+responder reseñas; con el plan Gratuito el mensaje se recibe igual, solo que
+la respuesta se sigue dando fuera de MÍA, por los datos de contacto que ya
+son públicos). Cada mensaje nuevo de una clienta le manda a la dueña un aviso
+por correo y por SMS para que responda pronto.
+
+El SMS se manda con la API de **Twilio** (otra vez, sin librerías nuevas).
+A diferencia del correo, **Twilio cobra por cada mensaje enviado** (no tiene
+un nivel gratuito permanente como SendGrid), así que esta parte es opcional:
+
+| Variable | Qué es | De dónde se saca |
+|---|---|---|
+| `TWILIO_ACCOUNT_SID` | Identificador de tu cuenta de Twilio | Twilio Console → dashboard principal |
+| `TWILIO_AUTH_TOKEN` | Token de autenticación | Twilio Console → dashboard principal (junto al SID) |
+| `TWILIO_NUMERO` | El número de Twilio desde el que se manda el SMS | Twilio Console → Phone Numbers (hay que comprar uno, ~$1 USD/mes) |
+
+Si faltan estas variables, todo lo demás sigue funcionando igual — solo se
+omite el SMS (el correo sí se manda, y queda anotado en los logs). Los
+teléfonos de negocios sin código de país se asumen de México (`+52`)
+automáticamente.
+
 ## Estructura del código
 
 ```
@@ -210,11 +235,13 @@ src/
   negocios.js           reglas de negocio: qué ve el público vs. la dueña
   subidas.js            procesa las fotos que se suben (base64 → archivo)
   stripe.js              cliente de Stripe (se queda inerte si falta la llave)
-  correo.js              correos de bienvenida por SendGrid (igual, inerte si falta la llave)
+  correo.js              correos por SendGrid (igual, inerte si falta la llave)
+  sms.js                 SMS por Twilio (igual, inerte si falta la llave)
+  mensajes.js            conversaciones entre usuarias y negocios
   seed.js               datos de demostración
   routes/               un archivo por grupo de endpoints (auth, negocios,
                         reseñas, favoritos, blog, administración, catálogo,
-                        pagos)
+                        pagos, mensajes)
 public/
   index.html            cascarón de la página
   css/estilos.css        estilos (compartidos con mia.html)

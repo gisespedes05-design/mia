@@ -62,6 +62,18 @@ export function correoBienvenidaUsuaria(nombre) {
   };
 }
 
+export function correoNuevoMensaje(propietariaNombre, negocioNombre, usuariaNombre, extracto) {
+  return {
+    asunto: `Tienes un nuevo mensaje en MÍA de ${usuariaNombre}`,
+    html: ENVOLTURA(`
+      <h1 style="font-size:22px;margin:0 0 12px">Hola, ${propietariaNombre}</h1>
+      <p><strong>${usuariaNombre}</strong> le escribió a <strong>${negocioNombre}</strong> a través de MÍA:</p>
+      <p style="background:#F4F0F8;border-radius:10px;padding:14px 16px;font-style:italic">"${extracto}"</p>
+      <p>Entra a tu panel en MÍA para leerlo completo y responder cuanto antes.</p>
+    `),
+  };
+}
+
 export function correoBienvenidaNegocio(nombre, negocioNombre, plan) {
   const nombrePlan = PLANES[plan]?.nombre || plan;
   const base = `

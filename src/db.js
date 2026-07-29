@@ -155,6 +155,26 @@ CREATE TABLE IF NOT EXISTS pagos_stripe (
   creado_en         TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Una usuaria le escribe a un negocio: una sola conversación por pareja
+-- negocio-usuaria, con los mensajes de ida y vuelta en la tabla de abajo.
+CREATE TABLE IF NOT EXISTS conversaciones (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  negocio_id  INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  creado_en   TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (negocio_id, usuario_id)
+);
+
+-- "leido" se refiere a si ya lo vio la otra parte (no quien lo escribió).
+CREATE TABLE IF NOT EXISTS mensajes (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversacion_id  INTEGER NOT NULL REFERENCES conversaciones(id) ON DELETE CASCADE,
+  autor            TEXT NOT NULL CHECK (autor IN ('usuario', 'negocio')),
+  cuerpo           TEXT NOT NULL,
+  leido            INTEGER NOT NULL DEFAULT 0,
+  creado_en        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_negocios_estado     ON negocios(estado);
 CREATE INDEX IF NOT EXISTS idx_negocios_categoria  ON negocios(categoria);
 CREATE INDEX IF NOT EXISTS idx_negocios_duena      ON negocios(propietaria_id);
@@ -164,6 +184,9 @@ CREATE INDEX IF NOT EXISTS idx_productos_negocio   ON productos(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_publicaciones_neg   ON publicaciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_solicitudes_estado  ON solicitudes(estado);
 CREATE INDEX IF NOT EXISTS idx_pagos_negocio       ON pagos_stripe(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_conversaciones_neg  ON conversaciones(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_conversaciones_usu  ON conversaciones(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_mensajes_conv       ON mensajes(conversacion_id);
 `);
 
 // Migración ligera: si la base ya existía antes de sumar el cobro con

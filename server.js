@@ -15,6 +15,7 @@ import * as admin from './src/routes/admin.js';
 import * as blog from './src/routes/blog.js';
 import * as catalogo from './src/routes/catalogo.js';
 import * as pagos from './src/routes/pagos.js';
+import * as mensajes from './src/routes/mensajes.js';
 
 const r = new Enrutador();
 
@@ -34,8 +35,13 @@ r.post('/api/auth/clave', auth.cambiarClave);
 // Las rutas literales van antes que ":slug" para que no las intercepte.
 r.get('/api/negocios/mapa', negocios.mapa);
 r.get('/api/mis-negocios', negocios.misNegocios);
+r.get('/api/mis-mensajes', mensajes.listarDeUsuaria);
 r.get('/api/negocios', negocios.listar);
 r.get('/api/negocios/:id/panel', negocios.verPanel);
+r.get('/api/negocios/:id/mensajes', mensajes.listarDeNegocio);
+r.post('/api/negocios/:id/mensajes', mensajes.escribir);
+r.get('/api/mensajes/:id', mensajes.verHilo);
+r.post('/api/mensajes/:id/responder', mensajes.responder);
 r.get('/api/negocios/:slug', negocios.verDetalle);
 r.patch('/api/negocios/:id', negocios.actualizar);
 r.post('/api/negocios/:id/enviar-revision', negocios.enviarRevision);
