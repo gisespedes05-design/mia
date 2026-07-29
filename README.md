@@ -59,7 +59,7 @@ subcategorías. Se ajustan desde `src/config.js`.
 
 | | Gratuito | Suscripción | Membresía | Crece con MÍA |
 |---|---|---|---|---|
-| Precio | $0 | $199/mes | $599/mes | Desde $2,500/mes |
+| Precio | $0 | $299/mes | $599/mes | Desde $2,500/mes |
 | Subcategorías | 5 | 5 | 5 | 5 |
 | Logo | ✓ | ✓ | ✓ | ✓ |
 | Publicaciones | 1 | ilimitadas | ilimitadas | ilimitadas |
