@@ -3,6 +3,9 @@ import { join } from 'node:path';
 import { Enrutador, crearManejador } from './src/http.js';
 import { RAIZ, DIR_SUBIDAS } from './src/db.js';
 import { PUERTO } from './src/config.js';
+import { crearAdminInicialSiHaceFalta } from './src/auth.js';
+
+crearAdminInicialSiHaceFalta();
 
 import * as auth from './src/routes/auth.js';
 import * as negocios from './src/routes/negocios.js';

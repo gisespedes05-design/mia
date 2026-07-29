@@ -222,10 +222,13 @@ empezar:
    que la plataforma reinicie o vuelvas a desplegar, **se borran todos los
    negocios registrados**. Tanto Render como Railway ofrecen esto (a veces de
    paga, revisa el plan que elijas).
-4. **Primera carga de datos:** entra a la consola/shell del servicio y corre
-   `npm run seed` si quieres arrancar con cuentas de demostración, o déjalo
-   vacío si prefieres que MÍA arranque sin nada y las primeras cuentas sean
-   reales desde el día uno.
+4. **Tu cuenta de administradora:** agrega las variables `ADMIN_CORREO` y
+   `ADMIN_CLAVE` (tu correo real y una contraseña de al menos 8 caracteres).
+   En el primer arranque, si todavía no existe ninguna administradora, MÍA
+   crea automáticamente esa cuenta con rol de Organización MÍA — así no hace
+   falta entrar por consola ni cargar datos de demostración. Una vez creada,
+   puedes quitar esas dos variables si prefieres (no vuelve a usarlas mientras
+   ya exista una administradora).
 5. **Conecta tu dominio:** en la configuración del servicio agrega el dominio
    que compres (`mía.mx`, `mia.com.mx`, o el que elijas) y sigue las
    instrucciones de la plataforma para apuntar los DNS desde tu registrador —

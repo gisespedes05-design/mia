@@ -1,7 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHmac } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DIR_DATOS, uno } from './db.js';
+import { DIR_DATOS, uno, ejecutar } from './db.js';
 import { ROLES } from './config.js';
 
 const NOMBRE_COOKIE = 'mia_sesion';
@@ -120,3 +120,27 @@ export function exigirRol(ctx, ...roles) {
 }
 
 export const esAdmin = (usuario) => usuario?.rol === ROLES.ADMIN;
+
+/**
+ * Crea la primera cuenta de Organización MÍA al arrancar, a partir de
+ * ADMIN_CORREO/ADMIN_CLAVE, si todavía no existe ninguna administradora.
+ * Así se evita depender de datos de demostración para tener acceso real.
+ */
+export function crearAdminInicialSiHaceFalta() {
+  const correo = String(process.env.ADMIN_CORREO || '').toLowerCase().trim();
+  const clave = String(process.env.ADMIN_CLAVE || '');
+  if (!correo || !clave) return;
+  if (uno(`SELECT id FROM usuarios WHERE rol = $rol`, { rol: ROLES.ADMIN })) return;
+
+  const yaExiste = uno(`SELECT id FROM usuarios WHERE correo = $correo`, { correo });
+  if (yaExiste) {
+    ejecutar(`UPDATE usuarios SET rol = $rol WHERE id = $id`, { rol: ROLES.ADMIN, id: yaExiste.id });
+    console.log(`[MÍA] ${correo} ahora es administradora.`);
+    return;
+  }
+  ejecutar(
+    `INSERT INTO usuarios (nombre, correo, hash, rol) VALUES ('Organización MÍA', $correo, $hash, $rol)`,
+    { correo, hash: cifrarContrasena(clave), rol: ROLES.ADMIN }
+  );
+  console.log(`[MÍA] Cuenta de administradora creada para ${correo}.`);
+}
