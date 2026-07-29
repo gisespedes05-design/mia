@@ -11,6 +11,7 @@ import * as favoritos from './src/routes/favoritos.js';
 import * as admin from './src/routes/admin.js';
 import * as blog from './src/routes/blog.js';
 import * as catalogo from './src/routes/catalogo.js';
+import * as pagos from './src/routes/pagos.js';
 
 const r = new Enrutador();
 
@@ -35,6 +36,8 @@ r.get('/api/negocios/:id/panel', negocios.verPanel);
 r.get('/api/negocios/:slug', negocios.verDetalle);
 r.patch('/api/negocios/:id', negocios.actualizar);
 r.post('/api/negocios/:id/enviar-revision', negocios.enviarRevision);
+r.post('/api/negocios/:id/pago/iniciar', pagos.crearCheckout);
+r.post('/api/negocios/:id/pago/portal', pagos.crearPortal);
 r.post('/api/negocios/:id/logo', negocios.subirLogo);
 r.delete('/api/negocios/:id/logo', negocios.quitarLogo);
 r.post('/api/negocios/:id/fotos', negocios.subirFoto);
@@ -80,6 +83,10 @@ r.patch('/api/admin/usuarias/:id/suspension', admin.alternarSuspensionUsuaria);
 r.get('/api/admin/resenas', admin.listarResenas);
 r.patch('/api/admin/resenas/:id/oculta', admin.alternarResenaOculta);
 r.get('/api/admin/bitacora', admin.listarBitacora);
+r.get('/api/admin/pagos', admin.listarPagos);
+
+// ------------------------------------------------------- Stripe webhook --
+r.post('/api/pagos/webhook', pagos.webhook);
 
 const manejador = crearManejador({
   enrutador: r,

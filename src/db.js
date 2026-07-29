@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS negocios (
   plan            TEXT NOT NULL DEFAULT 'gratuito',
   plan_vence      TEXT,
   pago_confirmado INTEGER NOT NULL DEFAULT 1,
+  stripe_customer_id     TEXT,
+  stripe_subscription_id TEXT,
   estado          TEXT NOT NULL DEFAULT 'borrador',
   verificado      INTEGER NOT NULL DEFAULT 0,
   vistas          INTEGER NOT NULL DEFAULT 0,
@@ -138,6 +140,21 @@ CREATE TABLE IF NOT EXISTS bitacora (
   creado_en  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Cada evento de Stripe que se procesa queda aquí: es el historial de pagos
+-- que ve la administradora, y evita.procesar dos veces el mismo evento si
+-- Stripe lo reintenta (les pasa seguido, no es un error).
+CREATE TABLE IF NOT EXISTS pagos_stripe (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  negocio_id        INTEGER REFERENCES negocios(id) ON DELETE SET NULL,
+  evento_stripe_id  TEXT NOT NULL UNIQUE,
+  tipo              TEXT NOT NULL,
+  plan              TEXT NOT NULL DEFAULT '',
+  monto             REAL,
+  moneda            TEXT NOT NULL DEFAULT '',
+  estado            TEXT NOT NULL DEFAULT 'pagado',
+  creado_en         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_negocios_estado     ON negocios(estado);
 CREATE INDEX IF NOT EXISTS idx_negocios_categoria  ON negocios(categoria);
 CREATE INDEX IF NOT EXISTS idx_negocios_duena      ON negocios(propietaria_id);
@@ -146,7 +163,19 @@ CREATE INDEX IF NOT EXISTS idx_fotos_negocio       ON fotos(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_productos_negocio   ON productos(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_publicaciones_neg   ON publicaciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_solicitudes_estado  ON solicitudes(estado);
+CREATE INDEX IF NOT EXISTS idx_pagos_negocio       ON pagos_stripe(negocio_id);
 `);
+
+// Migración ligera: si la base ya existía antes de sumar el cobro con
+// Stripe, le faltan estas dos columnas. CREATE TABLE IF NOT EXISTS no las
+// agrega sola porque la tabla ya está creada, así que se revisan a mano.
+const columnasNegocios = todos(`SELECT name FROM pragma_table_info('negocios')`).map((c) => c.name);
+if (!columnasNegocios.includes('stripe_customer_id')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN stripe_customer_id TEXT`);
+}
+if (!columnasNegocios.includes('stripe_subscription_id')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN stripe_subscription_id TEXT`);
+}
 
 /** Consulta que devuelve varias filas. */
 export function todos(sql, params = {}) {

@@ -12,5 +12,8 @@
     "reset": "node --disable-warning=ExperimentalWarning src/seed.js --reset"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "stripe": "^22.3.2"
+  }
 }

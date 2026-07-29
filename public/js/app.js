@@ -40,6 +40,26 @@ let YO = null;
 
 const MAX_SUBCATEGORIAS = 5;
 
+// Los únicos dos planes que se cobran solos, sin que nadie de MÍA intervenga.
+// Crece con MÍA no entra aquí a propósito: se cotiza y se confirma a mano.
+const PLANES_AUTOMATIZADOS = ["suscripcion", "membresia"];
+
+/** Manda a pagar con Stripe. Sale de verdad del sitio: no es un cambio de hash. */
+async function iniciarPago(negocioId, plan) {
+  try {
+    const { url } = await api.post("/api/negocios/" + negocioId + "/pago/iniciar", { plan });
+    window.location.href = url;
+  } catch (err) { avisarError(err); }
+}
+
+/** Portal de Stripe: para que la dueña vea sus facturas, cambie su tarjeta o cancele ella misma. */
+async function abrirPortalPago(negocioId) {
+  try {
+    const { url } = await api.post("/api/negocios/" + negocioId + "/pago/portal");
+    window.location.href = url;
+  } catch (err) { avisarError(err); }
+}
+
 async function arrancar() {
   const [categorias, planes, sesion] = await Promise.all([
     api.get("/api/categorias"),
@@ -57,7 +77,23 @@ async function arrancar() {
     return p.id;
   });
   YO = sesion;
+  avisarRetornoDeStripe();
   pintar();
+}
+
+/**
+ * Si el Payment Link de Stripe está configurado para volver a MÍA después de
+ * pagar, esto avisa el resultado y limpia el "?pago=" de la URL. Si Stripe
+ * no vuelve aquí (se quedó en su propia pantalla de confirmación), no pasa
+ * nada: el webhook ya activó el plan de todas formas.
+ */
+function avisarRetornoDeStripe() {
+  const parametros = new URLSearchParams(location.search);
+  const resultado = parametros.get("pago");
+  if (!resultado) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  if (resultado === "exito") avisar("¡Pago recibido! Tu plan se activa en cuanto Stripe lo confirme (unos segundos).");
+  else if (resultado === "cancelado") avisar("Cancelaste el pago. Tu perfil sigue con las reglas del plan Gratuito.");
 }
 
 async function refrescarSesion() {
@@ -928,7 +964,7 @@ function vistaRegistro(planId) {
         'negocio: ventas, redes, contenido, imagen…"></textarea></label></div>' : "") +
 
     (plan.precioMensual ? '<div class="tarjeta p20 pila g12"><p class="eyebrow">' +
-      (plan.cotizado ? "Cotización" : "Pago") + "</p>" +
+      (plan.cotizado ? "Cotización" : "Pago con Stripe") + "</p>" +
       "<p><strong>" + esc(plan.etiqueta) + "</strong></p>" +
       '<p class="pequeno apagado">' + (plan.cotizado
         ? "Los $2,500 son el punto de partida. El precio final depende de los servicios que " +
@@ -936,13 +972,16 @@ function vistaRegistro(planId) {
           "automático: al enviar, el equipo de MÍA te contacta para platicar el alcance y " +
           "cotizarte. El plan se activa cuando ambas partes están de acuerdo; mientras tanto tu " +
           "perfil funciona con las reglas del plan Gratuito."
-        : "Al enviar este formulario tu solicitud le llega a MÍA. El equipo te contacta para " +
-          "confirmar el pago y en ese momento se activan los beneficios de tu plan. Mientras " +
-          "tanto tu perfil funciona con las reglas del plan Gratuito.") + "</p></div>" : "") +
+        : "Al enviar, te llevamos directo a pagar con Stripe de forma segura. En cuanto Stripe " +
+          "confirme el pago —normalmente toma segundos— tu plan se activa solo, sin que nadie " +
+          "tenga que hacer nada más. Mientras tanto tu perfil funciona con las reglas del plan Gratuito.")
+        + "</p></div>" : "") +
 
     '<div class="pila g12">' +
       '<button class="btn ancho" onclick="enviarRegistro(\'' + planId + '\')">' +
-        (plan.cotizado ? "Enviar mi solicitud" : "Enviar mi registro") + "</button>" +
+        (plan.cotizado ? "Enviar mi solicitud"
+          : PLANES_AUTOMATIZADOS.includes(planId) ? "Continuar y pagar con Stripe" : "Enviar mi registro") +
+        "</button>" +
       '<p id="g_error" class="pequeno" style="color:var(--peligro)"></p>' +
       '<p class="diminuto apagado">Al enviar, tu solicitud queda guardada para el equipo de MÍA ' +
       "y se crea tu perfil en espera de revisión.</p>" +
@@ -984,12 +1023,17 @@ async function enviarRegistro(planId) {
     },
   };
   try {
-    await api.post("/api/auth/registro-negocio", cuerpo);
+    const r = await api.post("/api/auth/registro-negocio", cuerpo);
     await refrescarSesion();
+
+    if (PLANES_AUTOMATIZADOS.includes(planId)) {
+      avisar("Ya casi. Te llevamos a pagar con Stripe…");
+      return iniciarPago(r.negocioId, planId);
+    }
     location.hash = "#/panel";
     await pintar();
-    avisar(PLANES[planId].precioMensual
-      ? "Recibimos tu registro. MÍA te contacta para confirmar tu pago."
+    avisar(planId === "crece"
+      ? "Recibimos tu registro. MÍA te contacta para cotizarte."
       : "¡Listo! Tu perfil quedó en espera de revisión.");
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo completar el registro."); }
 }
@@ -1117,6 +1161,17 @@ function fichaPanel(n) {
       "Te avisamos en cuanto se publique.</div>" : "") +
     (n.estado === "suspendido" ? '<div class="aviso alerta">MÍA detuvo este perfil' +
       (n.notaRevision ? ": " + esc(n.notaRevision) : ".") + "</div>" : "") +
+
+    (PLANES_AUTOMATIZADOS.includes(n.plan)
+      ? (!n.pagoConfirmado || n.membresiaVencida
+        ? '<div class="aviso alerta"><div><strong>' +
+            (n.membresiaVencida ? `Tu ${esc(PLANES[n.plan].nombre)} venció.` : "Todavía falta confirmar tu pago.") +
+            '</strong> Complétalo con Stripe para activar tus beneficios.' +
+            '<br><button class="btn chico" style="margin-top:8px" onclick="iniciarPago(' + n.id + ",'" + n.plan +
+            '\')">Pagar con Stripe</button></div></div>'
+        : '<div class="fila g8"><span class="chip jade">Pago al día con Stripe</span>' +
+          '<button class="btn fantasma chico" onclick="abrirPortalPago(' + n.id + ')">Administrar mi pago</button></div>')
+      : "") +
 
     (n.bloqueos.length ? '<div class="aviso candado"><div><strong>Tu plan está ocultando cosas:</strong>' +
       '<ul style="margin:6px 0 0;padding-left:18px">' + n.bloqueos.map((x) => "<li>" + esc(x) + "</li>").join("") +
@@ -1403,7 +1458,7 @@ async function vistaAdmin(seccion) {
   const nuevas = solicitudes.filter((x) => x.estado === "nueva").length;
   const tabs = [["resumen", "Resumen"], ["solicitudes", "Solicitudes" + (nuevas ? " (" + nuevas + ")" : "")],
     ["negocios", "Negocios"], ["usuarias", "Usuarias"], ["resenas", "Reseñas"],
-    ["blog", "Blog"], ["bitacora", "Bitácora"]];
+    ["pagos", "Pagos"], ["blog", "Blog"], ["bitacora", "Bitácora"]];
 
   let contenido;
   if (s === "resumen") contenido = await adminResumen();
@@ -1411,6 +1466,7 @@ async function vistaAdmin(seccion) {
   else if (s === "negocios") contenido = await adminNegocios();
   else if (s === "usuarias") contenido = await adminUsuarias();
   else if (s === "resenas") contenido = await adminResenas();
+  else if (s === "pagos") contenido = await adminPagos();
   else if (s === "blog") contenido = await adminBlog();
   else contenido = await adminBitacora();
 
@@ -1591,6 +1647,40 @@ async function adminResenas() {
 async function adminOcultar(id) {
   try { await api.patch("/api/admin/resenas/" + id + "/oculta"); await pintar(); avisar("Actualizamos la reseña."); }
   catch (err) { avisarError(err); }
+}
+
+/* ------------------------------------------------------------------- pagos */
+const ESTADO_PAGO = {
+  pagado: { et: "Pagado", chip: "jade" },
+  fallido: { et: "Falló", chip: "peligro" },
+  cancelado: { et: "Cancelado", chip: "" },
+};
+const TIPO_EVENTO_STRIPE = {
+  "checkout.session.completed": "Alta",
+  "invoice.paid": "Renovación",
+  "invoice.payment_failed": "Cobro fallido",
+  "customer.subscription.deleted": "Cancelación",
+};
+
+async function adminPagos() {
+  const pagos = await api.get("/api/admin/pagos");
+  const filas = pagos.map((p) => {
+    const est = ESTADO_PAGO[p.estado] || { et: p.estado, chip: "" };
+    return "<tr><td>" + (p.negocio_slug
+        ? '<a href="#/negocio/' + esc(p.negocio_slug) + '">' + esc(p.negocio_nombre) + "</a>"
+        : '<span class="apagado">' + esc(p.negocio_nombre || "—") + "</span>") + "</td>" +
+      '<td class="pequeno">' + esc(TIPO_EVENTO_STRIPE[p.tipo] || p.tipo) + "</td>" +
+      '<td class="pequeno">' + esc(p.plan ? (PLANES[p.plan]?.nombre || p.plan) : "—") + "</td>" +
+      '<td class="mono">' + (p.monto != null ? pesos(p.monto) + " " + esc((p.moneda || "").toUpperCase()) : "—") + "</td>" +
+      '<td><span class="chip ' + est.chip + '">' + esc(est.et) + "</span></td>" +
+      '<td class="diminuto mono">' + esc(new Date(p.creado_en).toLocaleString("es-MX")) + "</td></tr>";
+  }).join("");
+
+  return encabezado("Pagos", "Cada evento que confirma Stripe queda aquí: altas, renovaciones, cobros fallidos y cancelaciones.") +
+    (pagos.length
+      ? '<div class="tabla-envoltura"><table><thead><tr><th>Negocio</th><th>Evento</th><th>Plan</th>' +
+        "<th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>" + filas + "</tbody></table></div>"
+      : vacio("Todavía no hay pagos procesados por Stripe."));
 }
 
 /* ------------------------------------------------------------------- blog */

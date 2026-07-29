@@ -205,3 +205,15 @@ export function listarBitacora(ctx) {
       ORDER BY b.creado_en DESC LIMIT 200`
   );
 }
+
+/* ------------------------------------------------------------------ pagos */
+
+export function listarPagos(ctx) {
+  soloAdmin(ctx);
+  return todos(
+    `SELECT p.*, n.nombre AS negocio_nombre, n.slug AS negocio_slug
+       FROM pagos_stripe p
+       LEFT JOIN negocios n ON n.id = p.negocio_id
+      ORDER BY p.creado_en DESC LIMIT 200`
+  );
+}

@@ -107,6 +107,74 @@ Las solicitudes se ven en **Administración › Solicitudes**: negocio, plan,
 categoría, fecha y estado, con lo que la dueña haya escrito para Crece con MÍA.
 Todo se revisa y se marca como atendido dentro de la misma página.
 
+## Cobros automáticos con Stripe
+
+Suscripción y Membresía se cobran solas con Stripe: al registrarse (o al
+completar un pago pendiente desde su panel), a la dueña se le manda a la
+página de pago de Stripe; en cuanto Stripe confirma el cobro, su plan se
+activa sin que nadie de MÍA tenga que hacer nada. Las renovaciones mensuales
+y los cobros fallidos también se procesan solos. **Crece con MÍA no pasa por
+aquí**: se sigue cotizando y confirmando a mano, como hasta ahora, porque su
+precio varía según el alcance.
+
+### Variables de entorno que hay que configurar
+
+| Variable | Qué es | De dónde se saca |
+|---|---|---|
+| `STRIPE_PAYMENT_LINK_SUSCRIPCION` | URL del Payment Link del plan Suscripción | Stripe Dashboard → Payment Links → el enlace `https://buy.stripe.com/...` de ese producto |
+| `STRIPE_PAYMENT_LINK_MEMBRESIA` | URL del Payment Link del plan Membresía | Igual, para el producto de Membresía |
+| `STRIPE_WEBHOOK_SECRET` | Firma con la que Stripe sella cada aviso que manda | Se genera al crear el endpoint del webhook (siguiente sección); empieza con `whsec_` |
+| `STRIPE_SECRET_KEY` | Llave secreta de la cuenta de Stripe | Developers → API keys → *Secret key* (`sk_live_...` o `sk_test_...`) |
+| `SITIO_URL` | El dominio real donde vive MÍA (por ejemplo `https://mia.mx`) | Opcional; sin ella, se infiere de la petición |
+
+Las dos primeras son URL públicas (no secretas): son literalmente el enlace
+donde cualquiera puede pagar. `STRIPE_SECRET_KEY` solo hace falta para el
+botón **"Administrar mi pago"** del panel (el portal donde la dueña ve sus
+facturas o cambia su tarjeta) — sin ella, todo lo demás funciona igual.
+
+### Configurar el webhook (el paso que activa todo)
+
+1. En el Dashboard de Stripe: **Developers → Webhooks → Add endpoint**.
+2. URL del endpoint: `https://tu-dominio/api/pagos/webhook`.
+3. Eventos a enviar — selecciona exactamente estos cuatro:
+   - `checkout.session.completed`
+   - `invoice.paid`
+   - `invoice.payment_failed`
+   - `customer.subscription.deleted`
+4. Al guardar, Stripe te muestra el **signing secret** (`whsec_...`): eso va en
+   `STRIPE_WEBHOOK_SECRET`.
+5. Opcional pero recomendable: en cada Payment Link, en **"After payment"**,
+   elige *"Redirect customers to your website"* con esta URL:
+   `https://tu-dominio/?pago=exito`. Si no lo configuras, no pasa nada malo —
+   el plan se activa igual por el webhook — solo que la dueña se queda un
+   momento en la pantalla de confirmación de Stripe en vez de volver sola.
+
+### Cómo probarlo sin arriesgar dinero real
+
+Usa las llaves de **modo de prueba** de Stripe (`sk_test_...`) y una tarjeta de
+prueba (`4242 4242 4242 4242`, cualquier fecha futura y CVC). El webhook se
+puede probar en local con la CLI de Stripe (`stripe listen --forward-to
+localhost:3000/api/pagos/webhook`), que te da un `whsec_` temporal para
+`STRIPE_WEBHOOK_SECRET`. Cuando todo funcione en modo prueba, se cambian las
+mismas variables por las de modo real (`sk_live_...` y los Payment Links del
+modo real) y no hay que tocar nada más del código.
+
+### Qué pasa con cada aviso de Stripe
+
+- **Pago recibido** (`checkout.session.completed` + `invoice.paid`): se activa
+  el plan y se fija hasta cuándo queda vigente.
+- **Se renueva sola cada mes** (`invoice.paid` de nuevo): la vigencia se
+  extiende automáticamente, sin que nadie intervenga.
+- **Un cobro falla** (`invoice.payment_failed`): no se corta el servicio de
+  inmediato — Stripe reintenta el cobro solo. Queda anotado para que la
+  organización lo sepa.
+- **Se cancela la suscripción** (`customer.subscription.deleted`): el negocio
+  conserva su plan hasta el último día ya pagado (no hay corte ni reembolso
+  automático); al llegar esa fecha, cae solo al plan Gratuito.
+
+Todo esto queda visible en **Administración › Pagos**, con el monto, el tipo
+de evento y el estado de cada uno.
+
 ## Estructura del código
 
 ```
@@ -118,9 +186,11 @@ src/
   http.js               enrutador y servidor de archivos, sin frameworks
   negocios.js           reglas de negocio: qué ve el público vs. la dueña
   subidas.js            procesa las fotos que se suben (base64 → archivo)
+  stripe.js              cliente de Stripe (se queda inerte si falta la llave)
   seed.js               datos de demostración
   routes/               un archivo por grupo de endpoints (auth, negocios,
-                        reseñas, favoritos, blog, administración, catálogo)
+                        reseñas, favoritos, blog, administración, catálogo,
+                        pagos)
 public/
   index.html            cascarón de la página
   css/estilos.css        estilos (compartidos con mia.html)
@@ -130,9 +200,10 @@ data/                   base de datos y fotos subidas (no se versiona)
 
 ## Cómo ponerla en línea con un dominio real
 
-Este servidor no tiene dependencias que instalar y sirve tanto la API como los
-archivos del sitio, así que corre en cualquier plataforma que ejecute Node 22.
-Render y Railway son las más sencillas para empezar:
+Este servidor solo depende del SDK de Stripe (`npm install` lo resuelve solo)
+y sirve tanto la API como los archivos del sitio, así que corre en cualquier
+plataforma que ejecute Node 22. Render y Railway son las más sencillas para
+empezar:
 
 1. **Sube este repositorio a GitHub** (si no está ya) y conéctalo a Render o
    Railway — ambos lo detectan como proyecto Node automáticamente.
@@ -142,6 +213,10 @@ Render y Railway son las más sencillas para empezar:
    - Variable `MIA_SECRETO`: defínela tú con un texto largo y aleatorio (por
      ejemplo, generado con `openssl rand -hex 32`). Sin esto, cada reinicio
      del servidor invalida las sesiones de todo el mundo.
+   - Las variables de Stripe (`STRIPE_PAYMENT_LINK_SUSCRIPCION`,
+     `STRIPE_PAYMENT_LINK_MEMBRESIA`, `STRIPE_WEBHOOK_SECRET`,
+     `STRIPE_SECRET_KEY`): ver la sección **Cobros automáticos con Stripe**
+     más abajo.
 3. **Agrega un disco persistente** montado en la carpeta `data/`. Esto es lo
    más importante y lo más fácil de olvidar: sin disco persistente, cada vez
    que la plataforma reinicie o vuelvas a desplegar, **se borran todos los

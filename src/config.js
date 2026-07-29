@@ -151,6 +151,20 @@ export function membresiaVencida(negocio) {
   return new Date(negocio.plan_vence).getTime() < Date.now();
 }
 
+/**
+ * Payment Link de Stripe ("https://buy.stripe.com/...") de cada plan que se
+ * cobra solo. Se configura por variable de entorno — son URL públicas, no
+ * secretas, pero igual conviene poder cambiarlas sin tocar código, por si
+ * un día se recrean en Stripe.
+ *
+ * "Crece con MÍA" no aparece aquí a propósito: su precio se cotiza caso por
+ * caso, así que ese pago lo sigue confirmando la organización a mano.
+ */
+export const STRIPE_ENLACES_PAGO = {
+  suscripcion: process.env.STRIPE_PAYMENT_LINK_SUSCRIPCION || '',
+  membresia: process.env.STRIPE_PAYMENT_LINK_MEMBRESIA || '',
+};
+
 /** Taxonomía definida por MÍA. */
 export const CATEGORIAS = [
   { id: 'belleza', nombre: 'Belleza', icono: '💄',

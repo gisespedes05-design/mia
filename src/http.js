@@ -63,7 +63,7 @@ export class Enrutador {
   }
 }
 
-async function leerCuerpo(req) {
+async function leerCrudo(req) {
   const trozos = [];
   let total = 0;
   for await (const trozo of req) {
@@ -71,10 +71,14 @@ async function leerCuerpo(req) {
     if (total > LIMITE_CUERPO) throw new ErrorHttp(413, 'El archivo es demasiado grande (máximo 8 MB).');
     trozos.push(trozo);
   }
-  if (!total) return {};
-  const texto = Buffer.concat(trozos).toString('utf8');
+  return Buffer.concat(trozos);
+}
+
+async function leerCuerpo(req) {
+  const buffer = await leerCrudo(req);
+  if (!buffer.length) return {};
   try {
-    return JSON.parse(texto);
+    return JSON.parse(buffer.toString('utf8'));
   } catch {
     throw new ErrorHttp(400, 'El formato de la petición no es válido.');
   }
@@ -135,14 +139,20 @@ export function crearManejador({ enrutador, dirPublico, dirSubidas }) {
           return responderJson(res, 405, { error: 'Método no permitido.' });
         }
 
+        // El webhook de Stripe firma los bytes exactos del cuerpo: si aquí se
+        // parsea a JSON y se reconstruye, la firma ya no coincide con nada.
+        // Por eso esta única ruta recibe el cuerpo crudo en vez de parseado.
+        const esWebhookStripe = ruta === '/api/pagos/webhook' && req.method === 'POST';
+
         const ctx = {
           req,
           res,
           url,
           params: encontrada.params,
           consulta: Object.fromEntries(url.searchParams),
-          usuario: usuarioDeLaPeticion(req),
-          cuerpo: req.method === 'GET' || req.method === 'DELETE' ? {} : await leerCuerpo(req),
+          usuario: esWebhookStripe ? null : usuarioDeLaPeticion(req),
+          cuerpo: esWebhookStripe || req.method === 'GET' || req.method === 'DELETE' ? {} : await leerCuerpo(req),
+          cuerpoCrudo: esWebhookStripe ? await leerCrudo(req) : null,
           cookies: [],
         };
 
@@ -178,11 +188,15 @@ export function crearManejador({ enrutador, dirPublico, dirSubidas }) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('Página no encontrada');
     } catch (err) {
-      const codigo = err instanceof ErrorHttp ? err.codigo : 500;
-      if (codigo >= 500) console.error('[MÍA]', err);
+      // Un ErrorHttp siempre trae un mensaje escrito a propósito para
+      // mostrarse, sin importar el código; lo que se oculta es la excepción
+      // cruda e inesperada, que sí podría filtrar detalles internos.
+      const esperado = err instanceof ErrorHttp;
+      const codigo = esperado ? err.codigo : 500;
+      if (!esperado) console.error('[MÍA]', err);
       if (res.writableEnded) return undefined;
       return responderJson(res, codigo, {
-        error: codigo >= 500 ? 'Ocurrió un error en el servidor.' : err.message,
+        error: esperado ? err.message : 'Ocurrió un error en el servidor.',
       });
     }
   };
