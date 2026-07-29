@@ -242,6 +242,7 @@ async function pintar() {
     else if (vista === "mapa") html = await vistaMapa();
     else if (vista === "blog") html = arg ? await vistaArticulo(arg) : await vistaBlog();
     else if (vista === "sobre") html = vistaSobre();
+    else if (vista === "privacidad") html = vistaPrivacidad();
     else if (vista === "planes") html = vistaPlanes();
     else if (vista === "registro") html = vistaRegistro(arg);
     else if (vista === "entrar") html = vistaEntrar(arg);
@@ -662,6 +663,64 @@ function vistaSobre() {
     "</div>" +
   "</div>";
 }
+/* ===================================================== AVISO DE PRIVACIDAD */
+function vistaPrivacidad() {
+  const seccion = (t, ...parrafos) =>
+    '<div class="pila g8"><h2>' + t + "</h2>" + parrafos.map((p) => "<p>" + p + "</p>").join("") + "</div>";
+
+  return '<div class="envoltura bloque pila g24" style="max-width:760px">' +
+    '<div class="pila g8"><p class="eyebrow">Legal</p><h1>Aviso de privacidad</h1>' +
+    '<p class="apagado">Última actualización: julio de 2026.</p></div>' +
+    '<div class="articulo pila g24">' +
+
+    seccion("Responsable de tus datos",
+      "<strong>Giselle Chávez Céspedes</strong>, en representación de MÍA, con domicilio en " +
+      "Xochimilco, Ciudad de México, es responsable del tratamiento de tus datos personales, " +
+      "de conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los " +
+      "Particulares.") +
+
+    seccion("Qué datos recabamos",
+      "Según el tipo de cuenta que crees, podemos recabar: nombre, correo electrónico, " +
+      "contraseña (que guardamos siempre cifrada, nunca en texto plano), teléfono, y, si " +
+      "registras un negocio, su categoría, descripción, ubicación, redes sociales y las " +
+      "fotografías que subas. También guardamos las reseñas y favoritos que dejes, y el " +
+      "estado de tus pagos (el número completo de tu tarjeta nunca lo vemos ni lo guardamos: " +
+      "eso lo procesa directamente Stripe).") +
+
+    seccion("Para qué usamos tus datos",
+      "<strong>Finalidades necesarias:</strong> crear y administrar tu cuenta; publicar y " +
+      "administrar tu perfil de negocio; procesar el pago de tu plan; verificar negocios; " +
+      "moderar reseñas; y contactarte para dar seguimiento a tu registro, tu plan o tu " +
+      "verificación.",
+      "<strong>Finalidades secundarias (opcionales):</strong> avisarte de novedades o " +
+      "promociones de MÍA. Puedes oponerte a estas en cualquier momento sin que afecte tu " +
+      "cuenta, escribiendo al correo de contacto de abajo.") +
+
+    seccion("A quién más llegan tus datos",
+      "Para operar MÍA compartimos datos con: <strong>Stripe</strong> (procesa los pagos de " +
+      "los planes), <strong>Twilio SendGrid</strong> (envía los correos de la plataforma) y " +
+      "<strong>Render</strong> (aloja el servidor y la base de datos). Todos procesan tus " +
+      "datos solo para prestarnos ese servicio, no para sus propios fines. Si tú decides " +
+      "escribirnos por el botón de WhatsApp, esa conversación queda sujeta además a las " +
+      "políticas de WhatsApp/Meta.") +
+
+    seccion("Cómo ejercer tus derechos (ARCO)",
+      "Puedes Acceder, Rectificar o Cancelar tus datos, y Oponerte a su uso, en cualquier " +
+      "momento. Para eso, escríbenos a <strong>mia.paraellas@gmail.com</strong> desde el " +
+      "correo con el que te registraste, indicando qué quieres hacer. Responderemos en un " +
+      "plazo razonable.") +
+
+    seccion("Cookies",
+      "MÍA usa una sola cookie técnica para mantener tu sesión iniciada. No usamos cookies de " +
+      "rastreo ni de publicidad.") +
+
+    seccion("Cambios a este aviso",
+      "Si actualizamos este aviso de forma importante, lo anunciaremos en esta misma página " +
+      "con la nueva fecha de actualización.") +
+
+    "</div></div>";
+}
+
 /* ============================================================ PERFIL NEGOCIO */
 async function vistaNegocio(slug) {
   let n;
