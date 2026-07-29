@@ -175,6 +175,29 @@ modo real) y no hay que tocar nada más del código.
 Todo esto queda visible en **Administración › Pagos**, con el monto, el tipo
 de evento y el estado de cada uno.
 
+## Correos de bienvenida y entrevista por WhatsApp
+
+Al registrarse, cada cuenta recibe un correo de bienvenida. Los negocios que
+se registran con **Membresía** o **Crece con MÍA** reciben además un botón
+para agendar por WhatsApp: para Membresía, la entrevista de registro y
+verificación; para Crece con MÍA, la cotización de su plan de crecimiento.
+Gratuito y Suscripción solo reciben la bienvenida (no necesitan entrevista).
+
+Los correos se mandan con la API de **SendGrid** (sin librerías nuevas, con
+el `fetch` nativo de Node). Variables de entorno:
+
+| Variable | Qué es | De dónde se saca |
+|---|---|---|
+| `SENDGRID_API_KEY` | Llave de la API de SendGrid | SendGrid → Settings → API Keys → Create API Key |
+| `CORREO_REMITENTE` | El correo desde el que se manda (debe estar verificado en SendGrid) | SendGrid → Settings → Sender Authentication → Single Sender Verification |
+| `CORREO_REMITENTE_NOMBRE` | Nombre que se muestra como remitente | Opcional; por defecto `MÍA` |
+| `WHATSAPP_MIA` | Número de WhatsApp de la organización | Solo dígitos con código de país, sin "+" ni espacios (ej. `521XXXXXXXXXX`) |
+
+Si falta `SENDGRID_API_KEY` o `CORREO_REMITENTE`, el registro sigue
+funcionando igual — simplemente no se manda el correo (queda anotado en los
+logs del servidor). Si falta `WHATSAPP_MIA`, el correo se manda pero sin el
+botón de WhatsApp.
+
 ## Estructura del código
 
 ```
@@ -187,6 +210,7 @@ src/
   negocios.js           reglas de negocio: qué ve el público vs. la dueña
   subidas.js            procesa las fotos que se suben (base64 → archivo)
   stripe.js              cliente de Stripe (se queda inerte si falta la llave)
+  correo.js              correos de bienvenida por SendGrid (igual, inerte si falta la llave)
   seed.js               datos de demostración
   routes/               un archivo por grupo de endpoints (auth, negocios,
                         reseñas, favoritos, blog, administración, catálogo,

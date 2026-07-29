@@ -4,6 +4,7 @@ import {
 } from '../auth.js';
 import { exigirTexto, exigirCorreo, generarSlug, normalizarSub, normalizarRedes } from '../negocios.js';
 import { PLANES, ROLES } from '../config.js';
+import { enviarCorreo, correoBienvenidaUsuaria, correoBienvenidaNegocio } from '../correo.js';
 
 function crearCuenta({ nombre, correo, clave, telefono = '', rol }) {
   const yaExiste = uno(`SELECT id FROM usuarios WHERE correo = $correo`, { correo });
@@ -19,13 +20,14 @@ function crearCuenta({ nombre, correo, clave, telefono = '', rol }) {
 }
 
 /** Registro de una clienta: solo correo y contraseña, sin negocio. */
-export function registrarClienta(ctx) {
+export async function registrarClienta(ctx) {
   const nombre = exigirTexto(ctx.cuerpo.nombre, 'nombre', { min: 2, max: 120 });
   const correo = exigirCorreo(ctx.cuerpo.correo);
   const clave = String(ctx.cuerpo.clave || '');
 
   const id = crearCuenta({ nombre, correo, clave, rol: ROLES.USUARIO });
   ctx.cookies.push(cookieDeSesion(id));
+  await enviarCorreo({ para: correo, ...correoBienvenidaUsuaria(nombre) });
   return { id, nombre, correo, rol: ROLES.USUARIO };
 }
 
@@ -34,7 +36,7 @@ export function registrarClienta(ctx) {
  * frontend, pero todos llegan aquí: lo que cambia es qué campos manda cada
  * uno (una dueña con plan Gratuito no manda redes, por ejemplo).
  */
-export function registrarNegocio(ctx) {
+export async function registrarNegocio(ctx) {
   const { negocio } = ctx.cuerpo;
   if (!negocio || typeof negocio !== 'object') throw new ErrorHttp(400, 'Faltan los datos del negocio.');
 
@@ -90,6 +92,7 @@ export function registrarNegocio(ctx) {
 
   anotar(usuarioId, 'Registro recibido', `${nombreNegocio} — plan ${PLANES[plan].nombre}`);
   ctx.cookies.push(cookieDeSesion(usuarioId));
+  await enviarCorreo({ para: correo, ...correoBienvenidaNegocio(nombre, nombreNegocio, plan) });
   return { usuarioId, negocioId, slug, plan };
 }
 

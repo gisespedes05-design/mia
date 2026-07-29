@@ -165,6 +165,17 @@ export const STRIPE_ENLACES_PAGO = {
   membresia: process.env.STRIPE_PAYMENT_LINK_MEMBRESIA || '',
 };
 
+/**
+ * WhatsApp personal de la organización: ahí se agenda la entrevista de
+ * verificación (Membresía) o la cotización del plan de crecimiento (Crece
+ * con MÍA). Formato esperado: solo dígitos con código de país, sin "+" ni
+ * espacios (ej. "521XXXXXXXXXX" para un celular de México).
+ */
+export const WHATSAPP_MIA = process.env.WHATSAPP_MIA || '';
+
+export const enlaceWhatsApp = (mensaje) =>
+  `https://wa.me/${WHATSAPP_MIA}?text=${encodeURIComponent(mensaje)}`;
+
 /** Taxonomía definida por MÍA. */
 export const CATEGORIAS = [
   { id: 'belleza', nombre: 'Belleza', icono: '💄',
