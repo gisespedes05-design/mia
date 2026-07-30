@@ -1393,7 +1393,7 @@ function fichaPanel(n) {
     (n.estado === "suspendido" ? '<div class="aviso alerta">MÍA detuvo este perfil' +
       (n.notaRevision ? ": " + esc(n.notaRevision) : ".") + "</div>" : "") +
 
-    (PLANES_AUTOMATIZADOS.includes(n.plan)
+    (PLANES_AUTOMATIZADOS.includes(n.plan) || (n.plan === "crece" && n.enlacePagoCrece)
       ? (!n.pagoConfirmado || n.membresiaVencida
         ? '<div class="aviso alerta"><div><strong>' +
             (n.membresiaVencida ? `Tu ${esc(PLANES[n.plan].nombre)} venció.` : "Todavía falta confirmar tu pago.") +
@@ -1777,7 +1777,10 @@ async function adminNegocios() {
           esc(PLANES[k].nombre) + "</option>").join("") + "</select>" +
         (n.membresiaVencida ? '<br><span class="chip peligro" style="margin-top:4px">Vencido</span>' : "") +
         (!n.pagoConfirmado ? '<br><button class="btn chico" style="margin-top:4px" onclick="confirmarPago(' +
-          n.id + ')">Confirmar pago</button>' : "") + "</td>" +
+          n.id + ')">Confirmar pago</button>' : "") +
+        (n.plan === "crece" ? '<br><button class="btn linea chico" style="margin-top:4px" onclick="adminEnlacePago(' +
+          n.id + ",'" + encodeURIComponent(n.enlacePagoCrece || "") + "')\">" +
+          (n.enlacePagoCrece ? "Editar enlace de pago" : "Agregar enlace de pago") + "</button>" : "") + "</td>" +
       '<td class="mono">' + n.vistas + "</td>" +
       '<td><div class="fila g8">' +
         (n.estado === "pendiente"
@@ -1823,6 +1826,21 @@ async function adminPlan(id, plan) {
 async function confirmarPago(id) {
   try { await api.post("/api/admin/negocios/" + id + "/confirmar-pago"); await pintar(); avisar("Confirmamos el pago. Ya tiene todos sus beneficios."); }
   catch (err) { avisarError(err); }
+}
+
+async function adminEnlacePago(id, actualCodificado) {
+  const actual = decodeURIComponent(actualCodificado);
+  const enlace = prompt(
+    "Pega el Payment Link de Stripe que creaste para este negocio (con su precio ya cotizado).\n" +
+    "Déjalo vacío para quitarlo.",
+    actual
+  );
+  if (enlace === null) return;
+  try {
+    await api.patch("/api/admin/negocios/" + id + "/enlace-pago", { enlace: enlace.trim() });
+    await pintar();
+    avisar(enlace.trim() ? "Enlace de pago guardado." : "Enlace de pago quitado.");
+  } catch (err) { avisarError(err); }
 }
 
 /* --------------------------------------------------------------- usuarias */

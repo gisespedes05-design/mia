@@ -113,9 +113,17 @@ Suscripción y Membresía se cobran solas con Stripe: al registrarse (o al
 completar un pago pendiente desde su panel), a la dueña se le manda a la
 página de pago de Stripe; en cuanto Stripe confirma el cobro, su plan se
 activa sin que nadie de MÍA tenga que hacer nada. Las renovaciones mensuales
-y los cobros fallidos también se procesan solos. **Crece con MÍA no pasa por
-aquí**: se sigue cotizando y confirmando a mano, como hasta ahora, porque su
-precio varía según el alcance.
+y los cobros fallidos también se procesan solos.
+
+**Crece con MÍA también se puede cobrar por Stripe**, pero como cada negocio
+tiene un precio distinto (ya cotizado a mano), no usa un Payment Link
+compartido: la administradora crea en Stripe un producto y un Payment Link
+específico para ESE negocio, con su precio ya negociado, y lo guarda desde
+**Administración › Negocios** (botón "Agregar enlace de pago", visible solo
+para negocios en ese plan). En cuanto lo guarda, ese negocio ya puede pagarlo
+solo desde su panel, igual que Suscripción o Membresía — el webhook lo
+reconoce igual. Mientras no se le configure un enlace, sigue cotizándose y
+confirmándose a mano, como antes.
 
 ### Variables de entorno que hay que configurar
 

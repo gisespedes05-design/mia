@@ -285,6 +285,7 @@ export function vistaPanel(negocio) {
         }
       : null,
     propietariaId: negocio.propietaria_id,
+    enlacePagoCrece: negocio.enlace_pago_crece || null,
   };
 }
 

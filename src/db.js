@@ -229,6 +229,12 @@ if (!columnasNegocios.includes('stripe_customer_id')) {
 if (!columnasNegocios.includes('stripe_subscription_id')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN stripe_subscription_id TEXT`);
 }
+// Crece con MÍA se cotiza a mano: este es el Payment Link que la
+// administradora crea en Stripe para ESE negocio en particular, con su
+// precio personalizado. Sin esto, ese plan no tiene forma de cobrarse solo.
+if (!columnasNegocios.includes('enlace_pago_crece')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN enlace_pago_crece TEXT`);
+}
 
 /** Consulta que devuelve varias filas. */
 export function todos(sql, params = {}) {

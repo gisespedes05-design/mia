@@ -90,6 +90,7 @@ r.post('/api/admin/negocios/:id/rechazar', admin.rechazar);
 r.post('/api/admin/negocios/:id/suspender', admin.suspender);
 r.patch('/api/admin/negocios/:id/verificado', admin.alternarVerificado);
 r.patch('/api/admin/negocios/:id/plan', admin.cambiarPlan);
+r.patch('/api/admin/negocios/:id/enlace-pago', admin.establecerEnlacePago);
 r.post('/api/admin/negocios/:id/confirmar-pago', admin.confirmarPago);
 r.get('/api/admin/usuarias', admin.listarUsuarias);
 r.patch('/api/admin/usuarias/:id/rol', admin.cambiarRol);

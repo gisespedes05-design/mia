@@ -142,6 +142,26 @@ export function cambiarPlan(ctx) {
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
 
+/**
+ * El Payment Link que la administradora crea a mano en Stripe para ESTE
+ * negocio de Crece con MÍA (precio personalizado, cotizado caso por caso).
+ * Con esto, ese negocio ya puede pagarlo solo, igual que Suscripción o
+ * Membresía — solo que el enlace es único para él, no uno compartido.
+ */
+export function establecerEnlacePago(ctx) {
+  const admin = soloAdmin(ctx);
+  const negocio = negocioOFallo(ctx.params.id);
+  const enlace = texto(ctx.cuerpo.enlace, 300);
+  if (enlace && !/^https:\/\/buy\.stripe\.com\//.test(enlace)) {
+    throw new ErrorHttp(400, 'Ese enlace no parece un Payment Link de Stripe (debe empezar con https://buy.stripe.com/).');
+  }
+  ejecutar(`UPDATE negocios SET enlace_pago_crece = $enlace WHERE id = $id`, {
+    enlace: enlace || null, id: negocio.id,
+  });
+  anotar(admin.id, enlace ? 'Enlace de pago personalizado guardado' : 'Enlace de pago personalizado quitado', negocio.nombre);
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
 export function confirmarPago(ctx) {
   const admin = soloAdmin(ctx);
   const negocio = negocioOFallo(ctx.params.id);

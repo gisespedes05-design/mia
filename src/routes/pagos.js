@@ -16,24 +16,32 @@ function origenDe(ctx) {
 const fechaDeUnix = (segundosUnix) => new Date(segundosUnix * 1000).toISOString().slice(0, 10);
 
 /**
- * Arma la URL del Payment Link de Stripe que corresponde a Suscripción o
- * Membresía. No hace ninguna llamada a Stripe: los Payment Links ya existen
- * en el Dashboard, solo se les pega el negocio en `client_reference_id` para
- * que el webhook sepa a quién activarle el plan cuando se complete el pago.
- * El pago NO se confirma aquí — se confirma cuando llega ese webhook, que es
- * la única fuente de verdad sobre si el dinero de verdad entró.
+ * Arma la URL del Payment Link de Stripe. Para Suscripción y Membresía es
+ * el mismo enlace compartido para todas (STRIPE_ENLACES_PAGO); para Crece
+ * con MÍA es el enlace que la administradora crea a mano para ESE negocio,
+ * con su precio ya cotizado (`enlace_pago_crece`). No hace ninguna llamada
+ * a Stripe: los Payment Links ya existen en el Dashboard, solo se les pega
+ * el negocio en `client_reference_id` para que el webhook sepa a quién
+ * activarle el plan cuando se complete el pago. El pago NO se confirma
+ * aquí — se confirma cuando llega ese webhook, que es la única fuente de
+ * verdad sobre si el dinero de verdad entró.
  */
 export function crearCheckout(ctx) {
   const usuario = exigirSesion(ctx);
   const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
 
   const plan = ctx.cuerpo.plan;
-  if (!PLANES_AUTOMATIZADOS.includes(plan)) {
-    throw new ErrorHttp(400, 'Ese plan no se paga por aquí. Suscripción y Membresía se cobran con Stripe; Crece con MÍA se cotiza directamente.');
+  if (!PLANES_AUTOMATIZADOS.includes(plan) && plan !== 'crece') {
+    throw new ErrorHttp(400, 'Ese plan no se paga por aquí.');
   }
-  const enlace = STRIPE_ENLACES_PAGO[plan];
+  const enlace = plan === 'crece' ? negocio.enlace_pago_crece : STRIPE_ENLACES_PAGO[plan];
   if (!enlace) {
-    throw new ErrorHttp(503, `Falta configurar el enlace de pago de Stripe para el plan ${PLANES[plan].nombre}.`);
+    throw new ErrorHttp(
+      503,
+      plan === 'crece'
+        ? 'Todavía no hay un enlace de pago para tu cotización. Escríbele a MÍA para completarlo.'
+        : `Falta configurar el enlace de pago de Stripe para el plan ${PLANES[plan].nombre}.`
+    );
   }
 
   const url = new URL(enlace);
@@ -94,7 +102,7 @@ async function manejarCheckoutCompletado(event) {
   const [idParte, plan] = String(session.client_reference_id || '').split(':');
   const negocioId = Number(idParte);
   const negocio = negocioId ? obtenerNegocioPorId(negocioId) : null;
-  if (!negocio || !PLANES_AUTOMATIZADOS.includes(plan)) {
+  if (!negocio || (!PLANES_AUTOMATIZADOS.includes(plan) && plan !== 'crece')) {
     console.error('[Stripe] checkout.session.completed sin negocio o plan reconocible:', session.id, session.client_reference_id);
     return;
   }
