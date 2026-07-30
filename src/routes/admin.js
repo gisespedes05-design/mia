@@ -8,6 +8,20 @@ const soloAdmin = (ctx) => exigirRol(ctx, ROLES.ADMIN);
 
 /* ---------------------------------------------------------------- resumen */
 
+/**
+ * Lo que de verdad pagó ese negocio la última vez (según Stripe), no el
+ * precio de lista — así una promoción o cupón sí se refleja en el ingreso.
+ * Si nunca ha pagado por Stripe (p. ej. Crece con MÍA, que se cotiza a
+ * mano), se usa el precio de lista como estimado.
+ */
+function ingresoRealDe(negocioId, plan) {
+  const ultimoPago = uno(
+    `SELECT monto FROM pagos_stripe WHERE negocio_id = $id AND estado = 'pagado' ORDER BY creado_en DESC LIMIT 1`,
+    { id: negocioId }
+  );
+  return ultimoPago ? ultimoPago.monto : PLANES[plan].precioMensual;
+}
+
 export function resumen(ctx) {
   soloAdmin(ctx);
   const negocios = todos(`SELECT * FROM negocios`);
@@ -18,7 +32,7 @@ export function resumen(ctx) {
   const nuevasSolicitudes = uno(`SELECT COUNT(*) c FROM solicitudes WHERE estado = 'nueva'`).c;
   const enMapa = conReglas.filter(({ n, r }) => n.estado === 'publicado' && r.permisos.mapa && n.ciudad).length;
   const ingresoMensual = conReglas.reduce(
-    (acc, { r }) => acc + (r.planEfectivo === 'gratuito' ? 0 : PLANES[r.planEfectivo].precioMensual),
+    (acc, { n, r }) => acc + (r.planEfectivo === 'gratuito' ? 0 : ingresoRealDe(n.id, r.planEfectivo)),
     0
   );
   const totalUsuarios = uno(`SELECT COUNT(*) c FROM usuarios`).c;
