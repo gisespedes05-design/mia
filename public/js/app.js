@@ -735,10 +735,9 @@ function vistaPrivacidad() {
     '<div class="articulo pila g24">' +
 
     seccion("Responsable de tus datos",
-      "<strong>Giselle Chávez Céspedes</strong>, en representación de MÍA, con domicilio en " +
-      "Xochimilco, Ciudad de México, es responsable del tratamiento de tus datos personales, " +
-      "de conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los " +
-      "Particulares.") +
+      "<strong>MÍA</strong>, con domicilio en Xochimilco, Ciudad de México, es responsable del " +
+      "tratamiento de tus datos personales, de conformidad con la Ley Federal de Protección de " +
+      "Datos Personales en Posesión de los Particulares.") +
 
     seccion("Qué datos recabamos",
       "Según el tipo de cuenta que crees, podemos recabar: nombre, correo electrónico, " +
