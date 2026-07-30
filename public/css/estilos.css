@@ -76,7 +76,7 @@ section.bloque{padding:36px 0}
 header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bottom:1px solid var(--linea)}
 .barra .envoltura{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:62px}
 .marca{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
-.marca .glifo{width:30px;height:30px;background:var(--acento);border-radius:50% 50% 50% 2px;flex-shrink:0}
+.marca .glifo{width:30px;height:30px;flex-shrink:0}
 .marca .nombre{font-weight:800;font-size:1.32rem;letter-spacing:-.03em}
 nav.menu{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
 nav.menu a{padding:7px 10px;border-radius:var(--r);text-decoration:none;font-size:.88rem;
