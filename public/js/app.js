@@ -628,7 +628,62 @@ async function vistaArticulo(slug) {
     carruselHtml(a.fotos) +
     '<hr class="separador">' +
     '<div class="articulo">' + a.cuerpo.split("\n\n").map((p) => "<p>" + esc(p) + "</p>").join("") + "</div>" +
+    '<hr class="separador">' +
+    '<div class="fila g8">' +
+      reaccionBoton(a.id, "like", "👍", a.reacciones.conteos.like, a.reacciones.mia) +
+      reaccionBoton(a.id, "dislike", "👎", a.reacciones.conteos.dislike, a.reacciones.mia) +
+      reaccionBoton(a.id, "love", "❤️", a.reacciones.conteos.love, a.reacciones.mia) +
+    "</div>" +
+    '<hr class="separador">' +
+    '<div class="pila g16"><p class="eyebrow">Comentarios</p>' +
+      (YO ? '<div class="tarjeta p16 pila g8">' +
+        '<textarea id="com_texto" style="min-height:70px" placeholder="Escribe un comentario…"></textarea>' +
+        '<p id="com_error" class="pequeno" style="color:var(--peligro)"></p>' +
+        '<div><button class="btn chico" onclick="comentarArticulo(' + a.id + ')">Comentar</button></div></div>'
+        : '<div class="aviso">Para comentar <a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>') +
+      (a.comentarios.length ? a.comentarios.map(bloqueComentario).join("")
+        : '<p class="apagado pequeno">Sé la primera en comentar.</p>') +
+    "</div>" +
   "</div>";
+}
+
+function reaccionBoton(articuloId, tipo, emoji, cuenta, miReaccion) {
+  return '<button class="btn ' + (miReaccion === tipo ? "" : "linea") + ' chico" onclick="reaccionarArticulo(' +
+    articuloId + ",'" + tipo + "')\">" + emoji + " " + cuenta + "</button>";
+}
+
+function bloqueComentario(c) {
+  const puedeBorrar = YO && (YO.rol === "admin" || YO.id === c.usuario_id);
+  return '<div class="tarjeta p16 pila g4">' +
+    '<div class="fila entre g8"><strong class="pequeno">' + esc(c.autora) + "</strong>" +
+    '<span class="diminuto apagado">' + esc(fecha(c.creado_en)) + "</span></div>" +
+    "<p>" + esc(c.texto) + "</p>" +
+    (puedeBorrar ? '<div><button class="btn fantasma chico" onclick="borrarComentarioArticulo(' + c.id +
+      ')">Borrar</button></div>' : "") +
+  "</div>";
+}
+
+async function reaccionarArticulo(articuloId, tipo) {
+  if (!YO) return (location.hash = "#/entrar");
+  try { await api.post("/api/blog/" + articuloId + "/reaccion", { tipo }); await pintar(); }
+  catch (err) { avisarError(err); }
+}
+
+async function comentarArticulo(articuloId) {
+  const texto = val("com_texto");
+  const decir = (m) => { if ($("com_error")) $("com_error").textContent = m; };
+  if (texto.length < 2) return decir("Escribe tu comentario.");
+  try {
+    await api.post("/api/blog/" + articuloId + "/comentarios", { texto });
+    await pintar();
+    avisar("Comentario publicado.");
+  } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo publicar tu comentario."); }
+}
+
+async function borrarComentarioArticulo(id) {
+  if (!confirm("¿Borrar este comentario?")) return;
+  try { await api.del("/api/blog/comentarios/" + id); await pintar(); avisar("Borramos el comentario."); }
+  catch (err) { avisarError(err); }
 }
 
 /* -------------------------------------------------------------- carrusel */
@@ -1860,19 +1915,42 @@ async function adminPagos() {
 }
 
 /* ------------------------------------------------------------------- blog */
+// Se guardan aparte (no solo en el DOM) porque agregar una foto vuelve a
+// dibujar toda la pantalla — sin esto, se borraría lo ya escrito.
+let borradorFotosBlog = [];
+let borradorTitulo = "", borradorResumen = "", borradorCuerpo = "";
+
 async function adminBlog() {
   const articulos = await api.get("/api/blog");
   return encabezado("Blog", "Escribe y publica los artículos de MÍA.") +
     '<div class="tarjeta p20 pila g12"><p class="eyebrow">Nuevo artículo</p>' +
-      '<label class="campo">Título<input id="b_titulo"></label>' +
-      '<label class="campo">Resumen<input id="b_resumen" placeholder="Una línea que invite a leer."></label>' +
+      '<label class="campo">Título<input id="b_titulo" value="' + esc(borradorTitulo) +
+        '" oninput="borradorTitulo=this.value"></label>' +
+      '<label class="campo">Resumen<input id="b_resumen" value="' + esc(borradorResumen) +
+        '" oninput="borradorResumen=this.value" placeholder="Una línea que invite a leer."></label>' +
       '<label class="campo">Contenido <span class="apagado">(deja una línea en blanco entre párrafos)</span>' +
-        '<textarea id="b_cuerpo" style="min-height:170px"></textarea></label>' +
-      '<div><button class="btn" onclick="crearArticulo()">Publicar artículo</button></div>' +
-      '<p class="pequeno apagado">Las fotos se agregan después, ya publicado: aparece abajo en ' +
-        'la lista con su propio botón "Agregar foto".</p></div>' +
+        '<textarea id="b_cuerpo" style="min-height:170px" oninput="borradorCuerpo=this.value">' +
+        esc(borradorCuerpo) + "</textarea></label>" +
+      '<label class="campo">Fotos (opcional)</label>' +
+      (borradorFotosBlog.length ? '<div class="galeria">' + borradorFotosBlog.map((f, i) =>
+        '<div class="foto"><img src="' + f + '" alt=""><button class="quitar" onclick="quitarFotoBorrador(' + i +
+        ')">Quitar</button></div>').join("") + "</div>" : "") +
+      '<label class="btn linea chico" style="align-self:flex-start">Agregar foto' +
+        '<input type="file" accept="image/*" style="display:none" onchange="agregarFotoBorrador(this)"></label>' +
+      '<div><button class="btn" onclick="crearArticulo()">Publicar artículo</button></div></div>' +
     (articulos.length ? '<div class="pila g12">' + articulos.map(fichaArticuloAdmin).join("") + "</div>"
       : vacio("Todavía no hay artículos."));
+}
+
+function agregarFotoBorrador(input) {
+  procesarImagen(input, 1200, 0.75, async (dataUrl) => {
+    borradorFotosBlog.push(dataUrl);
+    await pintar();
+  });
+}
+function quitarFotoBorrador(i) {
+  borradorFotosBlog.splice(i, 1);
+  pintar();
 }
 
 function fichaArticuloAdmin(a) {
@@ -1899,7 +1977,9 @@ async function crearArticulo() {
   const titulo = val("b_titulo"), cuerpo = val("b_cuerpo");
   if (!titulo) return avisar("Ponle título al artículo.");
   try {
-    await api.post("/api/admin/blog", { titulo, resumen: val("b_resumen"), cuerpo });
+    await api.post("/api/admin/blog", { titulo, resumen: val("b_resumen"), cuerpo, fotos: borradorFotosBlog });
+    borradorFotosBlog = [];
+    borradorTitulo = borradorResumen = borradorCuerpo = "";
     await pintar();
     avisar("Publicamos el artículo.");
   } catch (err) { avisarError(err); }

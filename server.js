@@ -76,6 +76,9 @@ r.post('/api/admin/blog/:id/fotos', blog.subirFoto);
 r.delete('/api/admin/blog/:id/fotos/:fotoId', blog.quitarFoto);
 r.patch('/api/admin/blog/:id', blog.alternarPublicado);
 r.delete('/api/admin/blog/:id', blog.borrar);
+r.post('/api/blog/:id/comentarios', blog.comentar);
+r.delete('/api/blog/comentarios/:id', blog.borrarComentario);
+r.post('/api/blog/:id/reaccion', blog.reaccionar);
 
 // ----------------------------------------------------------------- admin --
 r.get('/api/admin/resumen', admin.resumen);

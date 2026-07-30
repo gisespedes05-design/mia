@@ -140,6 +140,25 @@ CREATE TABLE IF NOT EXISTS articulo_fotos (
   creado_en    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS articulo_comentarios (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  articulo_id  INTEGER NOT NULL REFERENCES articulos(id) ON DELETE CASCADE,
+  usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  texto        TEXT NOT NULL,
+  creado_en    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Una sola reacción por persona y artículo; tocar la misma la quita,
+-- tocar otra la reemplaza (se resuelve en la ruta, no aquí).
+CREATE TABLE IF NOT EXISTS articulo_reacciones (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  articulo_id  INTEGER NOT NULL REFERENCES articulos(id) ON DELETE CASCADE,
+  usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  tipo         TEXT NOT NULL CHECK (tipo IN ('like', 'dislike', 'love')),
+  creado_en    TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (articulo_id, usuario_id)
+);
+
 CREATE TABLE IF NOT EXISTS bitacora (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   actor_id   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -196,6 +215,8 @@ CREATE INDEX IF NOT EXISTS idx_conversaciones_neg  ON conversaciones(negocio_id)
 CREATE INDEX IF NOT EXISTS idx_conversaciones_usu  ON conversaciones(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_mensajes_conv       ON mensajes(conversacion_id);
 CREATE INDEX IF NOT EXISTS idx_articulo_fotos_art  ON articulo_fotos(articulo_id);
+CREATE INDEX IF NOT EXISTS idx_articulo_com_art     ON articulo_comentarios(articulo_id);
+CREATE INDEX IF NOT EXISTS idx_articulo_reac_art    ON articulo_reacciones(articulo_id);
 `);
 
 // Migración ligera: si la base ya existía antes de sumar el cobro con
