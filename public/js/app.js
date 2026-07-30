@@ -1869,7 +1869,9 @@ async function adminBlog() {
       '<label class="campo">Resumen<input id="b_resumen" placeholder="Una línea que invite a leer."></label>' +
       '<label class="campo">Contenido <span class="apagado">(deja una línea en blanco entre párrafos)</span>' +
         '<textarea id="b_cuerpo" style="min-height:170px"></textarea></label>' +
-      '<div><button class="btn" onclick="crearArticulo()">Publicar artículo</button></div></div>' +
+      '<div><button class="btn" onclick="crearArticulo()">Publicar artículo</button></div>' +
+      '<p class="pequeno apagado">Las fotos se agregan después, ya publicado: aparece abajo en ' +
+        'la lista con su propio botón "Agregar foto".</p></div>' +
     (articulos.length ? '<div class="pila g12">' + articulos.map(fichaArticuloAdmin).join("") + "</div>"
       : vacio("Todavía no hay artículos."));
 }
