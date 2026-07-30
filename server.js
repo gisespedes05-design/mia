@@ -72,6 +72,8 @@ r.delete('/api/favoritos/:negocioId', favoritos.quitar);
 r.get('/api/blog', blog.listar);
 r.get('/api/blog/:slug', blog.verDetalle);
 r.post('/api/admin/blog', blog.crear);
+r.post('/api/admin/blog/:id/fotos', blog.subirFoto);
+r.delete('/api/admin/blog/:id/fotos/:fotoId', blog.quitarFoto);
 r.patch('/api/admin/blog/:id', blog.alternarPublicado);
 r.delete('/api/admin/blog/:id', blog.borrar);
 

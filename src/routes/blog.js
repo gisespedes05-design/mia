@@ -3,20 +3,29 @@ import { ErrorHttp, exigirRol } from '../auth.js';
 import { ROLES } from '../config.js';
 import { texto } from '../negocios.js';
 import { avisarNuevoArticulo } from '../correo.js';
+import { guardarImagenBase64, borrarImagen } from '../subidas.js';
 
 const esAdmin = (usuario) => usuario?.rol === ROLES.ADMIN;
+
+function fotosDeArticulo(articuloId) {
+  return todos(`SELECT id, archivo, orden FROM articulo_fotos WHERE articulo_id = $id ORDER BY orden, id`, {
+    id: articuloId,
+  }).map((f) => ({ id: f.id, url: `/subidas/${f.archivo}` }));
+}
+
+const conFotos = (a) => ({ ...a, publicado: Boolean(a.publicado), fotos: fotosDeArticulo(a.id) });
 
 export function listar(ctx) {
   const filas = esAdmin(ctx.usuario)
     ? todos(`SELECT * FROM articulos ORDER BY creado_en DESC`)
     : todos(`SELECT * FROM articulos WHERE publicado = 1 ORDER BY creado_en DESC`);
-  return filas.map((a) => ({ ...a, publicado: Boolean(a.publicado) }));
+  return filas.map(conFotos);
 }
 
 export function verDetalle(ctx) {
   const a = uno(`SELECT * FROM articulos WHERE slug = $slug`, { slug: ctx.params.slug });
   if (!a || (!a.publicado && !esAdmin(ctx.usuario))) throw new ErrorHttp(404, 'No encontramos ese artículo.');
-  return { ...a, publicado: Boolean(a.publicado) };
+  return conFotos(a);
 }
 
 function generarSlugArticulo(titulo) {
@@ -32,6 +41,12 @@ function generarSlugArticulo(titulo) {
   let n = 2;
   while (uno(`SELECT id FROM articulos WHERE slug = $slug`, { slug })) slug = `${base}-${n++}`;
   return slug;
+}
+
+function articuloOFallo(id) {
+  const a = uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(id) });
+  if (!a) throw new ErrorHttp(404, 'Ese artículo ya no existe.');
+  return a;
 }
 
 export function crear(ctx) {
@@ -50,23 +65,49 @@ export function crear(ctx) {
   anotar(usuario.id, 'Artículo publicado', titulo);
   const articulo = uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(r.lastInsertRowid) });
   avisarNuevoArticulo(articulo); // se crea publicado por defecto (ver esquema)
-  return articulo;
+  return conFotos(articulo);
+}
+
+export function subirFoto(ctx) {
+  exigirRol(ctx, ROLES.ADMIN);
+  const a = articuloOFallo(ctx.params.id);
+  const archivo = guardarImagenBase64(ctx.cuerpo.imagen);
+  const orden = uno(`SELECT COALESCE(MAX(orden), -1) + 1 AS n FROM articulo_fotos WHERE articulo_id = $id`, {
+    id: a.id,
+  }).n;
+  ejecutar(`INSERT INTO articulo_fotos (articulo_id, archivo, orden) VALUES ($id, $archivo, $orden)`, {
+    id: a.id, archivo, orden,
+  });
+  return conFotos(a);
+}
+
+export function quitarFoto(ctx) {
+  exigirRol(ctx, ROLES.ADMIN);
+  const a = articuloOFallo(ctx.params.id);
+  const foto = uno(`SELECT * FROM articulo_fotos WHERE id = $id AND articulo_id = $articuloId`, {
+    id: Number(ctx.params.fotoId), articuloId: a.id,
+  });
+  if (!foto) throw new ErrorHttp(404, 'Esa fotografía ya no existe.');
+  borrarImagen(foto.archivo);
+  ejecutar(`DELETE FROM articulo_fotos WHERE id = $id`, { id: foto.id });
+  return conFotos(a);
 }
 
 export function alternarPublicado(ctx) {
   const usuario = exigirRol(ctx, ROLES.ADMIN);
-  const a = uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(ctx.params.id) });
-  if (!a) throw new ErrorHttp(404, 'Ese artículo ya no existe.');
+  const a = articuloOFallo(ctx.params.id);
   ejecutar(`UPDATE articulos SET publicado = 1 - publicado WHERE id = $id`, { id: a.id });
   anotar(usuario.id, a.publicado ? 'Artículo ocultado' : 'Artículo publicado', a.titulo);
   if (!a.publicado) avisarNuevoArticulo(a); // pasó de oculto a publicado
-  return { ...a, publicado: !a.publicado };
+  return conFotos({ ...a, publicado: a.publicado ? 0 : 1 });
 }
 
 export function borrar(ctx) {
   const usuario = exigirRol(ctx, ROLES.ADMIN);
-  const a = uno(`SELECT * FROM articulos WHERE id = $id`, { id: Number(ctx.params.id) });
-  if (!a) throw new ErrorHttp(404, 'Ese artículo ya no existe.');
+  const a = articuloOFallo(ctx.params.id);
+  for (const f of todos(`SELECT archivo FROM articulo_fotos WHERE articulo_id = $id`, { id: a.id })) {
+    borrarImagen(f.archivo);
+  }
   ejecutar(`DELETE FROM articulos WHERE id = $id`, { id: a.id });
   anotar(usuario.id, 'Artículo borrado', a.titulo);
   return { ok: true };

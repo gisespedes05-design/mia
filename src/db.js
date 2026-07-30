@@ -132,6 +132,14 @@ CREATE TABLE IF NOT EXISTS articulos (
   creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS articulo_fotos (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  articulo_id  INTEGER NOT NULL REFERENCES articulos(id) ON DELETE CASCADE,
+  archivo      TEXT NOT NULL,
+  orden        INTEGER NOT NULL DEFAULT 0,
+  creado_en    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS bitacora (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   actor_id   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -187,6 +195,7 @@ CREATE INDEX IF NOT EXISTS idx_pagos_negocio       ON pagos_stripe(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_conversaciones_neg  ON conversaciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_conversaciones_usu  ON conversaciones(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_mensajes_conv       ON mensajes(conversacion_id);
+CREATE INDEX IF NOT EXISTS idx_articulo_fotos_art  ON articulo_fotos(articulo_id);
 `);
 
 // Migración ligera: si la base ya existía antes de sumar el cobro con

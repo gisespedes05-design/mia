@@ -208,6 +208,12 @@ Toda usuaria activa (rol clienta) recibe un correo cuando:
 - **Un negocio se verifica** (el sello de verificado, plan Membresía o Crece).
 - **Se publica un artículo del blog** (tanto al crearlo como al des-ocultarlo).
 
+Los artículos del blog admiten varias fotografías. Desde **Administración ›
+Blog**, cada artículo tiene su propio botón para agregar o quitar fotos
+(igual que las fotos de un negocio). En la página pública del artículo, si
+hay dos o más fotos, se muestran de una en una en un carrusel — con flechas
+para desktop y deslizando (swipe) en pantallas táctiles.
+
 Estos avisos nunca bloquean la acción de la administradora que los dispara
 (publicar, verificar, escribir el blog) — se mandan en segundo plano y
 cualquier error solo queda anotado en los logs.

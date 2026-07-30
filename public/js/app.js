@@ -268,6 +268,7 @@ async function pintar() {
   menu();
   window.scrollTo(0, 0);
   if (vista === "mapa") dibujarMapa(ultimoMapa);
+  if (vista === "blog" && arg) iniciarCarrusel();
 }
 
 function sinAcceso() {
@@ -624,9 +625,63 @@ async function vistaArticulo(slug) {
       '<p class="eyebrow">' + esc(fecha(a.creado_en)) + " · " + esc(a.autora) + "</p>" +
       "<h1>" + esc(a.titulo) + "</h1>" +
       '<p class="apagado" style="font-size:1.05rem">' + esc(a.resumen) + "</p></div>" +
+    carruselHtml(a.fotos) +
     '<hr class="separador">' +
     '<div class="articulo">' + a.cuerpo.split("\n\n").map((p) => "<p>" + esc(p) + "</p>").join("") + "</div>" +
   "</div>";
+}
+
+/* -------------------------------------------------------------- carrusel */
+function carruselHtml(fotos) {
+  if (!fotos || !fotos.length) return "";
+  if (fotos.length === 1) return '<div class="carrusel"><img src="' + esc(fotos[0].url) + '" alt=""></div>';
+  return '<div class="carrusel" id="carrusel">' +
+    '<div class="carrusel-pista" id="carrusel_pista">' +
+      fotos.map((f) => '<div class="carrusel-diapositiva"><img src="' + esc(f.url) + '" alt=""></div>').join("") +
+    "</div>" +
+    '<button class="carrusel-flecha izq" onclick="moverCarrusel(-1)" aria-label="Foto anterior">‹</button>' +
+    '<button class="carrusel-flecha der" onclick="moverCarrusel(1)" aria-label="Foto siguiente">›</button>' +
+    '<div class="carrusel-puntos">' + fotos.map((_, i) =>
+      '<button class="' + (i === 0 ? "activo" : "") + '" onclick="irACarrusel(' + i +
+      ')" aria-label="Ir a la foto ' + (i + 1) + '"></button>').join("") +
+    "</div></div>";
+}
+
+let carruselIndice = 0;
+let carruselTotal = 0;
+
+function iniciarCarrusel() {
+  const pista = $("carrusel_pista");
+  if (!pista) return;
+  carruselIndice = 0;
+  carruselTotal = pista.children.length;
+  let arranco = null;
+  pista.addEventListener("pointerdown", (e) => { arranco = e.clientX; });
+  pista.addEventListener("pointerup", (e) => {
+    if (arranco === null) return;
+    const delta = e.clientX - arranco;
+    arranco = null;
+    if (delta > 40) moverCarrusel(-1);
+    else if (delta < -40) moverCarrusel(1);
+  });
+}
+
+function actualizarCarrusel() {
+  const pista = $("carrusel_pista");
+  if (!pista) return;
+  pista.style.transform = "translateX(-" + carruselIndice * 100 + "%)";
+  document.querySelectorAll("#carrusel .carrusel-puntos button").forEach((b, i) =>
+    b.classList.toggle("activo", i === carruselIndice));
+}
+
+function moverCarrusel(direccion) {
+  carruselIndice = Math.max(0, Math.min(carruselTotal - 1, carruselIndice + direccion));
+  actualizarCarrusel();
+}
+
+function irACarrusel(i) {
+  carruselIndice = i;
+  actualizarCarrusel();
 }
 
 /* ================================================================= SOBRE MÍA */
@@ -1815,17 +1870,29 @@ async function adminBlog() {
       '<label class="campo">Contenido <span class="apagado">(deja una línea en blanco entre párrafos)</span>' +
         '<textarea id="b_cuerpo" style="min-height:170px"></textarea></label>' +
       '<div><button class="btn" onclick="crearArticulo()">Publicar artículo</button></div></div>' +
-    (articulos.length ? '<div class="pila g12">' + articulos.map((a) =>
-      '<div class="tarjeta p16 fila entre g8"><div style="flex:1;min-width:180px">' +
-        '<div class="fila g8"><span class="chip ' + (a.publicado ? "jade" : "sol") + '">' +
-        (a.publicado ? "Publicado" : "Borrador") + '</span><span class="diminuto apagado">' +
-        esc(fecha(a.creado_en)) + "</span></div>" +
-        "<strong>" + esc(a.titulo) + '</strong><p class="diminuto apagado">' + esc(a.resumen) + "</p></div>" +
-        '<div class="fila g8"><a class="btn fantasma chico" href="#/blog/' + esc(a.slug) + '">Ver</a>' +
-        '<button class="btn linea chico" onclick="alternarArticulo(' + a.id + ')">' +
-        (a.publicado ? "Ocultar" : "Publicar") + "</button>" +
-        '<button class="btn fantasma chico" onclick="borrarArticulo(' + a.id + ')">Borrar</button></div></div>'
-    ).join("") + "</div>" : vacio("Todavía no hay artículos."));
+    (articulos.length ? '<div class="pila g12">' + articulos.map(fichaArticuloAdmin).join("") + "</div>"
+      : vacio("Todavía no hay artículos."));
+}
+
+function fichaArticuloAdmin(a) {
+  return '<div class="tarjeta p16 pila g12">' +
+    '<div class="fila entre g8 arriba"><div style="flex:1;min-width:180px">' +
+      '<div class="fila g8"><span class="chip ' + (a.publicado ? "jade" : "sol") + '">' +
+      (a.publicado ? "Publicado" : "Borrador") + '</span><span class="diminuto apagado">' +
+      esc(fecha(a.creado_en)) + "</span></div>" +
+      "<strong>" + esc(a.titulo) + '</strong><p class="diminuto apagado">' + esc(a.resumen) + "</p></div>" +
+      '<div class="fila g8"><a class="btn fantasma chico" href="#/blog/' + esc(a.slug) + '">Ver</a>' +
+      '<button class="btn linea chico" onclick="alternarArticulo(' + a.id + ')">' +
+      (a.publicado ? "Ocultar" : "Publicar") + "</button>" +
+      '<button class="btn fantasma chico" onclick="borrarArticulo(' + a.id + ')">Borrar</button></div></div>' +
+    (a.fotos.length ? '<div class="galeria">' + a.fotos.map((f) =>
+      '<div class="foto">' + imagenHtml(f.url, a.titulo) +
+      '<button class="quitar" onclick="quitarFotoArticulo(' + a.id + "," + f.id + ')">Quitar</button></div>'
+    ).join("") + "</div>" : "") +
+    '<label class="btn linea chico" style="align-self:flex-start">Agregar foto' +
+      '<input type="file" accept="image/*" style="display:none" onchange="subirFotoArticulo(' + a.id +
+      ',this)"></label>' +
+  "</div>";
 }
 async function crearArticulo() {
   const titulo = val("b_titulo"), cuerpo = val("b_cuerpo");
@@ -1843,6 +1910,16 @@ async function alternarArticulo(id) {
 async function borrarArticulo(id) {
   if (!confirm("¿Borrar este artículo?")) return;
   try { await api.del("/api/admin/blog/" + id); await pintar(); avisar("Borramos el artículo."); }
+  catch (err) { avisarError(err); }
+}
+function subirFotoArticulo(id, input) {
+  procesarImagen(input, 1200, 0.75, async (dataUrl) => {
+    try { await api.post("/api/admin/blog/" + id + "/fotos", { imagen: dataUrl }); await pintar(); avisar("Subimos la fotografía."); }
+    catch (err) { avisarError(err); }
+  });
+}
+async function quitarFotoArticulo(id, fotoId) {
+  try { await api.del("/api/admin/blog/" + id + "/fotos/" + fotoId); await pintar(); }
   catch (err) { avisarError(err); }
 }
 
