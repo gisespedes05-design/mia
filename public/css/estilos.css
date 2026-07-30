@@ -1,35 +1,48 @@
+/* Paleta clara: "Vanilla Cream / Blush Petal / Rosewood / Sage Leaf /
+   Misty Sky / Midnight Lagoon". Paleta oscura: "Back in Black / Mountain
+   Heather / Decanting / Funkie Friday / Moonscape". --jade y --cobalto se
+   derivan de Sage Leaf y Misty Sky, oscurecidas un poco (color-mix) para
+   que el texto de los chips siga leyéndose bien sobre fondo claro. */
 :root{
-  --fondo:#FBF8FA; --fondo2:#F3E7ED; --superficie:#FFFFFF;
-  --texto:#523F77; --texto2:#6B6693; --linea:#E6D9E3;
-  --acento:#B35A8A; --acento-tinta:#FFFFFF; --acento-suave:#F6B7C7;
-  --cobalto:#5B63A0; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
-  --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
+  --fondo:#FFF7E6; --fondo2:#F7C8D3; --superficie:#FFFFFF;
+  --texto:#2D3A47; --texto2:color-mix(in srgb, #2D3A47 55%, #FFF7E6);
+  --linea:color-mix(in srgb, #2D3A47 16%, #FFF7E6);
+  --acento:#B46A72; --acento-tinta:#FFFFFF; --acento-suave:#F7C8D3;
+  --cobalto:color-mix(in srgb, #A9B7C6 66%, #2D3A47);
+  --jade:color-mix(in srgb, #A8B58A 72%, #2D3A47);
+  --sol:#C98A00; --peligro:#B92A2A;
+  --sombra:0 1px 2px rgba(45,58,71,.08), 0 8px 24px -12px rgba(45,58,71,.16);
   --r:4px;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --fondo:#1B1526; --fondo2:#241C33; --superficie:#2C2340;
-    --texto:#F3EDF7; --texto2:#B9AFCF; --linea:#453868;
-    --acento:#E58AB5; --acento-tinta:#2E1220; --acento-suave:#3D2438;
+    --fondo:#16131F; --fondo2:#4A3F4B; --superficie:#4A3F4B;
+    --texto:#F0D9E4; --texto2:#C1A0AC;
+    --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
+    --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
     --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
     --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
-  --fondo:#1B1526; --fondo2:#241C33; --superficie:#2C2340;
-  --texto:#F3EDF7; --texto2:#B9AFCF; --linea:#453868;
-  --acento:#E58AB5; --acento-tinta:#2E1220; --acento-suave:#3D2438;
+  --fondo:#16131F; --fondo2:#4A3F4B; --superficie:#4A3F4B;
+  --texto:#F0D9E4; --texto2:#C1A0AC;
+  --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
+  --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
   --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
   --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 :root[data-theme="light"]{
-  --fondo:#FBF8FA; --fondo2:#F3E7ED; --superficie:#FFFFFF;
-  --texto:#523F77; --texto2:#6B6693; --linea:#E6D9E3;
-  --acento:#B35A8A; --acento-tinta:#FFFFFF; --acento-suave:#F6B7C7;
-  --cobalto:#5B63A0; --sol:#C98A00; --jade:#0B7A5E; --peligro:#B92A2A;
-  --sombra:0 1px 2px rgba(36,16,35,.06), 0 8px 24px -12px rgba(36,16,35,.14);
+  --fondo:#FFF7E6; --fondo2:#F7C8D3; --superficie:#FFFFFF;
+  --texto:#2D3A47; --texto2:color-mix(in srgb, #2D3A47 55%, #FFF7E6);
+  --linea:color-mix(in srgb, #2D3A47 16%, #FFF7E6);
+  --acento:#B46A72; --acento-tinta:#FFFFFF; --acento-suave:#F7C8D3;
+  --cobalto:color-mix(in srgb, #A9B7C6 66%, #2D3A47);
+  --jade:color-mix(in srgb, #A8B58A 72%, #2D3A47);
+  --sol:#C98A00; --peligro:#B92A2A;
+  --sombra:0 1px 2px rgba(45,58,71,.08), 0 8px 24px -12px rgba(45,58,71,.16);
 }
 
 *{box-sizing:border-box}

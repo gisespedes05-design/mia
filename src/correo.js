@@ -40,8 +40,8 @@ export async function enviarCorreo({ para, asunto, html }) {
 /* ============================================================ plantillas === */
 
 const ENVOLTURA = (contenido) => `
-  <div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#2E2247">
-    <p style="color:#B35A8A;font-weight:800;font-size:22px;margin:0 0 20px">MÍA</p>
+  <div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#2D3A47">
+    <p style="color:#B46A72;font-weight:800;font-size:22px;margin:0 0 20px">MÍA</p>
     ${contenido}
     <p style="color:#8a8a8a;font-size:13px;margin-top:32px">Directorio de negocios de mujeres mexicanas. No cobramos comisión.</p>
   </div>`;
@@ -49,14 +49,14 @@ const ENVOLTURA = (contenido) => `
 const botonWhatsApp = (mensaje, texto) => !WHATSAPP_MIA ? '' : `
   <p style="margin-top:20px">
     <a href="${enlaceWhatsApp(mensaje)}"
-       style="background:#B35A8A;color:#ffffff;padding:12px 22px;border-radius:8px;
+       style="background:#B46A72;color:#ffffff;padding:12px 22px;border-radius:8px;
        text-decoration:none;font-weight:700;display:inline-block">${texto}</a>
   </p>`;
 
 const botonSitio = (ruta, texto) => !SITIO_URL ? '' : `
   <p style="margin-top:16px">
     <a href="${SITIO_URL}${ruta}"
-       style="background:#B35A8A;color:#ffffff;padding:12px 22px;border-radius:8px;
+       style="background:#B46A72;color:#ffffff;padding:12px 22px;border-radius:8px;
        text-decoration:none;font-weight:700;display:inline-block">${texto}</a>
   </p>`;
 
@@ -130,7 +130,7 @@ export function correoNuevoMensaje(propietariaNombre, negocioNombre, usuariaNomb
     html: ENVOLTURA(`
       <h1 style="font-size:22px;margin:0 0 12px">Hola, ${propietariaNombre}</h1>
       <p><strong>${usuariaNombre}</strong> le escribió a <strong>${negocioNombre}</strong> a través de MÍA:</p>
-      <p style="background:#F4F0F8;border-radius:10px;padding:14px 16px;font-style:italic">"${extracto}"</p>
+      <p style="background:#FBE7EC;border-radius:10px;padding:14px 16px;font-style:italic">"${extracto}"</p>
       <p>Entra a tu panel en MÍA para leerlo completo y responder cuanto antes.</p>
     `),
   };
@@ -159,7 +159,7 @@ export function correoBienvenidaNegocio(nombre, negocioNombre, plan) {
   return {
     asunto: '¡Bienvenida a MÍA! Agenda tu entrevista',
     html: ENVOLTURA(base + `
-      <div style="background:#F6B7C7;border-radius:12px;padding:18px 20px;margin-top:20px">
+      <div style="background:#F7C8D3;border-radius:12px;padding:18px 20px;margin-top:20px">
         <p style="font-weight:800;margin:0 0 8px">📅 Agenda tu entrevista con MÍA</p>
         <p style="margin:0">Escríbenos por WhatsApp ${explicacion}.</p>
         ${botonWhatsApp(mensajeWA, 'Agendar por WhatsApp')}
