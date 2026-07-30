@@ -180,7 +180,12 @@ export function crearManejador({ enrutador, dirPublico, dirSubidas }) {
         archivo = `${archivo}.html`;
       }
       if (archivo && existsSync(archivo)) {
-        return servirArchivo(res, archivo, { cache: /\.(css|js|svg|png|jpg|webp|woff2)$/i.test(archivo) });
+        // El propio CSS y JS del sitio cambian de contenido con cada
+        // despliegue sin cambiar de nombre — cachearlos varios días haría
+        // que quien ya visitó el sitio siga viendo una versión vieja
+        // mezclada con el HTML nuevo. Las fotos subidas sí cachean fuerte
+        // (arriba, /subidas/), porque cada una nace con un nombre único.
+        return servirArchivo(res, archivo, { cache: /\.(svg|png|jpg|webp|woff2)$/i.test(archivo) });
       }
 
       const noEncontrada = join(dirPublico, '404.html');
