@@ -309,6 +309,27 @@ MÍA (campana con contador en el menú, y la bandeja en **Notificaciones**).
 Dejar de seguir un negocio detiene los avisos futuros sin afectar los ya
 recibidos.
 
+## Catálogo de productos y registro de ventas
+
+En el perfil público, cualquier clienta puede tocar **"¿Aún disponible?"** o
+**"Me interesa"** en un producto: eso le manda al negocio el mensaje
+precargado (por la mensajería normal de MÍA) y deja la consulta en el
+**registro de ventas** del negocio — privado, nadie más lo ve.
+
+48 horas después, si nadie marcó qué pasó, el negocio recibe un aviso (correo
++ notificación dentro de MÍA) preguntando si la venta se concretó — con un
+tono de "esto es el registro de tu propio negocio", no un reclamo. Si no
+contesta, hay un único recordatorio a las 96 horas y ahí se detiene: MÍA no
+insiste más. La dueña puede marcar el resultado (se vendió / sigue en
+pláticas / no se concretó) en cualquier momento desde **Mi negocio › Editar
+› Ver mi registro de ventas**, sin esperar a que le pregunten.
+
+Este seguimiento corre solo, dentro del propio servidor (revisa cada hora,
+y también al arrancar por si estuvo apagado). No necesita ningún servicio
+externo — pero si el servidor está dormido (por ejemplo, en el plan gratuito
+de Render, que se apaga sin visitas) el aviso se manda hasta que alguien
+entre al sitio y lo despierte.
+
 ## Estructura del código
 
 ```

@@ -8,6 +8,7 @@ import {
 } from '../negocios.js';
 import { reglasVigentes } from '../config.js';
 import { notificarASeguidoras } from '../notificaciones.js';
+import { consultasDe, resolverConsulta } from '../consultas.js';
 import { guardarImagenBase64, borrarImagen } from '../subidas.js';
 
 export function listar(ctx) {
@@ -46,6 +47,24 @@ export function verReporte(ctx) {
     throw new ErrorHttp(403, 'El reporte mensual es un beneficio para negocios verificados.');
   }
   return reporteMensual(negocio.id);
+}
+
+/** El registro privado de ventas del negocio: solo la dueña o MÍA lo ven. */
+export function verConsultas(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  return consultasDe(negocio.id);
+}
+
+export function resolverConsultaProducto(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const resultado = ctx.cuerpo.resultado;
+  if (!['vendido', 'en_platicas', 'no_concretado'].includes(resultado)) {
+    throw new ErrorHttp(400, 'Ese resultado no existe.');
+  }
+  resolverConsulta(Number(ctx.params.consultaId), negocio.id, resultado);
+  return consultasDe(negocio.id);
 }
 
 /** Datos completos para editar: solo la dueña o la organización MÍA. */
@@ -233,7 +252,10 @@ export function agregarPublicacion(ctx) {
     id: negocio.id, titulo, texto: cuerpoTexto,
   });
   if (negocio.estado === 'publicado') {
-    notificarASeguidoras(negocio.id, `Tu negocio favorito ${negocio.nombre} tiene una nueva publicación: ${titulo}`);
+    notificarASeguidoras(
+      negocio.id, `Tu negocio favorito ${negocio.nombre} tiene una nueva publicación: ${titulo}`,
+      `#/negocio/${negocio.slug}`
+    );
   }
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }

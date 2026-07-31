@@ -129,6 +129,21 @@ export function correoBienvenidaUsuaria(nombre) {
   };
 }
 
+export function correoConfirmarVenta(propietariaNombre, negocioNombre, productoNombre, usuariaNombre, negocioId, esRecordatorio) {
+  return {
+    asunto: esRecordatorio
+      ? `¿Se concretó la venta de "${productoNombre}"?`
+      : `Actualiza el registro de ventas de ${negocioNombre}`,
+    html: ENVOLTURA(`
+      <h1 style="font-size:22px;margin:0 0 12px">Hola, ${propietariaNombre}</h1>
+      <p>Hace ${esRecordatorio ? 'unos días' : '48 horas'}, <strong>${usuariaNombre}</strong> preguntó por
+      <strong>"${productoNombre}"</strong> en tu perfil de MÍA 💛</p>
+      <p>Esto queda en el registro de ventas de tu negocio — ¿se concretó?</p>
+      ${botonSitio(`/#/ventas/${negocioId}`, 'Actualizar en mi registro de ventas')}
+    `),
+  };
+}
+
 export function correoNuevoMensaje(propietariaNombre, negocioNombre, usuariaNombre, extracto) {
   return {
     asunto: `Tienes un nuevo mensaje en MÍA de ${usuariaNombre}`,

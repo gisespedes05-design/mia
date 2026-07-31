@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS notificaciones (
   usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   negocio_id  INTEGER REFERENCES negocios(id) ON DELETE CASCADE,
   mensaje     TEXT NOT NULL,
+  enlace      TEXT,
   leida       INTEGER NOT NULL DEFAULT 0,
   creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -226,6 +227,26 @@ CREATE TABLE IF NOT EXISTS mensajes (
   creado_en        TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Cuando una clienta toca "¿Aún disponible?" o "Me interesa" en un producto,
+-- queda aquí para poder preguntarle al negocio (a las 48h y, si no contesta,
+-- a las 96h) si se concretó la venta. Es el registro privado de ventas del
+-- negocio: nadie más lo ve, ni siquiera la clienta que preguntó.
+CREATE TABLE IF NOT EXISTS consultas_producto (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  negocio_id       INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  producto_id      INTEGER REFERENCES productos(id) ON DELETE SET NULL,
+  producto_nombre  TEXT NOT NULL,
+  usuario_id       INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  conversacion_id  INTEGER REFERENCES conversaciones(id) ON DELETE SET NULL,
+  mensaje_tipo     TEXT NOT NULL CHECK (mensaje_tipo IN ('disponible', 'interesa')),
+  resultado        TEXT NOT NULL DEFAULT 'pendiente'
+                     CHECK (resultado IN ('pendiente', 'vendido', 'en_platicas', 'no_concretado')),
+  preguntado_en    TEXT,
+  recordado_en     TEXT,
+  respondido_en    TEXT,
+  creado_en        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Clics en los botones de contacto del perfil público (WhatsApp, redes,
 -- teléfono). Guardado como eventos con fecha, no como contadores planos,
 -- para poder armar más adelante el reporte mensual de negocios verificados.
@@ -249,6 +270,8 @@ CREATE INDEX IF NOT EXISTS idx_interacciones_neg  ON interacciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_vistas_perfil_neg  ON vistas_perfil(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_seguidores_negocio ON seguidores(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_notificaciones_usu ON notificaciones(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_consultas_negocio   ON consultas_producto(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_consultas_resultado ON consultas_producto(resultado);
 CREATE INDEX IF NOT EXISTS idx_negocios_estado     ON negocios(estado);
 CREATE INDEX IF NOT EXISTS idx_negocios_categoria  ON negocios(categoria);
 CREATE INDEX IF NOT EXISTS idx_negocios_duena      ON negocios(propietaria_id);
@@ -308,6 +331,12 @@ if (!columnasNegocios.includes('banner')) {
 // Texto adicional para negocios verificados: "Sobre mi negocio".
 if (!columnasNegocios.includes('sobre_negocio')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN sobre_negocio TEXT NOT NULL DEFAULT ''`);
+}
+// A dónde navegar al tocar la notificación: el perfil del negocio (nueva
+// publicación de quien sigues) o el registro de ventas (confirmar una venta).
+const columnasNotificaciones = todos(`SELECT name FROM pragma_table_info('notificaciones')`).map((c) => c.name);
+if (columnasNotificaciones.length && !columnasNotificaciones.includes('enlace')) {
+  db.exec(`ALTER TABLE notificaciones ADD COLUMN enlace TEXT`);
 }
 
 /** Consulta que devuelve varias filas. */

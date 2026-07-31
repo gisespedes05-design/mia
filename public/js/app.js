@@ -229,14 +229,16 @@ function menu() {
     if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
     if (YO.rol === "usuario") {
       items += '<a href="#/favoritos" class="' + (v === "favoritos" ? "activo" : "") + '">Favoritos</a>' +
-        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>' +
-        '<a href="#/notificaciones" class="' + (v === "notificaciones" ? "activo" : "") +
-          '">Notificaciones<span id="badge_notif" class="badge" style="display:none"></span></a>';
+        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>';
+    }
+    if (YO.rol === "usuario" || YO.rol === "negocio") {
+      items += '<a href="#/notificaciones" class="' + (v === "notificaciones" ? "activo" : "") +
+        '">Notificaciones<span id="badge_notif" class="badge" style="display:none"></span></a>';
     }
     items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
   }
   $("menu").innerHTML = items;
-  if (YO && YO.rol === "usuario") actualizarBadgeNotificaciones();
+  if (YO && (YO.rol === "usuario" || YO.rol === "negocio")) actualizarBadgeNotificaciones();
 }
 
 async function actualizarBadgeNotificaciones() {
@@ -267,7 +269,8 @@ async function pintar() {
     else if (vista === "entrar") html = vistaEntrar(arg);
     else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
     else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
-    else if (vista === "notificaciones") html = YO && YO.rol === "usuario" ? await vistaNotificaciones() : sinAcceso();
+    else if (vista === "notificaciones") html = YO && (YO.rol === "usuario" || YO.rol === "negocio") ? await vistaNotificaciones() : sinAcceso();
+    else if (vista === "ventas") html = YO ? await vistaVentas(arg) : sinAcceso();
     else if (vista === "negocio-mensajes") html = YO && (YO.rol === "negocio" || YO.rol === "admin")
       ? await vistaMensajesNegocio(arg) : sinAcceso();
     else if (vista === "panel") html = YO && (YO.rol === "negocio" || YO.rol === "admin") ? await vistaPanel() : sinAcceso();
@@ -960,8 +963,10 @@ async function vistaNegocio(slug) {
         '<div class="foto">' + imagenHtml(f, n.nombre) + "</div>").join("") + "</div></div>" : "") +
 
     (n.productos.length ? '<div class="pila g12"><p class="eyebrow">Productos y servicios</p>' +
-      (destacados.length ? '<div class="rejilla">' + destacados.map((x) => fichaProducto(x, true)).join("") + "</div>" : "") +
-      (normales.length ? '<div class="rejilla">' + normales.map((x) => fichaProducto(x, false)).join("") + "</div>" : "") +
+      (destacados.length ? '<div class="rejilla">' + destacados.map((x) =>
+        fichaProducto(x, true, n.id, Boolean(YO && YO.rol === "usuario"))).join("") + "</div>" : "") +
+      (normales.length ? '<div class="rejilla">' + normales.map((x) =>
+        fichaProducto(x, false, n.id, Boolean(YO && YO.rol === "usuario"))).join("") + "</div>" : "") +
       "</div>" : "") +
 
     (n.publicaciones.length ? '<div class="pila g12"><p class="eyebrow">Publicaciones</p>' +
@@ -984,12 +989,18 @@ async function vistaNegocio(slug) {
   "</div>";
 }
 
-const fichaProducto = (x, destacado) => '<div class="tarjeta p16 pila g8"' +
+const fichaProducto = (x, destacado, negocioId, puedeConsultar) => '<div class="tarjeta p16 pila g8"' +
   (destacado ? ' style="border-left:3px solid var(--acento)"' : "") + ">" +
   (destacado ? '<span class="chip rosa">Destacado</span>' : "") +
   "<strong>" + esc(x.nombre) + "</strong>" +
   (x.descripcion ? '<p class="pequeno apagado">' + esc(x.descripcion) + "</p>" : "") +
-  (x.precio ? '<p class="mono" style="font-weight:700">' + pesos(x.precio) + "</p>" : "") + "</div>";
+  (x.precio ? '<p class="mono" style="font-weight:700">' + pesos(x.precio) + "</p>" : "") +
+  (puedeConsultar ? '<div class="fila g8">' +
+    '<button class="btn linea chico" onclick="consultarProducto(' + negocioId + "," + x.id +
+      ',\'disponible\')">¿Aún disponible?</button>' +
+    '<button class="btn chico" onclick="consultarProducto(' + negocioId + "," + x.id +
+      ',\'interesa\')">Me interesa</button>' +
+  "</div>" : "") + "</div>";
 
 function formularioResena(n, mia) {
   const cal = mia ? mia.calificacion : 0;
@@ -1064,6 +1075,15 @@ async function enviarMensajeNegocio(negocioId) {
     decir("");
     avisar("Tu mensaje ya se envió. Te va a responder por aquí mismo.");
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo enviar tu mensaje."); }
+}
+
+async function consultarProducto(negocioId, productoId, tipo) {
+  try {
+    const r = await api.post("/api/negocios/" + negocioId + "/productos/" + productoId + "/consultar", { tipo });
+    location.hash = "#/mensajes/" + r.conversacionId;
+    await pintar();
+    avisar(tipo === "disponible" ? "Le preguntamos si sigue disponible." : "Le avisamos que te interesa.");
+  } catch (err) { avisarError(err); }
 }
 
 async function alternarFavorito(negocioId, eraFavorito) {
@@ -1373,7 +1393,7 @@ async function vistaNotificaciones() {
     '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Notificaciones</h1></div>' +
     (notificaciones.length ? '<div class="pila g8">' + notificaciones.map((n) =>
       '<a class="tarjeta p16" style="text-decoration:none;display:block" href="' +
-        (n.negocio_slug ? "#/negocio/" + esc(n.negocio_slug) : "#/notificaciones") + '">' +
+        esc(n.enlace || (n.negocio_slug ? "#/negocio/" + n.negocio_slug : "#/notificaciones")) + '">' +
         '<p' + (n.leida ? ' class="apagado"' : "") + '>' + esc(n.mensaje) + "</p>" +
         '<p class="diminuto apagado">' + esc(fecha(n.creado_en)) + "</p></a>").join("") + "</div>"
       : vacio("Sigue negocios para enterarte cuando publiquen algo nuevo.")) + "</div>";
@@ -1697,6 +1717,8 @@ async function vistaEditar(id) {
       "</div>" +
       '<label class="campo">Descripción corta<input id="p_desc"></label>' +
       '<div><button class="btn linea" onclick="agregarProducto(' + n.id + ')">Agregar</button></div>' +
+      (n.productos.length ? '<div><a class="btn fantasma chico" href="#/ventas/' + n.id +
+        '">Ver mi registro de ventas</a></div>' : "") +
     "</div>" +
 
     '<div class="tarjeta p20 pila g12"><p class="eyebrow">Tu plan</p>' +
@@ -1743,6 +1765,53 @@ async function vistaReporte(id) {
         '</td><td class="mono">' + m.tiktok + "</td></tr>").join("") + "</tbody></table></div>"
       : vacio("Todavía no hay suficientes datos este mes. Vuelve más adelante.")) +
   "</div>";
+}
+
+/* ==================================================================== VENTAS */
+const ETIQUETA_CONSULTA = {
+  pendiente: ["Por confirmar", ""],
+  vendido: ["Se vendió", "jade"],
+  en_platicas: ["Sigue en pláticas", "sol"],
+  no_concretado: ["No se concretó", ""],
+};
+
+async function vistaVentas(id) {
+  let consultas;
+  try { consultas = await api.get("/api/negocios/" + id + "/consultas"); }
+  catch { return sinAcceso(); }
+
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="#/editar/' + id + '">← Volver a mi negocio</a>' +
+      '<p class="eyebrow">Privado, solo tú lo ves</p><h1>Registro de ventas</h1>' +
+      '<p class="apagado" style="max-width:58ch">Cada vez que alguien pregunta por un producto desde tu ' +
+      "perfil, queda aquí. Confirma cuando sepas cómo quedó — no hay prisa; si no contestas, te " +
+      "recordamos una sola vez, a los 4 días.</p></div>" +
+
+    (consultas.length ? '<div class="pila g12">' + consultas.map((c) => {
+      const [etiqueta, tono] = ETIQUETA_CONSULTA[c.resultado];
+      return '<div class="tarjeta p16 pila g8">' +
+        '<div class="fila entre g8"><strong>' + esc(c.producto_nombre) + '</strong>' +
+          '<span class="chip ' + tono + '">' + etiqueta + "</span></div>" +
+        '<p class="pequeno apagado">' + esc(c.usuaria_nombre) + " · " +
+          (c.mensaje_tipo === "disponible" ? "preguntó si estaba disponible" : "dijo que le interesa") +
+          " · " + esc(fecha(c.creado_en)) + "</p>" +
+        (c.resultado === "pendiente" ? '<div class="fila g8">' +
+          '<button class="btn chico" onclick="resolverConsulta(' + id + "," + c.id + ",'vendido')\">Se vendió</button>" +
+          '<button class="btn linea chico" onclick="resolverConsulta(' + id + "," + c.id + ",'en_platicas')\">Sigue en pláticas</button>" +
+          '<button class="btn fantasma chico" onclick="resolverConsulta(' + id + "," + c.id + ",'no_concretado')\">No se concretó</button>" +
+        "</div>" : "") +
+      "</div>";
+    }).join("") + "</div>"
+      : vacio("Cuando alguien pregunte por un producto tuyo, aparecerá aquí.")) +
+  "</div>";
+}
+
+async function resolverConsulta(negocioId, consultaId, resultado) {
+  try {
+    await api.patch("/api/negocios/" + negocioId + "/consultas/" + consultaId, { resultado });
+    await pintar();
+    avisar("Listo, quedó registrado.");
+  } catch (err) { avisarError(err); }
 }
 
 async function guardarNegocio(id) {

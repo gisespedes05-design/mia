@@ -17,6 +17,7 @@ import * as catalogo from './src/routes/catalogo.js';
 import * as pagos from './src/routes/pagos.js';
 import * as mensajes from './src/routes/mensajes.js';
 import * as notificaciones from './src/routes/notificaciones.js';
+import { revisarConsultasPendientes } from './src/seguimientoVentas.js';
 
 const r = new Enrutador();
 
@@ -48,6 +49,8 @@ r.patch('/api/negocios/:id', negocios.actualizar);
 r.post('/api/negocios/:id/enviar-revision', negocios.enviarRevision);
 r.post('/api/negocios/:id/interaccion', negocios.registrarInteraccion);
 r.get('/api/negocios/:id/reporte', negocios.verReporte);
+r.get('/api/negocios/:id/consultas', negocios.verConsultas);
+r.patch('/api/negocios/:id/consultas/:consultaId', negocios.resolverConsultaProducto);
 r.post('/api/negocios/:id/pago/iniciar', pagos.crearCheckout);
 r.post('/api/negocios/:id/pago/portal', pagos.crearPortal);
 r.post('/api/negocios/:id/logo', negocios.subirLogo);
@@ -59,6 +62,7 @@ r.delete('/api/negocios/:id/fotos/:fotoId', negocios.quitarFoto);
 r.post('/api/negocios/:id/productos', negocios.agregarProducto);
 r.patch('/api/negocios/:id/productos/:productoId', negocios.alternarProductoDestacado);
 r.delete('/api/negocios/:id/productos/:productoId', negocios.quitarProducto);
+r.post('/api/negocios/:id/productos/:productoId/consultar', mensajes.consultarProducto);
 r.post('/api/negocios/:id/publicaciones', negocios.agregarPublicacion);
 r.patch('/api/negocios/:id/publicaciones/:publicacionId', negocios.alternarPublicacionDestacada);
 r.delete('/api/negocios/:id/publicaciones/:publicacionId', negocios.quitarPublicacion);
@@ -124,3 +128,9 @@ const manejador = crearManejador({
 createServer(manejador).listen(PUERTO, () => {
   console.log(`MÍA corriendo en http://localhost:${PUERTO}`);
 });
+
+// Le pregunta a los negocios si se concretaron sus ventas: a las 48h y, si no
+// contestan, un único recordatorio a las 96h. Se revisa cada hora; también al
+// arrancar, por si el servidor estuvo apagado cuando le tocaba a alguna.
+revisarConsultasPendientes();
+setInterval(revisarConsultasPendientes, 60 * 60 * 1000);

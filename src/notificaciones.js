@@ -16,15 +16,22 @@ function seguidoresDe(negocioId) {
   return todos(`SELECT usuario_id FROM seguidores WHERE negocio_id = $n`, { n: negocioId });
 }
 
-/** Le avisa a cada seguidora de un negocio; nunca truena la acción que lo dispara. */
-export function notificarASeguidoras(negocioId, mensaje) {
+/** Notificación para una sola persona (ej. confirmar una venta). Nunca truena la acción que lo dispara. */
+export function notificar(usuarioId, negocioId, mensaje, enlace = null) {
   try {
-    for (const s of seguidoresDe(negocioId)) {
-      ejecutar(
-        `INSERT INTO notificaciones (usuario_id, negocio_id, mensaje) VALUES ($u, $n, $m)`,
-        { u: s.usuario_id, n: negocioId, m: mensaje }
-      );
-    }
+    ejecutar(
+      `INSERT INTO notificaciones (usuario_id, negocio_id, mensaje, enlace) VALUES ($u, $n, $m, $e)`,
+      { u: usuarioId, n: negocioId, m: mensaje, e: enlace }
+    );
+  } catch (err) {
+    console.error('[MÍA] Error creando notificación:', err.message);
+  }
+}
+
+/** Le avisa a cada seguidora de un negocio; nunca truena la acción que lo dispara. */
+export function notificarASeguidoras(negocioId, mensaje, enlace = null) {
+  try {
+    for (const s of seguidoresDe(negocioId)) notificar(s.usuario_id, negocioId, mensaje, enlace);
   } catch (err) {
     console.error('[MÍA] Error creando notificaciones:', err.message);
   }
@@ -32,7 +39,7 @@ export function notificarASeguidoras(negocioId, mensaje) {
 
 export function notificacionesDe(usuarioId) {
   return todos(
-    `SELECT no.id, no.mensaje, no.leida, no.creado_en, no.negocio_id,
+    `SELECT no.id, no.mensaje, no.enlace, no.leida, no.creado_en, no.negocio_id,
             n.nombre AS negocio_nombre, n.slug AS negocio_slug
        FROM notificaciones no
        LEFT JOIN negocios n ON n.id = no.negocio_id

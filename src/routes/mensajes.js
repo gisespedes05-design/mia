@@ -1,7 +1,7 @@
 import { ErrorHttp, exigirSesion, exigirRol } from '../auth.js';
 import { ROLES, reglasVigentes } from '../config.js';
 import { obtenerNegocioPorId, texto } from '../negocios.js';
-import { anotar } from '../db.js';
+import { anotar, ejecutar, uno } from '../db.js';
 import {
   conversacionesDeNegocio, conversacionesDeUsuaria, obtenerConversacion,
   exigirParteDe, mensajesDe, marcarLeidos, escribirA,
@@ -34,6 +34,43 @@ export async function escribir(ctx) {
 
   const conversacionId = escribirA({ negocioId: negocio.id, usuarioId: usuaria.id, autor: 'usuario', cuerpo });
   anotar(usuaria.id, 'Escribió a un negocio', negocio.nombre);
+  await avisarNegocioDeNuevoMensaje(negocio, usuaria, cuerpo);
+  return { conversacionId };
+}
+
+/**
+ * Una usuaria toca "¿Aún disponible?" o "Me interesa" en un producto: manda
+ * el mensaje precargado igual que `escribir`, y además deja una consulta en
+ * el registro privado de ventas del negocio (para el seguimiento de 48h/96h).
+ */
+export async function consultarProducto(ctx) {
+  const usuaria = exigirRol(ctx, ROLES.USUARIO);
+  const negocio = obtenerNegocioPorId(ctx.params.id);
+  if (!negocio || negocio.estado !== 'publicado') throw new ErrorHttp(404, 'No encontramos ese negocio.');
+
+  const producto = uno(`SELECT * FROM productos WHERE id = $id AND negocio_id = $negocioId`, {
+    id: Number(ctx.params.productoId), negocioId: negocio.id,
+  });
+  if (!producto) throw new ErrorHttp(404, 'Ese producto ya no existe.');
+
+  const tipo = ctx.cuerpo.tipo;
+  if (!['disponible', 'interesa'].includes(tipo)) throw new ErrorHttp(400, 'Ese tipo de consulta no existe.');
+
+  const cuerpo = tipo === 'disponible'
+    ? `¿Sigue disponible "${producto.nombre}"?`
+    : `Me interesa "${producto.nombre}".`;
+
+  const conversacionId = escribirA({ negocioId: negocio.id, usuarioId: usuaria.id, autor: 'usuario', cuerpo });
+  ejecutar(
+    `INSERT INTO consultas_producto
+       (negocio_id, producto_id, producto_nombre, usuario_id, conversacion_id, mensaje_tipo)
+     VALUES ($negocioId, $productoId, $productoNombre, $usuarioId, $conversacionId, $tipo)`,
+    {
+      negocioId: negocio.id, productoId: producto.id, productoNombre: producto.nombre,
+      usuarioId: usuaria.id, conversacionId, tipo,
+    }
+  );
+  anotar(usuaria.id, 'Consultó un producto', `${producto.nombre} — ${negocio.nombre}`);
   await avisarNegocioDeNuevoMensaje(negocio, usuaria, cuerpo);
   return { conversacionId };
 }
