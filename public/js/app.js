@@ -37,6 +37,9 @@ let CATEGORIAS = [];
 let PLANES = {};
 let ORDEN_PLANES = [];
 let YO = null;
+/** El primer negocio de la dueña, para que la barra de abajo pueda mandarla
+ * directo a Publicación/Producto/Mensajes de SU negocio sin preguntarle cuál. */
+let MI_NEGOCIO_ID = null;
 
 const MAX_SUBCATEGORIAS = 7;
 const MAX_CATEGORIAS = 2;
@@ -80,6 +83,7 @@ async function arrancar() {
   });
   MUNICIPIOS_POR_ESTADO = municipios;
   YO = sesion;
+  await actualizarMiNegocioId();
   avisarRetornoDeStripe();
   pintar();
   registrarServiceWorker();
@@ -107,6 +111,16 @@ function avisarRetornoDeStripe() {
 
 async function refrescarSesion() {
   YO = await api.get("/api/auth/yo");
+  await actualizarMiNegocioId();
+}
+
+async function actualizarMiNegocioId() {
+  MI_NEGOCIO_ID = null;
+  if (!YO || YO.rol !== "negocio") return;
+  try {
+    const mios = await api.get("/api/mis-negocios");
+    MI_NEGOCIO_ID = mios[0] ? mios[0].id : null;
+  } catch { /* la barra de abajo cae de vuelta a "Mi negocio" */ }
 }
 
 const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1] || { nombre: "", icono: "", sub: [] };
@@ -310,29 +324,51 @@ const ICONO_ESCUDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICONO_ENTRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
   'stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>' +
   '<polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>';
+const ICONO_PUBLICACION = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5v3a2 2 0 0 0 2 2h1l3 5v-5h2l7 4V5l-7 4H6a2 2 0 0 0-2 2Z">' +
+  "</path></svg>";
+const ICONO_PRODUCTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.9 12.9 20.6a2 2 0 0 1-2.8 0l-7.7-7.7a2 2 0 0 1' +
+  '-.6-1.4V4.5A1.5 1.5 0 0 1 3.3 3h6.6c.5 0 1 .2 1.4.6l7.7 7.7a2 2 0 0 1 0 2.8Z"></path>' +
+  '<circle cx="7.2" cy="7.7" r="1.1" fill="currentColor" stroke="none"></circle></svg>';
+const ICONO_MENSAJE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.5 8.7 8.7 0 0 1-4-1L3 20l1.1' +
+  '-4.7a8.4 8.4 0 0 1-1-4A8.4 8.4 0 0 1 12 3a8.6 8.6 0 0 1 9 8.5Z"></path></svg>';
 
 /** Barra fija de abajo, estilo app: Explorar, Categorías, Favoritos y Perfil
  * (este último cambia de ícono y a dónde lleva según el tipo de cuenta). */
 function barraTabs() {
   const v = ruta().vista;
-  let iconoPerfil = ICONO_ENTRAR, destinoPerfil = "entrar", vistasActivas = ["entrar"];
-  if (YO) {
-    if (YO.rol === "admin") { iconoPerfil = ICONO_ESCUDO; destinoPerfil = "admin"; vistasActivas = ["admin"]; }
-    else if (YO.rol === "negocio") {
-      iconoPerfil = ICONO_NEGOCIO; destinoPerfil = "panel"; vistasActivas = ["panel", "editar", "negocio-mensajes"];
-    } else { iconoPerfil = ICONO_PERSONA; destinoPerfil = "cuenta"; vistasActivas = ["cuenta"]; }
-  }
-  const conNotificaciones = YO && (YO.rol === "usuario" || YO.rol === "negocio");
   const tab = (href, icono, etiqueta, activa, puntito) =>
-    '<a href="#/' + href + '" class="' + (activa ? "activo" : "") + '">' + icono +
+    '<a href="' + href + '" class="' + (activa ? "activo" : "") + '">' + icono +
     (puntito ? '<span class="punto" id="punto_notif" style="display:none"></span>' : "") +
     "<span>" + etiqueta + "</span></a>";
 
+  // Una dueña de negocio no viene a buscar ni a guardar favoritos: viene a
+  // impulsar el suyo. Su barra es otra por completo.
+  if (YO && YO.rol === "negocio") {
+    const base = MI_NEGOCIO_ID ? "#/editar/" + MI_NEGOCIO_ID : "#/panel";
+    $("tabs").innerHTML =
+      tab("#/panel", ICONO_NEGOCIO, "Perfil", v === "panel" || v === "editar") +
+      tab(base, ICONO_PUBLICACION, "Publicación", false) +
+      tab(base, ICONO_PRODUCTO, "Producto", false) +
+      tab(MI_NEGOCIO_ID ? "#/negocio-mensajes/" + MI_NEGOCIO_ID : "#/panel", ICONO_MENSAJE, "Mensajes",
+        v === "negocio-mensajes", true);
+    actualizarBadgeNotificaciones();
+    return;
+  }
+
+  let iconoPerfil = ICONO_ENTRAR, destinoPerfil = "entrar", vistasActivas = ["entrar"];
+  if (YO) {
+    if (YO.rol === "admin") { iconoPerfil = ICONO_ESCUDO; destinoPerfil = "admin"; vistasActivas = ["admin"]; }
+    else { iconoPerfil = ICONO_PERSONA; destinoPerfil = "cuenta"; vistasActivas = ["cuenta"]; }
+  }
+  const conNotificaciones = YO && YO.rol === "usuario";
   $("tabs").innerHTML =
-    tab("inicio", ICONO_BUSCAR, "Explorar", v === "inicio") +
-    tab("directorio", ICONO_GRID, "Categorías", v === "directorio") +
-    tab("favoritos", ICONO_CORAZON, "Favoritos", v === "favoritos") +
-    tab(destinoPerfil, iconoPerfil, "Perfil", vistasActivas.includes(v), conNotificaciones);
+    tab("#/inicio", ICONO_BUSCAR, "Explorar", v === "inicio") +
+    tab("#/directorio", ICONO_GRID, "Categorías", v === "directorio") +
+    tab("#/favoritos", ICONO_CORAZON, "Favoritos", v === "favoritos") +
+    tab("#/" + destinoPerfil, iconoPerfil, "Perfil", vistasActivas.includes(v), conNotificaciones);
 
   if (conNotificaciones) actualizarBadgeNotificaciones();
 }
