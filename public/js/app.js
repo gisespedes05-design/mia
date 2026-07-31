@@ -300,6 +300,41 @@ function ruta() {
     arg2: p[2] ? decodeURIComponent(p[2]) : null };
 }
 
+/** El menú de arriba a la derecha: se ve en cualquier página, para
+ * cualquier tipo de cuenta (negocio, clienta o anónima) — a diferencia de
+ * "Cerrar sesión", que antes solo vivía adentro de "Mi negocio"/"Tu cuenta"
+ * y por eso costaba encontrarlo. */
+function actualizarMenuCabecera() {
+  const cont = $("menu_cabecera"), btn = $("btn_menu_cabecera");
+  if (!cont || !btn) return;
+  cont.hidden = true;
+  btn.setAttribute("aria-expanded", "false");
+  cont.innerHTML =
+    '<a href="#/mapa" role="menuitem">Mapa</a>' +
+    '<a href="#/blog" role="menuitem">Blog</a>' +
+    '<a href="#/planes" role="menuitem">Planes</a>' +
+    (YO
+      ? '<hr><button role="menuitem" class="salir" onclick="alternarMenuCabecera(false);salir()">Cerrar sesión</button>'
+      : '<hr><a href="#/entrar" role="menuitem">Entrar</a>');
+}
+
+function alternarMenuCabecera(forzarAbierto) {
+  const cont = $("menu_cabecera"), btn = $("btn_menu_cabecera");
+  if (!cont || !btn) return;
+  const abrir = forzarAbierto !== undefined ? forzarAbierto : cont.hidden;
+  cont.hidden = !abrir;
+  btn.setAttribute("aria-expanded", String(abrir));
+}
+
+document.addEventListener("click", (e) => {
+  const cont = $("menu_cabecera"), btn = $("btn_menu_cabecera");
+  if (!cont || cont.hidden) return;
+  if (!cont.contains(e.target) && !btn.contains(e.target)) alternarMenuCabecera(false);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") alternarMenuCabecera(false);
+});
+
 /** Enlaces que ya no caben en la barra de pestañas de abajo: viven dentro de
  * "Mi negocio", "Administración" y "Tu cuenta", cada quien con los suyos. */
 function enlacesSecundarios() {
@@ -436,6 +471,7 @@ async function pintar() {
   }
   app.removeAttribute("aria-busy");
   barraTabs();
+  actualizarMenuCabecera();
   window.scrollTo(0, 0);
   if (vista === "mapa") dibujarMapa(ultimoMapa);
   if (vista === "blog" && arg) iniciarCarrusel();

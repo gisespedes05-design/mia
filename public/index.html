@@ -18,7 +18,7 @@
 <body>
 
 <header class="barra">
-  <div class="envoltura">
+  <div class="envoltura fila entre">
     <a class="marca" href="#/inicio">
       <svg class="glifo" viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r="50" fill="#2D3A47"/>
@@ -32,6 +32,18 @@
       </svg>
       <span class="nombre">MÍA</span>
     </a>
+    <div class="menu-cabecera">
+      <button id="btn_menu_cabecera" class="btn-menu-cabecera" type="button" aria-haspopup="true"
+        aria-expanded="false" aria-label="Menú" onclick="alternarMenuCabecera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="17" x2="20" y2="17"></line>
+        </svg>
+      </button>
+      <div id="menu_cabecera" class="desplegable-cabecera" role="menu" hidden></div>
+    </div>
   </div>
 </header>
 
@@ -42,11 +54,8 @@
     <strong style="color:var(--texto)">MÍA</strong>
     <span>Directorio y comunidad de negocios dirigidos por mujeres.</span>
     <nav class="fila g12" style="flex-wrap:wrap">
-      <a href="#/mapa">Mapa</a>
-      <a href="#/blog">Blog</a>
       <a href="#/app">App</a>
       <a href="#/sobre">Sobre MÍA</a>
-      <a href="#/planes">Planes</a>
       <a href="#/privacidad">Aviso de privacidad</a>
     </nav>
   </div>

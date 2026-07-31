@@ -78,10 +78,26 @@ main{min-height:60vh;padding-bottom:78px}
 section.bloque{padding:36px 0}
 
 header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bottom:1px solid var(--linea)}
-.barra .envoltura{display:flex;align-items:center;justify-content:center;gap:14px;min-height:58px}
+.barra .envoltura{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:58px}
 .marca{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
 .marca .glifo{width:30px;height:30px;flex-shrink:0}
 .marca .nombre{font-weight:800;font-size:1.32rem;letter-spacing:-.03em}
+
+.menu-cabecera{position:relative;flex-shrink:0}
+.btn-menu-cabecera{display:flex;align-items:center;justify-content:center;width:38px;height:38px;
+  border-radius:100px;border:1px solid var(--linea);background:none;color:var(--texto);cursor:pointer;padding:0}
+.btn-menu-cabecera:hover{background:var(--fondo2)}
+.btn-menu-cabecera svg{width:18px;height:18px}
+.desplegable-cabecera{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--r);
+  box-shadow:0 10px 28px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column;gap:1px;z-index:60}
+.desplegable-cabecera[hidden]{display:none}
+.desplegable-cabecera a,.desplegable-cabecera button{display:block;width:100%;padding:9px 11px;
+  border-radius:8px;border:none;background:none;font:inherit;font-size:.88rem;font-weight:600;
+  color:var(--texto);text-align:left;text-decoration:none;cursor:pointer}
+.desplegable-cabecera a:hover,.desplegable-cabecera button:hover{background:var(--fondo2)}
+.desplegable-cabecera hr{border:none;border-top:1px solid var(--linea);margin:5px 2px}
+.desplegable-cabecera .salir{color:var(--peligro)}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;background:var(--superficie);
   border-top:1px solid var(--linea);box-shadow:0 -2px 12px rgba(0,0,0,.06);
