@@ -1,0 +1,13 @@
+{
+  "appId": "mx.mia.app",
+  "appName": "MÍA",
+  "webDir": "www",
+  "backgroundColor": "#2D3A47",
+  "server": {
+    "url": "https://mia-c2mm.onrender.com",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#2D3A47"
+  }
+}
