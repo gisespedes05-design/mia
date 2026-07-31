@@ -79,7 +79,7 @@ section.bloque{padding:36px 0}
 
 header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bottom:1px solid var(--linea)}
 .barra .envoltura{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:62px}
-.cabecera-izq{display:flex;align-items:center;gap:10px;position:relative}
+.cabecera-menu{display:flex;align-items:center;position:relative}
 .marca{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
 .marca .glifo{width:30px;height:30px;flex-shrink:0}
 .marca .nombre{font-weight:800;font-size:1.32rem;letter-spacing:-.03em}
@@ -90,7 +90,7 @@ header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bot
 .hamburguesa:hover{background:var(--fondo2)}
 .hamburguesa span{display:block;width:17px;height:2px;border-radius:2px;background:var(--texto)}
 
-nav.menu{display:none;position:absolute;top:calc(100% + 8px);left:0;flex-direction:column;gap:1px;
+nav.menu{display:none;position:absolute;top:calc(100% + 8px);right:0;flex-direction:column;gap:1px;
   min-width:230px;padding:6px;background:var(--superficie);border:1px solid var(--linea);
   border-radius:var(--r);box-shadow:var(--sombra);z-index:50}
 nav.menu.abierto{display:flex}
