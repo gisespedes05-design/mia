@@ -221,7 +221,7 @@ function ruta() {
 }
 
 const MENU_PUBLICO = [["inicio", "Inicio"], ["directorio", "Productos y Servicios"],
-  ["mapa", "Mapa"], ["blog", "Blog"], ["sobre", "Sobre MÍA"]];
+  ["mapa", "Mapa"], ["blog", "Blog"], ["app", "App"], ["sobre", "Sobre MÍA"]];
 
 function menu() {
   const v = ruta().vista;
@@ -269,6 +269,7 @@ async function pintar() {
     else if (vista === "mapa") html = await vistaMapa();
     else if (vista === "blog") html = arg ? await vistaArticulo(arg) : await vistaBlog();
     else if (vista === "sobre") html = vistaSobre();
+    else if (vista === "app") html = vistaApp();
     else if (vista === "privacidad") html = vistaPrivacidad();
     else if (vista === "planes") html = vistaPlanes();
     else if (vista === "registro") html = vistaRegistro(arg);
@@ -788,6 +789,33 @@ function irACarrusel(i) {
 }
 
 /* ================================================================= SOBRE MÍA */
+function vistaApp() {
+  return '<section class="hero"><div class="envoltura">' +
+    '<p class="eyebrow">MÍA en tu celular</p><h1>Descarga la app de MÍA</h1>' +
+    '<p class="entrada">La misma MÍA de siempre, como app: entra más rápido, sin escribir la ' +
+    "dirección cada vez.</p>" +
+    '<div class="fila g8"><a class="btn claro" href="/descargas/mia.apk" download>⬇ Descargar para Android</a></div>' +
+  "</div></section>" +
+
+  '<div class="envoltura bloque pila g32" style="max-width:680px">' +
+    '<div class="tarjeta p20 pila g12"><p class="eyebrow">Cómo instalarla</p>' +
+      '<div class="escalones">' +
+        escalon(1, "Descarga el archivo", 'Toca el botón de arriba desde tu celular Android (no funciona en iPhone todavía).') +
+        escalon(2, "Permite instalar", 'Android va a preguntar si confías en el origen. Es normal: MÍA no está todavía en Google Play, así que toca "Instalar de todos modos" o activa "Permitir de esta fuente".') +
+        escalon(3, "Ábrela como cualquier app", "Va a aparecer el ícono de MÍA en tu pantalla. Se conecta directo al sitio real: tu cuenta, tus mensajes y tus negocios son los mismos.") +
+      "</div>" +
+    "</div>" +
+
+    '<div class="aviso"><div><strong>¿Por qué no está en Google Play todavía?</strong> Estamos por ' +
+    "mandarla a revisión. Mientras tanto, esta es la versión oficial — funciona exactamente igual, " +
+    "solo que la descargas directo de aquí en lugar de la tienda.</div></div>" +
+
+    '<div class="pila g8"><p class="eyebrow">¿Tienes iPhone?</p>' +
+    '<p class="pequeno apagado">Por ahora puedes instalar MÍA como app desde Safari: abre ' +
+    "mia-c2mm.onrender.com, toca el botón de compartir y elige \"Agregar a inicio\".</p></div>" +
+  "</div>";
+}
+
 function vistaSobre() {
   return '<section class="hero"><div class="envoltura">' +
     '<p class="eyebrow">Sobre MÍA</p><h1>No somos un marketplace</h1>' +

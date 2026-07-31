@@ -2,3 +2,4 @@ node_modules/
 android/local.properties
 *.apk
 *.aab
+firma/

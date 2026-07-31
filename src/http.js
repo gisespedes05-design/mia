@@ -14,6 +14,7 @@ const TIPOS = {
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
+  '.apk': 'application/vnd.android.package-archive',
 };
 
 const LIMITE_CUERPO = 8 * 1024 * 1024; // 8 MB: permite subir una foto en base64

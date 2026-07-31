@@ -16,10 +16,27 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // La llave de firma NUNCA se guarda en el repositorio: se lee de
+    // variables de entorno. Sin ellas, la app se compila sin firmar (sigue
+    // sirviendo para GitHub Actions tal como está hoy).
+    signingConfigs {
+        release {
+            def rutaLlave = System.getenv("MIA_KEYSTORE_PATH")
+            if (rutaLlave != null) {
+                storeFile file(rutaLlave)
+                storePassword System.getenv("MIA_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("MIA_KEY_ALIAS")
+                keyPassword System.getenv("MIA_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (System.getenv("MIA_KEYSTORE_PATH") != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
