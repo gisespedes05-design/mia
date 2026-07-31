@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { Enrutador, crearManejador } from './src/http.js';
-import { RAIZ, DIR_SUBIDAS } from './src/db.js';
+import { RAIZ, DIR_DATOS, DIR_SUBIDAS } from './src/db.js';
 import { PUERTO } from './src/config.js';
 import { crearAdminInicialSiHaceFalta } from './src/auth.js';
 
@@ -127,6 +127,10 @@ const manejador = crearManejador({
 
 createServer(manejador).listen(PUERTO, () => {
   console.log(`MÍA corriendo en http://localhost:${PUERTO}`);
+  // Sin disco persistente montado exactamente aquí, cada despliegue borra
+  // todo lo registrado. Esta ruta es la que hay que poner como "Mount Path"
+  // del disco en Render (o la plataforma que sea).
+  console.log(`Carpeta de datos (para el disco persistente): ${DIR_DATOS}`);
 });
 
 // Le pregunta a los negocios si se concretaron sus ventas: a las 48h y, si no
