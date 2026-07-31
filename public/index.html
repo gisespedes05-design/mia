@@ -32,12 +32,6 @@
       </svg>
       <span class="nombre">MÍA</span>
     </a>
-    <div class="cabecera-menu">
-      <button type="button" class="hamburguesa" id="btn_menu" onclick="alternarMenu()" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
-        <span></span><span></span><span></span>
-      </button>
-      <nav class="menu" id="menu"></nav>
-    </div>
   </div>
 </header>
 
@@ -47,9 +41,18 @@
   <div class="envoltura pila g8">
     <strong style="color:var(--texto)">MÍA</strong>
     <span>Directorio y comunidad de negocios dirigidos por mujeres.</span>
-    <a href="#/privacidad" style="align-self:flex-start">Aviso de privacidad</a>
+    <nav class="fila g12" style="flex-wrap:wrap">
+      <a href="#/mapa">Mapa</a>
+      <a href="#/blog">Blog</a>
+      <a href="#/app">App</a>
+      <a href="#/sobre">Sobre MÍA</a>
+      <a href="#/planes">Planes</a>
+      <a href="#/privacidad">Aviso de privacidad</a>
+    </nav>
   </div>
 </footer>
+
+<nav class="tabs" id="tabs"></nav>
 
 <div id="toast" role="status" aria-live="polite"></div>
 

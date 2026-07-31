@@ -275,56 +275,74 @@ function ruta() {
     arg2: p[2] ? decodeURIComponent(p[2]) : null };
 }
 
-const MENU_PUBLICO = [["inicio", "Inicio"], ["directorio", "Productos y Servicios"],
-  ["mapa", "Mapa"], ["blog", "Blog"], ["app", "App"], ["sobre", "Sobre MÍA"]];
-
-let menuAbierto = false;
-function alternarMenu() {
-  menuAbierto = !menuAbierto;
-  $("menu").classList.toggle("abierto", menuAbierto);
-  $("btn_menu").setAttribute("aria-expanded", String(menuAbierto));
+/** Enlaces que ya no caben en la barra de pestañas de abajo: viven dentro de
+ * "Mi negocio", "Administración" y "Tu cuenta", cada quien con los suyos. */
+function enlacesSecundarios() {
+  return '<div class="fila g8" style="flex-wrap:wrap">' +
+    '<a class="btn linea chico" href="#/mapa">Mapa</a>' +
+    '<a class="btn linea chico" href="#/blog">Blog</a>' +
+    '<a class="btn linea chico" href="#/app">App</a>' +
+    '<a class="btn linea chico" href="#/sobre">Sobre MÍA</a>' +
+    '<a class="btn linea chico" href="#/planes">Planes</a>' +
+    '<button class="btn fantasma chico" onclick="salir()">Cerrar sesión</button>' +
+  "</div>";
 }
-document.addEventListener("click", (e) => {
-  if (!menuAbierto) return;
-  if ($("menu").contains(e.target) || $("btn_menu").contains(e.target)) return;
-  menuAbierto = false;
-  $("menu").classList.remove("abierto");
-  $("btn_menu").setAttribute("aria-expanded", "false");
-});
 
-function menu() {
+const ICONO_BUSCAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle>' +
+  '<line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+const ICONO_GRID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect>' +
+  '<rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect>' +
+  '<rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>';
+const ICONO_CORAZON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.2-4.5-9.7-9C.7 8.6 2 5.3 5.3 5.3c1.9 0 ' +
+  '3.4 1.1 4.4 2.6a5.3 5.3 0 0 1 4.4-2.6c3.3 0 4.6 3.3 3 6.7-2.5 4.5-9.7 9-9.7 9Z"></path></svg>';
+const ICONO_PERSONA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle>' +
+  '<path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg>';
+const ICONO_NEGOCIO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect>' +
+  '<path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+const ICONO_ESCUDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5Z">' +
+  "</path></svg>";
+const ICONO_ENTRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>' +
+  '<polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>';
+
+/** Barra fija de abajo, estilo app: Explorar, Categorías, Favoritos y Perfil
+ * (este último cambia de ícono y a dónde lleva según el tipo de cuenta). */
+function barraTabs() {
   const v = ruta().vista;
-  let items = MENU_PUBLICO.map(([h, t]) =>
-    '<a href="#/' + h + '" class="' + (v === h ? "activo" : "") + '">' + t + "</a>").join("");
-  if (!YO) {
-    items += '<a href="#/planes" class="' + (v === "planes" ? "activo" : "") + '">Planes</a>' +
-      '<a href="#/entrar" class="btn chico">Iniciar sesión</a>';
-  } else {
-    if (YO.rol === "admin") items += '<a href="#/admin" class="' + (v === "admin" ? "activo" : "") + '">Administración</a>';
-    if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
-    if (YO.rol === "usuario") {
-      items += '<a href="#/favoritos" class="' + (v === "favoritos" ? "activo" : "") + '">Favoritos</a>' +
-        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>';
-    }
-    if (YO.rol === "usuario" || YO.rol === "negocio") {
-      items += '<a href="#/notificaciones" class="' + (v === "notificaciones" ? "activo" : "") +
-        '">Notificaciones<span id="badge_notif" class="badge" style="display:none"></span></a>';
-    }
-    items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
+  let iconoPerfil = ICONO_ENTRAR, destinoPerfil = "entrar", vistasActivas = ["entrar"];
+  if (YO) {
+    if (YO.rol === "admin") { iconoPerfil = ICONO_ESCUDO; destinoPerfil = "admin"; vistasActivas = ["admin"]; }
+    else if (YO.rol === "negocio") {
+      iconoPerfil = ICONO_NEGOCIO; destinoPerfil = "panel"; vistasActivas = ["panel", "editar", "negocio-mensajes"];
+    } else { iconoPerfil = ICONO_PERSONA; destinoPerfil = "cuenta"; vistasActivas = ["cuenta"]; }
   }
-  $("menu").innerHTML = items;
-  $("menu").classList.toggle("abierto", menuAbierto);
-  $("btn_menu").setAttribute("aria-expanded", String(menuAbierto));
-  if (YO && (YO.rol === "usuario" || YO.rol === "negocio")) actualizarBadgeNotificaciones();
+  const conNotificaciones = YO && (YO.rol === "usuario" || YO.rol === "negocio");
+  const tab = (href, icono, etiqueta, activa, puntito) =>
+    '<a href="#/' + href + '" class="' + (activa ? "activo" : "") + '">' + icono +
+    (puntito ? '<span class="punto" id="punto_notif" style="display:none"></span>' : "") +
+    "<span>" + etiqueta + "</span></a>";
+
+  $("tabs").innerHTML =
+    tab("inicio", ICONO_BUSCAR, "Explorar", v === "inicio") +
+    tab("directorio", ICONO_GRID, "Categorías", v === "directorio") +
+    tab("favoritos", ICONO_CORAZON, "Favoritos", v === "favoritos") +
+    tab(destinoPerfil, iconoPerfil, "Perfil", vistasActivas.includes(v), conNotificaciones);
+
+  if (conNotificaciones) actualizarBadgeNotificaciones();
 }
 
 async function actualizarBadgeNotificaciones() {
   try {
     const { noLeidas } = await api.get("/api/notificaciones");
-    const b = $("badge_notif");
+    const b = $("punto_notif");
     if (!b) return;
-    b.textContent = noLeidas > 0 ? String(noLeidas) : "";
-    b.style.display = noLeidas > 0 ? "inline-flex" : "none";
+    b.style.display = noLeidas > 0 ? "block" : "none";
   } catch { /* sin notificaciones */ }
 }
 
@@ -355,6 +373,7 @@ async function pintar() {
     else if (vista === "editar") html = YO ? await vistaEditar(arg) : sinAcceso();
     else if (vista === "reporte") html = YO ? await vistaReporte(arg) : sinAcceso();
     else if (vista === "admin") html = esAdmin() ? await vistaAdmin(arg) : sinAcceso();
+    else if (vista === "cuenta") html = YO && YO.rol === "usuario" ? vistaCuenta() : sinAcceso();
     else html = await vistaInicio();
 
     app.innerHTML = html;
@@ -364,7 +383,7 @@ async function pintar() {
       '<p style="margin-top:14px"><a class="btn" href="#/inicio">Volver al inicio</a></p></div>';
   }
   app.removeAttribute("aria-busy");
-  menu();
+  barraTabs();
   window.scrollTo(0, 0);
   if (vista === "mapa") dibujarMapa(ultimoMapa);
   if (vista === "blog" && arg) iniciarCarrusel();
@@ -376,6 +395,25 @@ function sinAcceso() {
     '<p class="apagado">En MÍA cada quien ve lo suyo: la organización administra, los negocios ' +
     "editan su perfil y las visitantes dejan reseñas y guardan favoritos.</p>" +
     '<div class="fila g8"><a class="btn" href="#/entrar">Iniciar sesión</a></div></div>';
+}
+
+/** "Perfil" de una clienta: sus atajos y, aparte, todo lo que ya no cabe en la barra de abajo. */
+function vistaCuenta() {
+  return '<div class="envoltura bloque pila g24" style="max-width:480px">' +
+    '<div class="pila g4"><p class="eyebrow">Tu cuenta</p>' +
+      "<h1>" + esc(YO.nombre) + "</h1>" +
+      '<p class="apagado pequeno">' + esc(YO.correo) + "</p></div>" +
+
+    '<div class="tarjeta p12 pila g4">' +
+      '<a class="btn fantasma ancho" style="justify-content:flex-start" href="#/mensajes">💬 Mensajes</a>' +
+      '<a class="btn fantasma ancho" style="justify-content:flex-start" href="#/notificaciones">🔔 Notificaciones</a>' +
+      '<a class="btn fantasma ancho" style="justify-content:flex-start" href="#/favoritos">♡ Favoritos</a>' +
+    "</div>" +
+
+    '<div class="pila g8"><p class="eyebrow">Más de MÍA</p>' +
+      enlacesSecundarios() +
+    "</div>" +
+  "</div>";
 }
 
 const vacio = (msg) => '<div class="tarjeta p24 pila g8"><h3>Nada por aquí todavía</h3>' +
@@ -417,10 +455,7 @@ const consentimientosHtml = (prefijo) =>
     "(negocios verificados, artículos nuevos).</span>" +
   "</label>";
 
-window.addEventListener("hashchange", () => {
-  menuAbierto = false;
-  pintar();
-});
+window.addEventListener("hashchange", pintar);
 
 /* ==================================================================== SESIÓN */
 async function entrar(correo, clave) {
@@ -498,9 +533,32 @@ function dibujarMapa(negocios) {
     '<path class="tierra" d="' + trazo(BAJA) + '"></path>' + pins + "</svg>";
 }
 /* ==================================================================== INICIO */
+const ICONO_UBICACION = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-12A7 7 0 0 0 5 9c0 5.6 7 12 7 12Z">' +
+  '</path><circle cx="12" cy="9" r="2.5"></circle></svg>';
+const ICONO_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>';
+const ICONO_VERIFICADO = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' +
+  '<circle cx="12" cy="12" r="11" fill="var(--cobalto)"></circle>' +
+  '<path d="M7.3 12.3l3 3 6-6.6" stroke="#fff" stroke-width="2.3" fill="none" ' +
+  'stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+/** Foto + nombre + categoría + estrellas + palomita, para la lista de verificados de Inicio. */
+function filaVerificada(n) {
+  const c = cat(n.categoria);
+  return '<a class="fila-verificada" href="#/negocio/' + esc(n.slug) + '">' +
+    '<div class="foto-chica">' + imagenHtml(fotoDirectorioUrl(n), n.nombre) + "</div>" +
+    '<div class="pila g2" style="flex:1;min-width:0">' +
+      '<strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(n.nombre) + "</strong>" +
+      '<span class="pequeno apagado">' + c.icono + " " + esc(c.nombre) + "</span>" +
+      estrellasHtml(n.calificacion) +
+    "</div>" + ICONO_VERIFICADO + "</a>";
+}
+
 async function vistaInicio() {
   const { resultados } = await api.get("/api/negocios?porPagina=48");
   const destacados = resultados.slice(0, 6);
+  const verificados = resultados.filter((n) => n.verificado).slice(0, 5);
   const arts = (await api.get("/api/blog")).slice(0, 2);
 
   const ultimas = resultados
@@ -509,19 +567,35 @@ async function vistaInicio() {
     .slice(0, 3);
 
   return (
-  '<section class="hero"><div class="envoltura">' +
-    '<p class="eyebrow">Directorio y comunidad</p>' +
-    "<h1>Negocios dirigidos por mujeres</h1>" +
-    '<p class="entrada">MÍA no vende por ti ni cobra comisión. Te ayudamos a que te ' +
-    "encuentren: un directorio ordenado por categorías, un mapa y una comunidad que te acompaña.</p>" +
-    '<div class="buscador">' +
-      '<input id="q" placeholder="Busca maquillaje, pasteles, contabilidad…" ' +
-        'onkeydown="if(event.key===\'Enter\')buscarDesdeInicio()" aria-label="Buscar negocios">' +
-      '<button class="btn claro" onclick="buscarDesdeInicio()">Buscar</button>' +
+  '<section class="hero-inicio"><div class="envoltura pila g14" style="align-items:center;text-align:center">' +
+    '<div class="marca-grande">' +
+      '<svg class="glifo" viewBox="0 0 100 100" aria-hidden="true">' +
+        '<circle cx="50" cy="50" r="50" fill="#2D3A47"></circle>' +
+        '<g fill="none" stroke="#B46A72" stroke-width="2.6" stroke-linecap="round" opacity=".85">' +
+          '<line x1="25" y1="25" x2="45" y2="45"></line><line x1="45" y1="45" x2="75" y2="78"></line>' +
+        "</g>" +
+        '<circle cx="25" cy="25" r="5" fill="#FFF7E6"></circle>' +
+        '<circle cx="45" cy="45" r="7" fill="#FFF7E6"></circle>' +
+        '<circle cx="75" cy="78" r="11" fill="#FFF7E6"></circle>' +
+      "</svg>" +
+      '<span class="nombre-grande">MÍA</span>' +
     "</div>" +
+    '<p class="lema">Negocios dirigidos por mujeres ♥</p>' +
+    '<label class="buscador-pill">' + ICONO_BUSCAR +
+      '<input id="q" placeholder="¿Qué estás buscando?" ' +
+        'onkeydown="if(event.key===\'Enter\')buscarDesdeInicio()" aria-label="Buscar negocios">' +
+    "</label>" +
+    '<button class="cerca-de-ti" id="btn_cerca" onclick="buscarCercaDeTi()">' +
+      ICONO_UBICACION + "<span>Cerca de ti</span>" + ICONO_CHEVRON + "</button>" +
   "</div></section>" +
 
   '<div class="envoltura bloque pila g48">' +
+    (verificados.length ? '<div class="pila g16">' +
+      '<div class="fila entre g12"><h2>Negocios verificados</h2>' +
+      '<a class="btn fantasma chico" href="#/directorio">Ver todos</a></div>' +
+      '<div class="pila g10">' + verificados.map(filaVerificada).join("") + "</div>" +
+    "</div>" : "") +
+
     '<div class="pila g16">' +
       '<div class="fila entre g12"><h2>Explora por categoría</h2>' +
       '<a class="btn fantasma chico" href="#/directorio">Ver todas</a></div>' +
@@ -580,6 +654,30 @@ function registrarClic(id, tipo) {
 function buscarDesdeInicio() {
   filtro.q = val("q"); filtro.categoria = ""; filtro.sub = "";
   location.hash = "#/directorio"; pintar();
+}
+
+/** Usa la ubicación del navegador para adivinar la ciudad más cercana de la
+ * lista y filtrar el directorio por ahí — sin mandar coordenadas a ningún lado. */
+function buscarCercaDeTi() {
+  if (!navigator.geolocation) return avisar("Tu navegador no permite compartir tu ubicación.");
+  const btn = $("btn_cerca");
+  if (btn) btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      let mejor = null, mejorDist = Infinity;
+      for (const [ciudad, [lng, lat]] of Object.entries(CIUDADES)) {
+        const dist = Math.hypot(lat - latitude, lng - longitude);
+        if (dist < mejorDist) { mejorDist = dist; mejor = ciudad; }
+      }
+      if (btn) btn.disabled = false;
+      if (!mejor) return avisar("No encontramos una ciudad cercana en el directorio.");
+      filtro = { q: "", categoria: "", sub: "", ciudad: mejor };
+      location.hash = "#/directorio"; pintar();
+      avisar("Mostrando negocios cerca de " + mejor + ".");
+    },
+    () => { if (btn) btn.disabled = false; avisar("No pudimos obtener tu ubicación. Revisa los permisos del navegador."); }
+  );
 }
 
 /* ============================================================== TARJETAS */
@@ -1601,7 +1699,12 @@ async function vistaPanel() {
       "<h1>Mis perfiles</h1></div>" +
       '<a class="btn linea" href="#/planes">Registrar otro negocio</a></div>' +
     (mios.length ? '<div class="pila g16">' + mios.map(fichaPanel).join("")
-      : vacio("Todavía no tienes perfiles. Elige un plan para registrar tu negocio.")) + "</div>";
+      : vacio("Todavía no tienes perfiles. Elige un plan para registrar tu negocio.")) + "</div>" +
+    '<div class="envoltura"><hr class="separador" style="margin:20px 0">' +
+      '<div class="pila g8"><p class="eyebrow">Notificaciones y más</p>' +
+        '<div class="fila g8"><a class="btn linea chico" href="#/notificaciones">🔔 Notificaciones</a></div>' +
+        enlacesSecundarios() +
+      "</div></div>";
 }
 
 function fichaPanel(n) {
@@ -2127,6 +2230,8 @@ async function vistaAdmin(seccion) {
   return '<div class="envoltura shell"><aside class="lateral">' +
     tabs.map(([k, t]) => '<button class="' + (s === k ? "activo" : "") +
       '" onclick="location.hash=\'#/admin/' + k + '\'">' + esc(t) + "</button>").join("") +
+    '<hr class="separador" style="margin:6px 0">' +
+    '<button onclick="salir()">Cerrar sesión</button>' +
     '</aside><div class="pila g24">' + contenido + "</div></div>";
 }
 
