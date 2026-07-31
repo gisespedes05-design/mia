@@ -1,6 +1,6 @@
 import { ejecutar, uno, anotar } from '../db.js';
 import { ErrorHttp, exigirSesion } from '../auth.js';
-import { STRIPE_ENLACES_PAGO, PLANES } from '../config.js';
+import { STRIPE_ENLACES_PAGO, PLANES, ESTADOS_NEGOCIO } from '../config.js';
 import { stripe, stripeConfigurado, STRIPE_WEBHOOK_SECRETO } from '../stripe.js';
 import { obtenerNegocioPorId, exigirPropiedad } from '../negocios.js';
 
@@ -139,6 +139,17 @@ async function manejarFacturaPagada(event) {
     ejecutar(`UPDATE negocios SET plan_vence = $vence, pago_confirmado = 1 WHERE id = $id`, {
       vence: fechaDeUnix(finPeriodo), id: negocio.id,
     });
+  }
+  // Con el pago ya confirmado por Stripe, se publica sola: ya no hace falta
+  // que alguien de MÍA la revise a mano primero. Solo se toca si sigue
+  // "pendiente" — si MÍA ya la rechazó o la suspendió a propósito, esa
+  // decisión no se pisa nada más porque llegó un cobro. La insignia de
+  // verificada sigue siendo aparte y sigue siendo manual.
+  if (negocio.estado === ESTADOS_NEGOCIO.PENDIENTE) {
+    ejecutar(`UPDATE negocios SET estado = $publicado WHERE id = $id`, {
+      publicado: ESTADOS_NEGOCIO.PUBLICADO, id: negocio.id,
+    });
+    anotar(null, 'Publicado automáticamente', `${negocio.nombre}: se publicó solo al confirmarse el pago con Stripe.`);
   }
   anotar(null, 'Renovación cobrada por Stripe', `${negocio.nombre} — ${PLANES[negocio.plan]?.nombre || negocio.plan}`);
   registrarPago({
