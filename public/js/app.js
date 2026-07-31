@@ -141,6 +141,33 @@ const CIUDADES = {
 };
 const ENTIDADES_CIUDAD = Object.keys(CIUDADES).sort((a, b) => a.localeCompare(b, "es"));
 
+/** Alcaldías o municipios reales para las tres zonas metropolitanas más grandes.
+ * En el resto de las ciudades, el único municipio que se ofrece es la propia
+ * ciudad (para esas es donde vive el negocio de todos modos). */
+const ALCALDIAS_MUNICIPIOS = {
+  "Ciudad de México": ["Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa de Morelos",
+    "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "La Magdalena Contreras", "Miguel Hidalgo",
+    "Milpa Alta", "Tláhuac", "Tlalpan", "Venustiano Carranza", "Xochimilco"],
+  "Monterrey": ["Monterrey", "San Pedro Garza García", "San Nicolás de los Garza", "Guadalupe", "Apodaca",
+    "General Escobedo", "Santa Catarina", "García", "Juárez"],
+  "Guadalajara": ["Guadalajara", "Zapopan", "Tlaquepaque", "Tonalá", "Tlajomulco de Zúñiga", "El Salto",
+    "Juanacatlán", "Ixtlahuacán de los Membrillos"],
+};
+const alcaldiasDe = (ciudad) => (ciudad ? (ALCALDIAS_MUNICIPIOS[ciudad] || [ciudad]) : []);
+
+/** Repuebla el <select> de alcaldía/municipio según la ciudad elegida (prefijo "g" o "f"). */
+function pintarAlcaldias(prefijo) {
+  const sel = $(prefijo + "_alcaldia");
+  if (!sel) return;
+  const actual = sel.value;
+  const opciones = alcaldiasDe(val(prefijo + "_ciudad"));
+  sel.disabled = !opciones.length;
+  sel.innerHTML = opciones.length
+    ? '<option value="">Elige…</option>' + opciones.map((a) => '<option value="' + esc(a) + '">' + esc(a) + "</option>").join("")
+    : '<option value="">Primero elige una ciudad</option>';
+  if (opciones.includes(actual)) sel.value = actual;
+}
+
 /* ================================================================= UTILIDAD */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -1259,11 +1286,11 @@ function vistaRegistro(planId) {
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Tu negocio</p>' +
       '<div class="rejilla-campos">' +
         '<label class="campo">Nombre del negocio<input id="g_negocio"></label>' +
-        '<label class="campo">Ciudad<select id="g_ciudad"><option value="">Elige…</option>' +
+        '<label class="campo">Ciudad<select id="g_ciudad" onchange="pintarAlcaldias(\'g\')"><option value="">Elige…</option>' +
           ENTIDADES_CIUDAD.map((x) => '<option value="' + esc(x) + '">' + esc(x) + "</option>").join("") +
         "</select></label>" +
-        '<label class="campo">Alcaldía o municipio <span class="apagado">(opcional)</span>' +
-          '<input id="g_alcaldia" placeholder="Xochimilco, San Pedro Garza García…"></label>' +
+        '<label class="campo">Alcaldía o municipio<select id="g_alcaldia" disabled>' +
+          '<option value="">Primero elige una ciudad</option></select></label>' +
       "</div>" +
       '<label class="campo">Dirección <span class="apagado">(opcional)</span>' +
         '<input id="g_direccion" placeholder="Calle, número, colonia"></label>' +
@@ -1364,6 +1391,8 @@ function alternarSub(btn) {
 
 async function enviarRegistro(planId) {
   const decir = (m) => { if ($("g_error")) $("g_error").textContent = m; avisar(m); };
+  if (!val("g_ciudad")) return decir("Elige la ciudad de tu negocio.");
+  if (!val("g_alcaldia")) return decir("Elige tu alcaldía o municipio.");
   if (!val("g_categoria")) return decir("Elige la categoría principal de tu negocio.");
   if (!subSeleccionadas.length) return decir("Elige al menos una subcategoría.");
   if (!marcado("g_terminos")) return decir("Debes aceptar el aviso de privacidad y seguridad para continuar.");
@@ -1683,11 +1712,15 @@ async function vistaEditar(id) {
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Datos del negocio</p>' +
       '<div class="rejilla-campos">' +
         '<label class="campo">Nombre<input id="f_nombre" value="' + esc(n.nombre) + '"></label>' +
-        '<label class="campo">Ciudad<select id="f_ciudad"><option value="">Elige…</option>' +
+        '<label class="campo">Ciudad<select id="f_ciudad" onchange="pintarAlcaldias(\'f\')"><option value="">Elige…</option>' +
           ENTIDADES_CIUDAD.map((x) => '<option value="' + esc(x) + '"' +
             (n.ciudad === x ? " selected" : "") + ">" + esc(x) + "</option>").join("") + "</select></label>" +
-        '<label class="campo">Alcaldía o municipio <span class="apagado">(opcional)</span>' +
-          '<input id="f_alcaldia" placeholder="Xochimilco, San Pedro Garza García…" value="' + esc(n.alcaldiaMunicipio || "") + '"></label>' +
+        '<label class="campo">Alcaldía o municipio<select id="f_alcaldia"' + (n.ciudad ? "" : " disabled") + '>' +
+          (n.ciudad
+            ? '<option value="">Elige…</option>' + alcaldiasDe(n.ciudad).map((a) => '<option value="' + esc(a) + '"' +
+                (n.alcaldiaMunicipio === a ? " selected" : "") + ">" + esc(a) + "</option>").join("")
+            : '<option value="">Primero elige una ciudad</option>') +
+        "</select></label>" +
       "</div>" +
       '<label class="campo">Dirección<input id="f_direccion" value="' + esc(n.direccion || "") + '"></label>' +
       '<label class="campo">Teléfono<input id="f_telefono" value="' + esc(n.telefono || "") + '"></label>' +

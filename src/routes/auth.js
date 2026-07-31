@@ -57,8 +57,8 @@ export async function registrarNegocio(ctx) {
   const categoria2 = normalizarCategoria2(categoria, negocio.categoria2);
   const sub = normalizarSub(categoria, categoria2, negocio.sub);
   const descripcion = exigirTexto(negocio.descripcion, 'descripción', { min: 20, max: 6000 });
-  const ciudad = String(negocio.ciudad || '').slice(0, 80);
-  const alcaldiaMunicipio = String(negocio.alcaldiaMunicipio || '').slice(0, 100);
+  const ciudad = exigirTexto(negocio.ciudad, 'ciudad', { min: 1, max: 80 });
+  const alcaldiaMunicipio = exigirTexto(negocio.alcaldiaMunicipio, 'alcaldía o municipio', { min: 1, max: 100 });
   const direccion = String(negocio.direccion || '').slice(0, 200);
   const redes = normalizarRedes(negocio.redes);
   const mensaje = String(ctx.cuerpo.mensaje || '').slice(0, 2000);
