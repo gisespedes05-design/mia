@@ -31,7 +31,10 @@ export function verDetalle(ctx) {
   const negocio = obtenerNegocioPorSlug(ctx.params.slug);
   if (!negocio || !esVisiblePara(negocio, ctx.usuario)) throw new ErrorHttp(404, 'No encontramos ese negocio.');
 
-  if (negocio.estado === 'publicado' && ctx.consulta.contar === '1') {
+  // Toda visita cuenta, sin límite — menos cuando la dueña entra a ver su
+  // propio perfil, para que no infle sus propias estadísticas.
+  const esSuPropiaDuena = Boolean(ctx.usuario) && ctx.usuario.id === negocio.propietaria_id;
+  if (negocio.estado === 'publicado' && ctx.consulta.contar === '1' && !esSuPropiaDuena) {
     ejecutar(`UPDATE negocios SET vistas = vistas + 1 WHERE id = $id`, { id: negocio.id });
     ejecutar(`INSERT INTO vistas_perfil (negocio_id) VALUES ($id)`, { id: negocio.id });
   }
