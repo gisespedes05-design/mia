@@ -131,8 +131,13 @@ async function manejarFacturaPagada(event) {
 
   const negocio = negocioPorSuscripcion(invoice.subscription);
   if (!negocio) {
-    console.error('[Stripe] invoice.paid de una suscripción que no reconocemos:', invoice.subscription);
-    return;
+    // Stripe no garantiza el orden de entrega de sus webhooks: en un pago
+    // recién hecho, este invoice.paid puede llegar (o procesarse) antes que
+    // el checkout.session.completed que es quien vincula por primera vez el
+    // negocio con esta suscripción. En vez de darlo por perdido, se rechaza
+    // a propósito para que Stripe lo reintente solo en unos minutos, cuando
+    // ese vínculo ya debería existir.
+    throw new ErrorHttp(409, `invoice.paid de una suscripción todavía no vinculada: ${invoice.subscription}`);
   }
   const finPeriodo = invoice.lines?.data?.[0]?.period?.end;
   if (finPeriodo) {
@@ -163,7 +168,11 @@ async function manejarPagoFallido(event) {
   if (!invoice.subscription) return;
 
   const negocio = negocioPorSuscripcion(invoice.subscription);
-  if (!negocio) return;
+  if (!negocio) {
+    // Mismo caso que en invoice.paid: puede llegar antes que el vínculo
+    // exista todavía. Se rechaza para que Stripe lo reintente.
+    throw new ErrorHttp(409, `invoice.payment_failed de una suscripción todavía no vinculada: ${invoice.subscription}`);
+  }
 
   anotar(null, 'Pago con Stripe fallido', `${negocio.nombre}: Stripe reintentará el cobro automáticamente.`);
   registrarPago({
