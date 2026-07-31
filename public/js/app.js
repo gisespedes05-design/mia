@@ -229,13 +229,27 @@ function ruta() {
 const MENU_PUBLICO = [["inicio", "Inicio"], ["directorio", "Productos y Servicios"],
   ["mapa", "Mapa"], ["blog", "Blog"], ["app", "App"], ["sobre", "Sobre MÍA"]];
 
+let menuAbierto = false;
+function alternarMenu() {
+  menuAbierto = !menuAbierto;
+  $("menu").classList.toggle("abierto", menuAbierto);
+  $("btn_menu").setAttribute("aria-expanded", String(menuAbierto));
+}
+document.addEventListener("click", (e) => {
+  if (!menuAbierto) return;
+  if ($("menu").contains(e.target) || $("btn_menu").contains(e.target)) return;
+  menuAbierto = false;
+  $("menu").classList.remove("abierto");
+  $("btn_menu").setAttribute("aria-expanded", "false");
+});
+
 function menu() {
   const v = ruta().vista;
   let items = MENU_PUBLICO.map(([h, t]) =>
     '<a href="#/' + h + '" class="' + (v === h ? "activo" : "") + '">' + t + "</a>").join("");
   if (!YO) {
     items += '<a href="#/planes" class="' + (v === "planes" ? "activo" : "") + '">Planes</a>' +
-      '<a href="#/entrar" class="btn chico" style="margin-left:6px">Iniciar sesión</a>';
+      '<a href="#/entrar" class="btn chico">Iniciar sesión</a>';
   } else {
     if (YO.rol === "admin") items += '<a href="#/admin" class="' + (v === "admin" ? "activo" : "") + '">Administración</a>';
     if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
@@ -250,6 +264,8 @@ function menu() {
     items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
   }
   $("menu").innerHTML = items;
+  $("menu").classList.toggle("abierto", menuAbierto);
+  $("btn_menu").setAttribute("aria-expanded", String(menuAbierto));
   if (YO && (YO.rol === "usuario" || YO.rol === "negocio")) actualizarBadgeNotificaciones();
 }
 
@@ -352,7 +368,10 @@ const consentimientosHtml = (prefijo) =>
     "(negocios verificados, artículos nuevos).</span>" +
   "</label>";
 
-window.addEventListener("hashchange", pintar);
+window.addEventListener("hashchange", () => {
+  menuAbierto = false;
+  pintar();
+});
 
 /* ==================================================================== SESIÓN */
 async function entrar(correo, clave) {
