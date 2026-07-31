@@ -80,6 +80,12 @@ async function arrancar() {
   YO = sesion;
   avisarRetornoDeStripe();
   pintar();
+  registrarServiceWorker();
+}
+
+function registrarServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("/sw.js").catch(() => { /* sin instalación offline, no es grave */ });
 }
 
 /**

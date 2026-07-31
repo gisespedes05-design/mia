@@ -1,0 +1,19 @@
+{
+  "name": "MÍA — Directorio de negocios de mujeres",
+  "short_name": "MÍA",
+  "description": "Directorio y comunidad de negocios dirigidos por mujeres en México.",
+  "id": "/",
+  "start_url": "/?fuente=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF7E6",
+  "theme_color": "#2D3A47",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "icons": [
+    { "src": "/iconos/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
