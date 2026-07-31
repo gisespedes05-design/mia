@@ -62,9 +62,10 @@ async function abrirPortalPago(negocioId) {
 }
 
 async function arrancar() {
-  const [categorias, planes, sesion] = await Promise.all([
+  const [categorias, planes, municipios, sesion] = await Promise.all([
     api.get("/api/categorias"),
     api.get("/api/planes"),
+    api.get("/api/municipios"),
     api.get("/api/auth/yo"),
   ]);
   CATEGORIAS = categorias;
@@ -77,6 +78,7 @@ async function arrancar() {
     PLANES[p.id] = { ...p, limites };
     return p.id;
   });
+  MUNICIPIOS_POR_ESTADO = municipios;
   YO = sesion;
   avisarRetornoDeStripe();
   pintar();
@@ -141,19 +143,36 @@ const CIUDADES = {
 };
 const ENTIDADES_CIUDAD = Object.keys(CIUDADES).sort((a, b) => a.localeCompare(b, "es"));
 
-/** Alcaldías o municipios reales para las tres zonas metropolitanas más grandes.
- * En el resto de las ciudades, el único municipio que se ofrece es la propia
- * ciudad (para esas es donde vive el negocio de todos modos). */
-const ALCALDIAS_MUNICIPIOS = {
-  "Ciudad de México": ["Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa de Morelos",
-    "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "La Magdalena Contreras", "Miguel Hidalgo",
-    "Milpa Alta", "Tláhuac", "Tlalpan", "Venustiano Carranza", "Xochimilco"],
-  "Monterrey": ["Monterrey", "San Pedro Garza García", "San Nicolás de los Garza", "Guadalupe", "Apodaca",
-    "General Escobedo", "Santa Catarina", "García", "Juárez"],
-  "Guadalajara": ["Guadalajara", "Zapopan", "Tlaquepaque", "Tonalá", "Tlajomulco de Zúñiga", "El Salto",
-    "Juanacatlán", "Ixtlahuacán de los Membrillos"],
+/** A qué estado pertenece cada una de las ciudades de arriba, para poder
+ * ofrecer TODOS los municipios (o, en la Ciudad de México, las 16 alcaldías)
+ * de ese estado — no nada más los de la ciudad elegida. Los nombres de
+ * estado son exactamente los que usa el catálogo de INEGI. */
+const CIUDAD_A_ESTADO = {
+  "Ciudad de México": "Ciudad de México", "Guadalajara": "Jalisco", "Monterrey": "Nuevo León",
+  "Puebla": "Puebla", "Querétaro": "Querétaro", "Mérida": "Yucatán",
+  "Cancún": "Quintana Roo", "Tijuana": "Baja California", "León": "Guanajuato",
+  "Oaxaca de Juárez": "Oaxaca", "San Luis Potosí": "San Luis Potosí", "Aguascalientes": "Aguascalientes",
+  "Toluca": "México", "Culiacán": "Sinaloa", "Hermosillo": "Sonora",
+  "Chihuahua": "Chihuahua", "Veracruz": "Veracruz de Ignacio de la Llave", "Xalapa": "Veracruz de Ignacio de la Llave",
+  "Morelia": "Michoacán de Ocampo", "Cuernavaca": "Morelos", "Tuxtla Gutiérrez": "Chiapas",
+  "Villahermosa": "Tabasco", "Saltillo": "Coahuila de Zaragoza", "Durango": "Durango",
+  "Zacatecas": "Zacatecas", "Tepic": "Nayarit", "Colima": "Colima",
+  "Pachuca": "Hidalgo", "Tlaxcala": "Tlaxcala", "Campeche": "Campeche",
+  "Chetumal": "Quintana Roo", "La Paz": "Baja California Sur", "Mexicali": "Baja California",
+  "Ciudad Victoria": "Tamaulipas", "Playa del Carmen": "Quintana Roo", "Puerto Vallarta": "Jalisco",
+  "San Cristóbal de las Casas": "Chiapas", "Guanajuato": "Guanajuato", "Acapulco": "Guerrero",
+  "Mazatlán": "Sinaloa", "Tampico": "Tamaulipas", "Irapuato": "Guanajuato",
 };
-const alcaldiasDe = (ciudad) => (ciudad ? (ALCALDIAS_MUNICIPIOS[ciudad] || [ciudad]) : []);
+/** Catálogo completo de municipios por estado (INEGI). Se trae de /api/municipios
+ * al arrancar, junto con categorías y planes, para no meter ~2,500 nombres
+ * directo en este archivo. */
+let MUNICIPIOS_POR_ESTADO = {};
+const alcaldiasDe = (ciudad) => {
+  if (!ciudad) return [];
+  const estado = CIUDAD_A_ESTADO[ciudad];
+  const lista = estado && MUNICIPIOS_POR_ESTADO[estado];
+  return lista && lista.length ? lista : [ciudad];
+};
 
 /** Repuebla el <select> de alcaldía/municipio según la ciudad elegida (prefijo "g" o "f"). */
 function pintarAlcaldias(prefijo) {

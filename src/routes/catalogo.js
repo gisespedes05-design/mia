@@ -1,7 +1,12 @@
 import { CATEGORIAS, PLANES, ORDEN_PLANES } from '../config.js';
+import { MUNICIPIOS_POR_ESTADO } from '../municipios.js';
 
 export function categorias() {
   return CATEGORIAS;
+}
+
+export function municipios() {
+  return MUNICIPIOS_POR_ESTADO;
 }
 
 /**

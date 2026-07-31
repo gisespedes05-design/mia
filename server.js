@@ -24,6 +24,7 @@ const r = new Enrutador();
 // --------------------------------------------------------------- catálogo --
 r.get('/api/categorias', catalogo.categorias);
 r.get('/api/planes', catalogo.planes);
+r.get('/api/municipios', catalogo.municipios);
 
 // ------------------------------------------------------------------ auth --
 r.post('/api/auth/registro-clienta', auth.registrarClienta);
