@@ -203,8 +203,14 @@ function primeraFotoUrl(n) {
   return null;
 }
 
+/** La miniatura de la tarjeta del directorio: prioriza la foto destacada, para
+ * que no se repita ahí lo mismo que ya se ve en el logo o la portada del perfil. */
+function fotoDirectorioUrl(n) {
+  return n.fotoDestacada || primeraFotoUrl(n);
+}
+
 function portadaHtml(n, alto) {
-  const f = primeraFotoUrl(n);
+  const f = alto ? primeraFotoUrl(n) : fotoDirectorioUrl(n);
   const estilo = alto ? ' style="aspect-ratio:21/9"' : "";
   return '<div class="portada"' + estilo + ">" +
     (f ? imagenHtml(f, n.nombre) :
@@ -1638,6 +1644,18 @@ async function vistaEditar(id) {
       "</div>" +
       '<p class="diminuto apagado">Se muestra en la parte de arriba de tu perfil, como la portada de Facebook. Incluido en todos los planes.</p></div>' +
 
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Foto para el directorio</p>' +
+      (n.fotoDestacada ? '<div class="banner-vista destacada"><img src="' + esc(n.fotoDestacada) + '" alt="Foto destacada de ' + esc(n.nombre) + '"></div>' : "") +
+      '<div class="fila g12">' +
+        '<label class="btn linea chico">Subir foto para el directorio' +
+        '<input type="file" accept="image/*" style="display:none" onchange="subirFotoDestacada(' + n.id + ',this)"></label>' +
+        (n.fotoDestacada ? '<button class="btn fantasma chico" onclick="quitarFotoDestacada(' + n.id +
+          ')">Quitar</button>' : "") +
+      "</div>" +
+      '<p class="diminuto apagado">Es la miniatura que se ve en el directorio, donde aparecen todos los negocios en ' +
+      'cuadritos. Si no subes una, se usa tu portada. Muestra algo de tu negocio: tu espacio, tu producto, tu ' +
+      'servicio — no tiene que ser tu logo ni tu portada. Incluido en todos los planes.</p></div>' +
+
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Datos del negocio</p>' +
       '<div class="rejilla-campos">' +
         '<label class="campo">Nombre<input id="f_nombre" value="' + esc(n.nombre) + '"></label>' +
@@ -1952,6 +1970,16 @@ function subirBanner(id, input) {
 }
 async function quitarBanner(id) {
   try { await api.del("/api/negocios/" + id + "/banner"); await pintar(); avisar("Quitamos la foto de portada."); }
+  catch (err) { avisarError(err); }
+}
+function subirFotoDestacada(id, input) {
+  procesarImagen(input, 900, 0.75, async (dataUrl) => {
+    try { await api.post("/api/negocios/" + id + "/foto-destacada", { imagen: dataUrl }); await pintar(); avisar("Actualizamos tu foto para el directorio."); }
+    catch (err) { avisarError(err); }
+  });
+}
+async function quitarFotoDestacada(id) {
+  try { await api.del("/api/negocios/" + id + "/foto-destacada"); await pintar(); avisar("Quitamos la foto del directorio."); }
   catch (err) { avisarError(err); }
 }
 async function quitarFoto(id, fotoId) {

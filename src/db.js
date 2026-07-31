@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   telefono        TEXT NOT NULL DEFAULT '',
   logo            TEXT,
   banner          TEXT,
+  foto_destacada  TEXT,
   redes           TEXT NOT NULL DEFAULT '{"whatsapp":"","instagram":"","facebook":"","tiktok":""}',
   plan            TEXT NOT NULL DEFAULT 'gratuito',
   plan_vence      TEXT,
@@ -327,6 +328,13 @@ if (!columnasUsuarios.includes('terminos_aceptados_en')) {
 // usa la vista pública (la primera foto de la galería, como miniatura de tarjeta).
 if (!columnasNegocios.includes('banner')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN banner TEXT`);
+}
+// Foto para la tarjeta del directorio: aparte del logo, de la portada del
+// perfil (banner) y de la galería, para que la dueña pueda mostrar ahí algo
+// representativo de su negocio (su barra, su producto) sin que se repita la
+// misma imagen que ya se ve en su perfil.
+if (!columnasNegocios.includes('foto_destacada')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN foto_destacada TEXT`);
 }
 // Texto adicional para negocios verificados: "Sobre mi negocio".
 if (!columnasNegocios.includes('sobre_negocio')) {

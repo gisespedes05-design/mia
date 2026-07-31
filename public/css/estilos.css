@@ -155,6 +155,7 @@ button.chip{cursor:pointer}
 .banner-vista{aspect-ratio:3/1;border-radius:var(--r);overflow:hidden;background:var(--fondo2);
   border:1px solid var(--linea)}
 .banner-vista img{width:100%;height:100%;object-fit:cover;display:block}
+.banner-vista.destacada{aspect-ratio:16/10;max-width:320px}
 .banner-perfil{aspect-ratio:3/1;max-height:260px;border-radius:var(--r);overflow:hidden;
   background:var(--fondo2)}
 .banner-perfil img{width:100%;height:100%;object-fit:cover;display:block}

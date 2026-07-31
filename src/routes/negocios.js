@@ -176,6 +176,28 @@ export function quitarBanner(ctx) {
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
 
+/* ---------------------------------------------------- foto destacada ------ */
+// La miniatura que se ve en las tarjetas del directorio. Aparte del logo y
+// de la portada del perfil, para que la dueña muestre ahí algo distinto:
+// su producto, su espacio, su servicio — no forzosamente su logo o su banner.
+
+export function subirFotoDestacada(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const archivo = guardarImagenBase64(ctx.cuerpo.imagen);
+  borrarImagen(negocio.foto_destacada);
+  ejecutar(`UPDATE negocios SET foto_destacada = $foto WHERE id = $id`, { foto: archivo, id: negocio.id });
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
+export function quitarFotoDestacada(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  borrarImagen(negocio.foto_destacada);
+  ejecutar(`UPDATE negocios SET foto_destacada = NULL WHERE id = $id`, { id: negocio.id });
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
 /* ----------------------------------------------------------------- fotos -- */
 
 export function subirFoto(ctx) {

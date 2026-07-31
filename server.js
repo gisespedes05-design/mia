@@ -57,6 +57,8 @@ r.post('/api/negocios/:id/logo', negocios.subirLogo);
 r.delete('/api/negocios/:id/logo', negocios.quitarLogo);
 r.post('/api/negocios/:id/banner', negocios.subirBanner);
 r.delete('/api/negocios/:id/banner', negocios.quitarBanner);
+r.post('/api/negocios/:id/foto-destacada', negocios.subirFotoDestacada);
+r.delete('/api/negocios/:id/foto-destacada', negocios.quitarFotoDestacada);
 r.post('/api/negocios/:id/fotos', negocios.subirFoto);
 r.delete('/api/negocios/:id/fotos/:fotoId', negocios.quitarFoto);
 r.post('/api/negocios/:id/productos', negocios.agregarProducto);
