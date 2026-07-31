@@ -303,18 +303,41 @@ function ruta() {
 /** El menú de arriba a la derecha: se ve en cualquier página, para
  * cualquier tipo de cuenta (negocio, clienta o anónima) — a diferencia de
  * "Cerrar sesión", que antes solo vivía adentro de "Mi negocio"/"Tu cuenta"
- * y por eso costaba encontrarlo. */
-function actualizarMenuCabecera() {
+ * y por eso costaba encontrarlo. Con sesión, además suma Notificaciones
+ * (incluidas las de negocios que sigues) y Mensajes, cada una con su
+ * contador de lo que falta por leer — para negocio y para clienta por igual. */
+async function actualizarMenuCabecera() {
   const cont = $("menu_cabecera"), btn = $("btn_menu_cabecera");
   if (!cont || !btn) return;
   cont.hidden = true;
   btn.setAttribute("aria-expanded", "false");
+
+  let noLeidas = 0, mensajesSinLeer = 0, destinoMensajes = null;
+  if (YO) {
+    try { noLeidas = (await api.get("/api/notificaciones")).noLeidas; } catch { /* sin notificaciones */ }
+    try {
+      if (YO.rol === "usuario") {
+        destinoMensajes = "#/mensajes";
+        mensajesSinLeer = (await api.get("/api/mis-mensajes")).reduce((s, c) => s + c.no_leidos, 0);
+      } else if (YO.rol === "negocio") {
+        destinoMensajes = MI_NEGOCIO_ID ? "#/negocio-mensajes/" + MI_NEGOCIO_ID : "#/panel";
+        if (MI_NEGOCIO_ID) {
+          mensajesSinLeer = (await api.get("/api/negocios/" + MI_NEGOCIO_ID + "/mensajes")).reduce((s, c) => s + c.no_leidos, 0);
+        }
+      }
+    } catch { /* sin mensajes */ }
+  }
+  const conteo = (n) => (n > 0 ? '<span class="conteo-menu">' + (n > 99 ? "99+" : n) + "</span>" : "");
+
   cont.innerHTML =
     '<a href="#/mapa" role="menuitem">Mapa</a>' +
     '<a href="#/blog" role="menuitem">Blog</a>' +
     '<a href="#/planes" role="menuitem">Planes</a>' +
     (YO
-      ? '<hr><button role="menuitem" class="salir" onclick="alternarMenuCabecera(false);salir()">Cerrar sesión</button>'
+      ? "<hr>" +
+        '<a href="#/notificaciones" role="menuitem">Notificaciones' + conteo(noLeidas) + "</a>" +
+        (destinoMensajes ? '<a href="' + destinoMensajes + '" role="menuitem">Mensajes' + conteo(mensajesSinLeer) + "</a>" : "") +
+        '<hr><button role="menuitem" class="salir" onclick="alternarMenuCabecera(false);salir()">Cerrar sesión</button>'
       : '<hr><a href="#/entrar" role="menuitem">Entrar</a>');
 }
 

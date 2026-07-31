@@ -92,11 +92,14 @@ header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bot
   background:var(--superficie);border:1px solid var(--linea);border-radius:var(--r);
   box-shadow:0 10px 28px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column;gap:1px;z-index:60}
 .desplegable-cabecera[hidden]{display:none}
-.desplegable-cabecera a,.desplegable-cabecera button{display:block;width:100%;padding:9px 11px;
-  border-radius:8px;border:none;background:none;font:inherit;font-size:.88rem;font-weight:600;
-  color:var(--texto);text-align:left;text-decoration:none;cursor:pointer}
+.desplegable-cabecera a,.desplegable-cabecera button{display:flex;align-items:center;justify-content:space-between;
+  gap:10px;width:100%;padding:9px 11px;border-radius:8px;border:none;background:none;font:inherit;font-size:.88rem;
+  font-weight:600;color:var(--texto);text-align:left;text-decoration:none;cursor:pointer}
 .desplegable-cabecera a:hover,.desplegable-cabecera button:hover{background:var(--fondo2)}
 .desplegable-cabecera hr{border:none;border-top:1px solid var(--linea);margin:5px 2px}
+.conteo-menu{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+  padding:0 5px;border-radius:100px;background:var(--acento);color:#fff;font-size:.68rem;font-weight:800;
+  font-variant-numeric:tabular-nums;flex-shrink:0}
 .desplegable-cabecera .salir{color:var(--peligro)}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;background:var(--superficie);
