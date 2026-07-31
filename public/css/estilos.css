@@ -11,7 +11,7 @@
   --cobalto:color-mix(in srgb, #A9B7C6 66%, #2D3A47);
   --jade:color-mix(in srgb, #A8B58A 72%, #2D3A47);
   --sol:#C98A00; --peligro:#B92A2A;
-  --mapa-tierra:#F7C8D3;
+  --mapa-tierra:#F7C8D3; --hero-tinte:#F7C8D3;
   --sombra:0 1px 2px rgba(45,58,71,.08), 0 8px 24px -12px rgba(45,58,71,.16);
   --r:4px;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -24,7 +24,7 @@
     --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
     --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
     --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
-    --mapa-tierra:#7A6672;
+    --mapa-tierra:#7A6672; --hero-tinte:color-mix(in srgb, #4A3F4B 55%, #16131F);
     --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
@@ -34,7 +34,7 @@
   --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
   --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
   --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
-  --mapa-tierra:#7A6672;
+  --mapa-tierra:#7A6672; --hero-tinte:color-mix(in srgb, #4A3F4B 55%, #16131F);
   --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 :root[data-theme="light"]{
@@ -45,7 +45,7 @@
   --cobalto:color-mix(in srgb, #A9B7C6 66%, #2D3A47);
   --jade:color-mix(in srgb, #A8B58A 72%, #2D3A47);
   --sol:#C98A00; --peligro:#B92A2A;
-  --mapa-tierra:#F7C8D3;
+  --mapa-tierra:#F7C8D3; --hero-tinte:#F7C8D3;
   --sombra:0 1px 2px rgba(45,58,71,.08), 0 8px 24px -12px rgba(45,58,71,.16);
 }
 
@@ -151,7 +151,7 @@ button.chip{cursor:pointer}
 .buscador{display:flex;gap:8px;margin-top:24px;max-width:560px;flex-wrap:wrap}
 .buscador input{flex:1 1 220px;border-color:transparent}
 
-.hero-inicio{background:linear-gradient(180deg,var(--fondo2),var(--fondo) 80%);padding:40px 0 30px}
+.hero-inicio{background:linear-gradient(180deg,var(--hero-tinte),var(--fondo) 80%);padding:40px 0 30px}
 .marca-grande{display:flex;flex-direction:column;align-items:center;gap:2px}
 .marca-grande .glifo{width:52px;height:52px}
 .marca-grande .nombre-grande{font-size:2.2rem;font-weight:800;letter-spacing:-.02em;color:var(--acento)}
