@@ -3,7 +3,7 @@ import { ErrorHttp, exigirSesion, exigirRol } from '../auth.js';
 import { CATEGORIAS } from '../config.js';
 import {
   buscarNegocios, negociosEnMapa, obtenerNegocioPorId, obtenerNegocioPorSlug,
-  vistaPublica, vistaPanel, exigirPropiedad, esVisiblePara, texto, normalizarSub, normalizarRedes,
+  vistaPublica, vistaPanel, exigirPropiedad, esVisiblePara, texto, normalizarCategoria2, normalizarSub, normalizarRedes,
 } from '../negocios.js';
 import { guardarImagenBase64, borrarImagen } from '../subidas.js';
 
@@ -57,19 +57,31 @@ export function actualizar(ctx) {
   const categoria = c.categoria !== undefined ? texto(c.categoria, 40) : negocio.categoria;
   if (!CATEGORIAS.some((cat) => cat.id === categoria)) throw new ErrorHttp(400, 'Esa categoría no existe.');
 
+  const categoria2 = c.categoria2 !== undefined
+    ? normalizarCategoria2(categoria, c.categoria2)
+    : normalizarCategoria2(categoria, negocio.categoria2 || '');
+  const cambioDeCategoria = categoria !== negocio.categoria || categoria2 !== (negocio.categoria2 || '');
+
   const subActual = JSON.parse(negocio.sub || '[]');
-  const sub = c.sub !== undefined ? normalizarSub(categoria, c.sub) : subActual;
+  // Si además cambió alguna categoría, un sub:[] es la dueña vaciando a
+  // propósito para volver a elegir (las subcategorías viejas ya no aplican),
+  // no una lista vacía inválida.
+  const sub = c.sub === undefined
+    ? subActual
+    : Array.isArray(c.sub) && c.sub.length === 0 && cambioDeCategoria
+      ? []
+      : normalizarSub(categoria, categoria2, c.sub);
   const redesActuales = JSON.parse(negocio.redes || '{}');
   const redes = c.redes !== undefined ? normalizarRedes(c.redes) : redesActuales;
 
   ejecutar(
     `UPDATE negocios SET
-       nombre = $nombre, categoria = $categoria, sub = $sub, descripcion = $descripcion,
+       nombre = $nombre, categoria = $categoria, categoria2 = $categoria2, sub = $sub, descripcion = $descripcion,
        ciudad = $ciudad, direccion = $direccion, telefono = $telefono, redes = $redes,
        actualizado_en = datetime('now')
      WHERE id = $id`,
     {
-      id: negocio.id, nombre, categoria, sub: JSON.stringify(sub),
+      id: negocio.id, nombre, categoria, categoria2: categoria2 || null, sub: JSON.stringify(sub),
       descripcion: c.descripcion !== undefined ? texto(c.descripcion, 6000) : negocio.descripcion,
       ciudad: c.ciudad !== undefined ? texto(c.ciudad, 80) : negocio.ciudad,
       direccion: c.direccion !== undefined ? texto(c.direccion, 200) : negocio.direccion,

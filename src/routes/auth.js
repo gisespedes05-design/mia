@@ -2,7 +2,7 @@ import { ejecutar, uno, anotar } from '../db.js';
 import {
   cifrarContrasena, verificarContrasena, cookieDeSesion, cookieDeCierre, ErrorHttp, exigirSesion,
 } from '../auth.js';
-import { exigirTexto, exigirCorreo, generarSlug, normalizarSub, normalizarRedes } from '../negocios.js';
+import { exigirTexto, exigirCorreo, generarSlug, normalizarCategoria2, normalizarSub, normalizarRedes } from '../negocios.js';
 import { PLANES, ROLES } from '../config.js';
 import { enviarCorreo, correoBienvenidaUsuaria, correoBienvenidaNegocio } from '../correo.js';
 
@@ -48,7 +48,8 @@ export async function registrarNegocio(ctx) {
 
   const nombreNegocio = exigirTexto(negocio.nombre, 'nombre del negocio', { min: 2, max: 120 });
   const categoria = exigirTexto(negocio.categoria, 'categoría', { min: 1, max: 40 });
-  const sub = normalizarSub(categoria, negocio.sub);
+  const categoria2 = normalizarCategoria2(categoria, negocio.categoria2);
+  const sub = normalizarSub(categoria, categoria2, negocio.sub);
   const descripcion = exigirTexto(negocio.descripcion, 'descripción', { min: 20, max: 6000 });
   const ciudad = String(negocio.ciudad || '').slice(0, 80);
   const direccion = String(negocio.direccion || '').slice(0, 200);
@@ -61,14 +62,14 @@ export async function registrarNegocio(ctx) {
   const slug = generarSlug(nombreNegocio);
   const rNegocio = ejecutar(
     `INSERT INTO negocios (
-       propietaria_id, nombre, slug, categoria, sub, descripcion, ciudad, direccion,
+       propietaria_id, nombre, slug, categoria, categoria2, sub, descripcion, ciudad, direccion,
        telefono, redes, plan, plan_vence, pago_confirmado, estado
      ) VALUES (
-       $duena, $nombre, $slug, $categoria, $sub, $descripcion, $ciudad, $direccion,
+       $duena, $nombre, $slug, $categoria, $categoria2, $sub, $descripcion, $ciudad, $direccion,
        $telefono, $redes, $plan, $vence, $pago, 'pendiente'
      )`,
     {
-      duena: usuarioId, nombre: nombreNegocio, slug, categoria, sub: JSON.stringify(sub),
+      duena: usuarioId, nombre: nombreNegocio, slug, categoria, categoria2: categoria2 || null, sub: JSON.stringify(sub),
       descripcion, ciudad, direccion, telefono, redes: JSON.stringify(redes), plan,
       vence: esPago ? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) : null,
       pago: esPago ? 0 : 1,
@@ -86,7 +87,8 @@ export async function registrarNegocio(ctx) {
      )`,
     {
       negocioId, tipo: plan, planNombre: PLANES[plan].nombre, nombre, correo, telefono,
-      negocioNombre: nombreNegocio, ciudad, categoria, sub: sub.join(' | '), descripcion, mensaje,
+      negocioNombre: nombreNegocio, ciudad, categoria: categoria2 ? `${categoria} + ${categoria2}` : categoria,
+      sub: sub.join(' | '), descripcion, mensaje,
     }
   );
 

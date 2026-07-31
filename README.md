@@ -47,8 +47,10 @@ nadie, ni la organización, puede leerlas — solo se verifican.
 
 **Inicio · Productos y Servicios · Mapa · Blog · Sobre MÍA**
 
-Cada negocio pertenece a **una categoría principal** y puede estar en **hasta
-cinco subcategorías**. Las 18 categorías —Belleza, Moda, Repostería y
+Cada negocio pertenece a **una categoría principal** y puede tener **una
+segunda categoría opcional** (por ejemplo, una repostería que también hace
+golosinas para mascotas), con **hasta siete subcategorías en total**,
+tomadas de ambas categorías. Las 18 categorías —Belleza, Moda, Repostería y
 Alimentos, Eventos, Flores y Regalos, Hogar y Decoración, Salud y Bienestar,
 Fitness y Deporte, Educación, Arte y Diseño, Mascotas, Automotriz, Turismo,
 Maternidad e Infancia, Fotografía y Producción, Servicios Profesionales,

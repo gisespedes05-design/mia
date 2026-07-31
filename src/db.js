@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   nombre          TEXT NOT NULL,
   slug            TEXT NOT NULL UNIQUE,
   categoria       TEXT NOT NULL DEFAULT 'otros',
+  categoria2      TEXT,
   sub             TEXT NOT NULL DEFAULT '[]',
   descripcion     TEXT NOT NULL DEFAULT '',
   ciudad          TEXT NOT NULL DEFAULT '',
@@ -235,6 +236,12 @@ if (!columnasNegocios.includes('stripe_subscription_id')) {
 if (!columnasNegocios.includes('enlace_pago_crece')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN enlace_pago_crece TEXT`);
 }
+// Segunda categoría opcional: un negocio puede cruzar dos rubros (una
+// repostería que también hace golosinas para mascotas, por ejemplo).
+if (!columnasNegocios.includes('categoria2')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN categoria2 TEXT`);
+}
+db.exec(`CREATE INDEX IF NOT EXISTS idx_negocios_categoria2 ON negocios(categoria2)`);
 
 /** Consulta que devuelve varias filas. */
 export function todos(sql, params = {}) {

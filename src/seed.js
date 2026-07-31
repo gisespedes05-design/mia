@@ -94,14 +94,14 @@ function crearNegocio(o) {
   const slug = generarSlug(o.nombre);
   const r = ejecutar(
     `INSERT INTO negocios (
-       propietaria_id, nombre, slug, categoria, sub, descripcion, ciudad, direccion,
+       propietaria_id, nombre, slug, categoria, categoria2, sub, descripcion, ciudad, direccion,
        telefono, redes, plan, plan_vence, pago_confirmado, estado, verificado, vistas
      ) VALUES (
-       $duena, $nombre, $slug, $categoria, $sub, $descripcion, $ciudad, $direccion,
+       $duena, $nombre, $slug, $categoria, $categoria2, $sub, $descripcion, $ciudad, $direccion,
        $telefono, $redes, $plan, $vence, $pago, $estado, $verificado, $vistas
      )`,
     {
-      duena: o.duena, nombre: o.nombre, slug, categoria: o.categoria,
+      duena: o.duena, nombre: o.nombre, slug, categoria: o.categoria, categoria2: o.categoria2 || null,
       sub: JSON.stringify(o.sub), descripcion: o.descripcion, ciudad: o.ciudad,
       direccion: o.direccion || '', telefono: o.telefono || '',
       redes: JSON.stringify(o.redes || {}), plan: o.plan, vence: o.vence || null,
@@ -146,9 +146,9 @@ crearPublicacion(idGlow, 'Nuevo servicio: laminado de cejas',
   'Llegó el laminado de cejas a Glow Studio. Es un tratamiento que alinea y fija el vello por seis a ocho semanas.', 18, false);
 
 const idDulce = crearNegocio({
-  duena: idRosario, nombre: 'Dulce Raíz', categoria: 'reposteria',
-  sub: ['Pasteles', 'Cupcakes', 'Chocolatería'], ciudad: 'Ciudad de México',
-  descripcion: 'Repostería artesanal sin conservadores. Pasteles de temporada, mesas de postres para eventos y chocolatería fina con cacao mexicano de Tabasco y Chiapas. Hacemos opciones sin gluten y sin azúcar refinada con dos días de anticipación.',
+  duena: idRosario, nombre: 'Dulce Raíz', categoria: 'reposteria', categoria2: 'mascotas',
+  sub: ['Pasteles', 'Cupcakes', 'Chocolatería', 'Alimentos'], ciudad: 'Ciudad de México',
+  descripcion: 'Repostería artesanal sin conservadores. Pasteles de temporada, mesas de postres para eventos y chocolatería fina con cacao mexicano de Tabasco y Chiapas. También horneamos galletas y pasteles para perros con ingredientes seguros para ellos. Hacemos opciones sin gluten y sin azúcar refinada con dos días de anticipación.',
   direccion: 'Colonia Roma Norte', telefono: '55 2244 8890',
   redes: { instagram: '@dulceraiz', tiktok: '@dulceraiz', whatsapp: '5522448890' },
   plan: 'suscripcion', vence: enMeses(3), estado: 'publicado', vistas: 860,

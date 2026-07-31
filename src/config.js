@@ -19,8 +19,11 @@ export const ESTADOS_NEGOCIO = {
 // Un negocio sólo aparece en el directorio público en este estado.
 export const ESTADO_VISIBLE = ESTADOS_NEGOCIO.PUBLICADO;
 
-// Una empresa pertenece a una categoría principal y hasta cinco subcategorías.
-export const MAX_SUBCATEGORIAS = 5;
+// Una empresa pertenece a una o dos categorías (por si un negocio cruza dos
+// rubros, como una repostería que también hace golosinas para mascotas) y
+// hasta siete subcategorías en total, tomadas de esas categorías.
+export const MAX_CATEGORIAS = 2;
+export const MAX_SUBCATEGORIAS = 7;
 
 /**
  * Planes de MÍA.
@@ -37,7 +40,7 @@ export const PLANES = {
     precioMensual: 0,
     peso: 0,
     resumen: 'Para que tu negocio aparezca en el directorio desde hoy.',
-    limites: { subcategorias: 5, publicaciones: 1, fotos: 0, caracteresDescripcion: 400 },
+    limites: { subcategorias: 7, publicaciones: 1, fotos: 0, caracteresDescripcion: 400 },
     permisos: {
       logo: true, contacto: true, redes: false, mapa: false, productosDestacados: false,
       verificado: false, prioridad: false, publicacionesDestacadas: false,
@@ -45,7 +48,7 @@ export const PLANES = {
     },
     incluye: [
       'Perfil básico', 'Logo', 'Una publicación', 'Datos de contacto',
-      'Categoría principal', 'Hasta cinco subcategorías',
+      'Hasta dos categorías', 'Hasta siete subcategorías',
     ],
     excluye: ['No aparece en el mapa'],
   },
@@ -57,7 +60,7 @@ export const PLANES = {
     precioMensual: 299,
     peso: 1,
     resumen: 'Para negocios que ya venden y quieren que las encuentren.',
-    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 12, caracteresDescripcion: 2000 },
+    limites: { subcategorias: 7, publicaciones: Infinity, fotos: 12, caracteresDescripcion: 2000 },
     permisos: {
       logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
       verificado: false, prioridad: false, publicacionesDestacadas: false,
@@ -78,7 +81,7 @@ export const PLANES = {
     precioMensual: 599,
     peso: 2,
     resumen: 'Para negocios que quieren liderar su categoría dentro de MÍA.',
-    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 30, caracteresDescripcion: 4000 },
+    limites: { subcategorias: 7, publicaciones: Infinity, fotos: 30, caracteresDescripcion: 4000 },
     permisos: {
       logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
       verificado: true, prioridad: true, publicacionesDestacadas: true,
@@ -103,7 +106,7 @@ export const PLANES = {
     peso: 3,
     cotizado: true,
     resumen: 'Todo lo de Membresía más tu marketing llevado de manera profesional.',
-    limites: { subcategorias: 5, publicaciones: Infinity, fotos: 40, caracteresDescripcion: 6000 },
+    limites: { subcategorias: 7, publicaciones: Infinity, fotos: 40, caracteresDescripcion: 6000 },
     permisos: {
       logo: true, contacto: true, redes: true, mapa: true, productosDestacados: true,
       verificado: true, prioridad: true, publicacionesDestacadas: true,

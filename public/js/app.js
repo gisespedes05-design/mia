@@ -38,7 +38,8 @@ let PLANES = {};
 let ORDEN_PLANES = [];
 let YO = null;
 
-const MAX_SUBCATEGORIAS = 5;
+const MAX_SUBCATEGORIAS = 7;
+const MAX_CATEGORIAS = 2;
 
 // Los únicos dos planes que se cobran solos, sin que nadie de MÍA intervenga.
 // Crece con MÍA no entra aquí a propósito: se cotiza y se confirma a mano.
@@ -391,7 +392,7 @@ async function vistaInicio() {
       '<div class="fila entre g12"><h2>Explora por categoría</h2>' +
       '<a class="btn fantasma chico" href="#/directorio">Ver todas</a></div>' +
       '<div class="rejilla cats">' + CATEGORIAS.slice(0, 8).map((c) => {
-        const cuantos = resultados.filter((n) => n.categoria === c.id).length;
+        const cuantos = resultados.filter((n) => n.categoria === c.id || n.categoria2 === c.id).length;
         return '<a class="tarjeta-cat" href="#/directorio/' + c.id + '">' +
           "<strong>" + c.icono + " " + esc(c.nombre) + "</strong>" +
           '<span class="diminuto apagado">' + c.sub.slice(0, 3).join(" · ") +
@@ -428,7 +429,7 @@ async function vistaInicio() {
       '<p class="eyebrow">¿Tienes un negocio?</p>' +
       "<h2>Aparece en MÍA desde hoy</h2>" +
       '<p class="apagado" style="max-width:56ch">El plan Gratuito no cuesta nada e incluye tu ' +
-      "perfil, tu logo, tus datos de contacto y hasta cinco subcategorías.</p>" +
+      "perfil, tu logo, tus datos de contacto y hasta siete subcategorías.</p>" +
       '<div class="fila g8"><a class="btn" href="#/registro/gratuito">Registrar mi negocio gratis</a>' +
       '<a class="btn linea" href="#/planes">Comparar planes</a></div>' +
     "</div>" +
@@ -449,6 +450,7 @@ function tarjeta(n) {
       '<div class="fila g8">' +
         (n.verificado ? '<span class="chip jade">Verificado</span>' : "") +
         '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
+        (n.categoria2 ? '<span class="chip">' + esc(n.categoria2Icono) + " " + esc(n.categoria2Nombre) + "</span>" : "") +
       "</div>" +
       "<h3>" + esc(n.nombre) + "</h3>" +
       '<p class="diminuto apagado">' + esc((n.sub || []).slice(0, 3).join(" · ")) + "</p>" +
@@ -482,7 +484,7 @@ async function vistaDirectorio() {
     '<div class="pila g8"><p class="eyebrow">Productos y Servicios</p>' +
       "<h1>El directorio de MÍA</h1>" +
       '<p class="apagado" style="max-width:58ch">Cada negocio pertenece a una categoría ' +
-      "principal y puede estar en hasta cinco subcategorías.</p></div>" +
+      "principal y puede tener hasta una segunda, con hasta siete subcategorías en total.</p></div>" +
 
     filtrosHtml() +
     '<hr class="separador">' +
@@ -494,7 +496,7 @@ async function vistaDirectorio() {
     '<hr class="separador">' +
     '<div class="pila g16"><h2>Todas las categorías</h2>' +
       '<div class="rejilla cats">' + CATEGORIAS.map((c) => {
-        const cuantos = todosParaConteo.filter((n) => n.categoria === c.id).length;
+        const cuantos = todosParaConteo.filter((n) => n.categoria === c.id || n.categoria2 === c.id).length;
         return '<a class="tarjeta-cat" href="#/directorio/' + c.id + '">' +
           "<strong>" + c.icono + " " + esc(c.nombre) + '</strong><span class="diminuto apagado">' +
           c.sub.length + " subcategorías · " + cuantos +
@@ -771,7 +773,7 @@ function vistaSobre() {
     '<div class="pila g16"><h2>Cómo entras a MÍA</h2>' +
       '<div class="escalones">' +
         escalon(1, "Eliges tu plan", "Cada plan tiene su propio formulario, con lo que ese plan necesita.") +
-        escalon(2, "Llenas el formulario", "Tus datos, tu categoría principal y hasta cinco subcategorías.") +
+        escalon(2, "Llenas el formulario", "Tus datos, hasta dos categorías y hasta siete subcategorías.") +
         escalon(3, "MÍA revisa tu perfil", "Confirmamos los datos y, si aplica, tu pago.") +
         escalon(4, "Tu perfil se publica", "Apareces en el directorio y empiezas a recibir clientas.") +
       "</div>" +
@@ -884,6 +886,8 @@ async function vistaNegocio(slug) {
         "</div>" +
         '<div class="fila g8"><a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
           c.id + '">' + c.icono + " " + esc(c.nombre) + "</a>" +
+          (n.categoria2 ? '<a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
+            esc(n.categoria2) + '">' + esc(n.categoria2Icono) + " " + esc(n.categoria2Nombre) + "</a>" : "") +
           (n.sub || []).map((s) => '<span class="chip">' + esc(s) + "</span>").join("") + "</div>" +
       "</div>" +
     "</div>" +
@@ -1068,7 +1072,7 @@ function vistaPlanes() {
     '<div class="pila g16"><h2>Así funciona el registro</h2>' +
       '<div class="escalones">' +
         escalon(1, "Eliges tu plan", "Cada plan abre su propio formulario.") +
-        escalon(2, "Llenas tus datos", "Categoría principal y hasta cinco subcategorías.") +
+        escalon(2, "Llenas tus datos", "Hasta dos categorías y hasta siete subcategorías.") +
         escalon(3, "MÍA recibe tu solicitud", "Queda registrada para el equipo, lista para revisión.") +
         escalon(4, "Se publica tu perfil", "Confirmamos datos y pago, y entras al directorio.") +
       "</div></div>" +
@@ -1089,6 +1093,7 @@ function vistaRegistro(planId) {
       '<p class="eyebrow">Formulario ' + esc(plan.nombre) + "</p>" +
       "<h1>Registra tu negocio</h1>" +
       '<div class="fila g8"><span class="chip rosa">' + esc(plan.etiqueta) + "</span>" +
+      '<span class="chip">Hasta ' + MAX_CATEGORIAS + " categorías</span>" +
       '<span class="chip">Hasta ' + L.subcategorias + " subcategorías</span>" +
       (P.mapa ? '<span class="chip jade">Aparece en el mapa</span>' : '<span class="chip">Sin mapa</span>') +
       "</div></div>" +
@@ -1112,7 +1117,12 @@ function vistaRegistro(planId) {
       '<label class="campo">Dirección <span class="apagado">(opcional)</span>' +
         '<input id="g_direccion" placeholder="Calle, número, colonia"></label>' +
       '<label class="campo">Categoría principal' +
-        '<select id="g_categoria" onchange="pintarSub()"><option value="">Elige…</option>' +
+        '<select id="g_categoria" onchange="categoriaCambioRegistro()"><option value="">Elige…</option>' +
+          CATEGORIAS.map((c) => '<option value="' + c.id + '">' + esc(c.icono + " " + c.nombre) + "</option>").join("") +
+        "</select></label>" +
+      '<label class="campo">Segunda categoría <span class="apagado">(opcional, por si tu negocio ' +
+        "cruza dos rubros)</span>" +
+        '<select id="g_categoria2" onchange="categoriaCambioRegistro()"><option value="">Ninguna</option>' +
           CATEGORIAS.map((c) => '<option value="' + c.id + '">' + esc(c.icono + " " + c.nombre) + "</option>").join("") +
         "</select></label>" +
       '<div class="pila g8"><span class="campo">Subcategorías <span class="apagado">' +
@@ -1170,11 +1180,21 @@ function vistaRegistro(planId) {
   "</div>";
 }
 
+function categoriaCambioRegistro() {
+  if (val("g_categoria") && val("g_categoria") === val("g_categoria2")) {
+    $("g_categoria2").value = "";
+    avisar("Elige una segunda categoría distinta a la principal.");
+  }
+  pintarSub();
+}
+
 function pintarSub() {
-  const c = CATEGORIAS.find((x) => x.id === val("g_categoria"));
+  const c1 = CATEGORIAS.find((x) => x.id === val("g_categoria"));
+  const c2 = CATEGORIAS.find((x) => x.id === val("g_categoria2"));
   subSeleccionadas = [];
-  $("g_sub").innerHTML = c
-    ? c.sub.map((s) => '<button type="button" class="chip" data-sub="' + esc(s) +
+  const opciones = c1 ? [...new Set([...c1.sub, ...(c2 ? c2.sub : [])])] : [];
+  $("g_sub").innerHTML = opciones.length
+    ? opciones.map((s) => '<button type="button" class="chip" data-sub="' + esc(s) +
         '" onclick="alternarSub(this)">' + esc(s) + "</button>").join("")
     : '<span class="pequeno apagado">Primero elige una categoría principal.</span>';
 }
@@ -1198,7 +1218,8 @@ async function enviarRegistro(planId) {
     nombre: val("g_nombre"), correo: val("g_correo"), clave: val("g_clave"), telefono: val("g_telefono"),
     plan: planId, mensaje: val("g_mensaje"),
     negocio: {
-      nombre: val("g_negocio"), categoria: val("g_categoria"), sub: subSeleccionadas.slice(),
+      nombre: val("g_negocio"), categoria: val("g_categoria"), categoria2: val("g_categoria2"),
+      sub: subSeleccionadas.slice(),
       ciudad: val("g_ciudad"), direccion: val("g_direccion"), descripcion: val("g_descripcion"),
       redes: { whatsapp: val("g_whatsapp"), instagram: val("g_instagram"), facebook: val("g_facebook"), tiktok: val("g_tiktok") },
     },
@@ -1372,6 +1393,7 @@ function fichaPanel(n) {
           "</div>" +
           "<h3>" + esc(n.nombre) + "</h3>" +
           '<p class="diminuto apagado">' + cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) +
+            (n.categoria2 ? " · " + cat(n.categoria2).icono + " " + esc(cat(n.categoria2).nombre) : "") +
             (n.sub.length ? " · " + esc(n.sub.join(", ")) : "") + "</p>" +
         "</div></div>" +
       '<div class="fila g8">' +
@@ -1437,6 +1459,8 @@ async function vistaEditar(id) {
   catch { return sinAcceso(); }
 
   const L = n.limites, P = n.permisos, c = cat(n.categoria);
+  const c2 = n.categoria2 ? cat(n.categoria2) : null;
+  const subOpciones = [...new Set([...c.sub, ...(c2 ? c2.sub : [])])];
   const cerrado = (t) => '<p class="pequeno apagado">🔒 ' + esc(t) + "</p>";
   const pubs = n.publicaciones;
   const tope = L.publicaciones === Infinity ? Infinity : L.publicaciones;
@@ -1469,9 +1493,14 @@ async function vistaEditar(id) {
         n.id + ',this.value)">' + CATEGORIAS.map((x) => '<option value="' + x.id + '"' +
           (n.categoria === x.id ? " selected" : "") + ">" + esc(x.icono + " " + x.nombre) + "</option>").join("") +
         "</select></label>" +
+      '<label class="campo">Segunda categoría <span class="apagado">(opcional)</span><select id="f_categoria2" ' +
+        'onchange="cambiarCategoria2(' + n.id + ',this.value,' + JSON.stringify(n.categoria).replace(/"/g, '&quot;') +
+        ')"><option value="">Ninguna</option>' + CATEGORIAS.map((x) => '<option value="' + x.id + '"' +
+          (n.categoria2 === x.id ? " selected" : "") + ">" + esc(x.icono + " " + x.nombre) + "</option>").join("") +
+        "</select></label>" +
       '<div class="pila g8"><span class="campo">Subcategorías <span class="apagado">(hasta ' +
         MAX_SUBCATEGORIAS + " · llevas " + n.sub.length + ')</span></span>' +
-        '<div class="subcats">' + c.sub.map((s) =>
+        '<div class="subcats">' + subOpciones.map((s) =>
           '<button type="button" class="chip ' + (n.sub.includes(s) ? "rosa" : "") +
           '" onclick="alternarSubNegocio(' + n.id + "," + JSON.stringify(s).replace(/"/g, "&quot;") +
           ')">' + esc(s) + "</button>").join("") + "</div></div>" +
@@ -1589,6 +1618,18 @@ async function cambiarCategoria(id, categoria) {
     await api.patch("/api/negocios/" + id, { categoria, sub: [] });
     await pintar();
     avisar("Cambiaste de categoría. Vuelve a elegir tus subcategorías.");
+  } catch (err) { avisarError(err); }
+}
+
+async function cambiarCategoria2(id, categoria2, categoriaActual) {
+  if (categoria2 && categoria2 === categoriaActual) {
+    avisar("Esa ya es tu categoría principal; elige otra o déjala en \"Ninguna\".");
+    return pintar();
+  }
+  try {
+    await api.patch("/api/negocios/" + id, { categoria2, sub: [] });
+    await pintar();
+    avisar("Cambiaste tu segunda categoría. Vuelve a elegir tus subcategorías.");
   } catch (err) { avisarError(err); }
 }
 
@@ -1770,7 +1811,9 @@ async function adminNegocios() {
     return '<tr><td><div class="fila g8">' + logoHtml(n) + "<div><strong>" + esc(n.nombre) +
         '</strong><br><span class="diminuto apagado">' + esc(n.propietariaNombre || "—") +
         " · " + esc(n.ciudad || "sin ciudad") + '</span><br><span class="diminuto apagado">' +
-        cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) + "</span></div></div></td>" +
+        cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) +
+        (n.categoria2 ? " · " + cat(n.categoria2).icono + " " + esc(cat(n.categoria2).nombre) : "") +
+        "</span></div></div></td>" +
       '<td><span class="chip ' + ESTADOS[n.estado].chip + '">' + esc(ESTADOS[n.estado].et) + "</span></td>" +
       '<td><select onchange="adminPlan(' + n.id + ',this.value)" style="min-width:126px">' +
         ORDEN_PLANES.map((k) => '<option value="' + k + '"' + (n.plan === k ? " selected" : "") + ">" +

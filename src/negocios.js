@@ -49,9 +49,24 @@ export function soloDigitos(valor, max = 20) {
 
 const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1];
 
-/** Hasta 5 subcategorías, y todas deben pertenecer a la categoría elegida. */
-export function normalizarSub(categoriaId, sub) {
-  const validas = new Set(cat(categoriaId).sub);
+/**
+ * La segunda categoría es opcional: sirve para negocios que cruzan dos
+ * rubros (una repostería que también hace golosinas para mascotas). Debe
+ * existir y no repetir la principal; si no, simplemente no hay segunda.
+ */
+export function normalizarCategoria2(categoriaId, categoria2Id) {
+  const id = texto(categoria2Id, 40);
+  if (!id || id === categoriaId) return '';
+  if (!CATEGORIAS.some((c) => c.id === id)) throw new ErrorHttp(400, 'Esa segunda categoría no existe.');
+  return id;
+}
+
+/**
+ * Hasta MAX_SUBCATEGORIAS subcategorías en total, tomadas de la categoría
+ * principal y, si se eligió, de la segunda categoría.
+ */
+export function normalizarSub(categoriaId, categoria2Id, sub) {
+  const validas = new Set([...cat(categoriaId).sub, ...(categoria2Id ? cat(categoria2Id).sub : [])]);
   const limpio = [...new Set((Array.isArray(sub) ? sub : []).map((s) => texto(s, 60)))].filter((s) =>
     validas.has(s)
   );
@@ -147,6 +162,7 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
   const reglas = reglasVigentes(negocio);
   const { limites, permisos } = reglas;
   const categoria = cat(negocio.categoria);
+  const categoria2 = negocio.categoria2 ? cat(negocio.categoria2) : null;
 
   const fotos = fotosDe(negocio.id)
     .slice(0, limites.fotos)
@@ -166,6 +182,9 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     categoria: negocio.categoria,
     categoriaNombre: categoria.nombre,
     categoriaIcono: categoria.icono,
+    categoria2: negocio.categoria2 || null,
+    categoria2Nombre: categoria2 ? categoria2.nombre : null,
+    categoria2Icono: categoria2 ? categoria2.icono : null,
     sub: parsearSub(negocio),
     descripcion: texto(negocio.descripcion, limites.caracteresDescripcion),
     ciudad: negocio.ciudad,
@@ -251,6 +270,7 @@ export function vistaPanel(negocio) {
     slug: negocio.slug,
     nombre: negocio.nombre,
     categoria: negocio.categoria,
+    categoria2: negocio.categoria2 || null,
     sub: parsearSub(negocio),
     descripcion: negocio.descripcion,
     ciudad: negocio.ciudad,
@@ -304,7 +324,7 @@ export function buscarNegocios({ q = '', categoria = '', sub = '', ciudad = '', 
     params.q = `%${texto(q, 80)}%`;
   }
   if (categoria && CATEGORIAS.some((c) => c.id === categoria)) {
-    filtros.push(`n.categoria = $categoria`);
+    filtros.push(`(n.categoria = $categoria OR n.categoria2 = $categoria)`);
     params.categoria = categoria;
   }
   if (ciudad) {
