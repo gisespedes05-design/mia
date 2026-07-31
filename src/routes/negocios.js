@@ -4,8 +4,10 @@ import { CATEGORIAS, ESTADO_VISIBLE } from '../config.js';
 import {
   buscarNegocios, negociosEnMapa, obtenerNegocioPorId, obtenerNegocioPorSlug,
   vistaPublica, vistaPanel, exigirPropiedad, esVisiblePara, texto, normalizarCategoria2, normalizarSub, normalizarRedes,
-  TIPOS_INTERACCION,
+  TIPOS_INTERACCION, reporteMensual,
 } from '../negocios.js';
+import { reglasVigentes } from '../config.js';
+import { notificarASeguidoras } from '../notificaciones.js';
 import { guardarImagenBase64, borrarImagen } from '../subidas.js';
 
 export function listar(ctx) {
@@ -30,8 +32,20 @@ export function verDetalle(ctx) {
 
   if (negocio.estado === 'publicado' && ctx.consulta.contar === '1') {
     ejecutar(`UPDATE negocios SET vistas = vistas + 1 WHERE id = $id`, { id: negocio.id });
+    ejecutar(`INSERT INTO vistas_perfil (negocio_id) VALUES ($id)`, { id: negocio.id });
   }
   return vistaPublica(negocio, { conDetalle: true });
+}
+
+/** Solo para negocios efectivamente verificados: sus vistas e interacciones por mes. */
+export function verReporte(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const reglas = reglasVigentes(negocio);
+  if (!(negocio.verificado && reglas.permisos.verificado)) {
+    throw new ErrorHttp(403, 'El reporte mensual es un beneficio para negocios verificados.');
+  }
+  return reporteMensual(negocio.id);
 }
 
 /** Datos completos para editar: solo la dueña o la organización MÍA. */
@@ -78,12 +92,13 @@ export function actualizar(ctx) {
   ejecutar(
     `UPDATE negocios SET
        nombre = $nombre, categoria = $categoria, categoria2 = $categoria2, sub = $sub, descripcion = $descripcion,
-       ciudad = $ciudad, direccion = $direccion, telefono = $telefono, redes = $redes,
+       sobre_negocio = $sobreNegocio, ciudad = $ciudad, direccion = $direccion, telefono = $telefono, redes = $redes,
        actualizado_en = datetime('now')
      WHERE id = $id`,
     {
       id: negocio.id, nombre, categoria, categoria2: categoria2 || null, sub: JSON.stringify(sub),
       descripcion: c.descripcion !== undefined ? texto(c.descripcion, 6000) : negocio.descripcion,
+      sobreNegocio: c.sobreNegocio !== undefined ? texto(c.sobreNegocio, 3000) : negocio.sobre_negocio,
       ciudad: c.ciudad !== undefined ? texto(c.ciudad, 80) : negocio.ciudad,
       direccion: c.direccion !== undefined ? texto(c.direccion, 200) : negocio.direccion,
       telefono: c.telefono !== undefined ? texto(c.telefono, 20) : negocio.telefono,
@@ -217,6 +232,9 @@ export function agregarPublicacion(ctx) {
   ejecutar(`INSERT INTO publicaciones (negocio_id, titulo, texto) VALUES ($id, $titulo, $texto)`, {
     id: negocio.id, titulo, texto: cuerpoTexto,
   });
+  if (negocio.estado === 'publicado') {
+    notificarASeguidoras(negocio.id, `Tu negocio favorito ${negocio.nombre} tiene una nueva publicación: ${titulo}`);
+  }
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
 

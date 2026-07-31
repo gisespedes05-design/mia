@@ -229,11 +229,24 @@ function menu() {
     if (YO.rol === "negocio") items += '<a href="#/panel" class="' + (v === "panel" ? "activo" : "") + '">Mi negocio</a>';
     if (YO.rol === "usuario") {
       items += '<a href="#/favoritos" class="' + (v === "favoritos" ? "activo" : "") + '">Favoritos</a>' +
-        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>';
+        '<a href="#/mensajes" class="' + (v === "mensajes" ? "activo" : "") + '">Mensajes</a>' +
+        '<a href="#/notificaciones" class="' + (v === "notificaciones" ? "activo" : "") +
+          '">Notificaciones<span id="badge_notif" class="badge" style="display:none"></span></a>';
     }
     items += '<button class="btn fantasma chico" onclick="salir()">Salir</button>';
   }
   $("menu").innerHTML = items;
+  if (YO && YO.rol === "usuario") actualizarBadgeNotificaciones();
+}
+
+async function actualizarBadgeNotificaciones() {
+  try {
+    const { noLeidas } = await api.get("/api/notificaciones");
+    const b = $("badge_notif");
+    if (!b) return;
+    b.textContent = noLeidas > 0 ? String(noLeidas) : "";
+    b.style.display = noLeidas > 0 ? "inline-flex" : "none";
+  } catch { /* sin notificaciones */ }
 }
 
 /** Cada vista es una función async que arma su propio HTML. */
@@ -254,10 +267,12 @@ async function pintar() {
     else if (vista === "entrar") html = vistaEntrar(arg);
     else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
     else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
+    else if (vista === "notificaciones") html = YO && YO.rol === "usuario" ? await vistaNotificaciones() : sinAcceso();
     else if (vista === "negocio-mensajes") html = YO && (YO.rol === "negocio" || YO.rol === "admin")
       ? await vistaMensajesNegocio(arg) : sinAcceso();
     else if (vista === "panel") html = YO && (YO.rol === "negocio" || YO.rol === "admin") ? await vistaPanel() : sinAcceso();
     else if (vista === "editar") html = YO ? await vistaEditar(arg) : sinAcceso();
+    else if (vista === "reporte") html = YO ? await vistaReporte(arg) : sinAcceso();
     else if (vista === "admin") html = esAdmin() ? await vistaAdmin(arg) : sinAcceso();
     else html = await vistaInicio();
 
@@ -871,9 +886,10 @@ async function vistaNegocio(slug) {
 
   const mio = YO && YO.rol === "admin"; // la comparación con la dueña real se resuelve en el servidor
   const c = cat(n.categoria);
-  let esFav = false;
+  let esFav = false, esSeguidora = false;
   if (YO && YO.rol === "usuario") {
     try { esFav = (await api.get("/api/favoritos")).some((f) => f.id === n.id); } catch { /* sin favoritos */ }
+    try { esSeguidora = (await api.get("/api/mis-seguidos")).some((f) => f.id === n.id); } catch { /* sin seguidos */ }
   }
   const miReseña = YO && YO.rol === "usuario" ? n.resenas.find((r) => r.usuario_id === YO.id) : null;
 
@@ -924,7 +940,9 @@ async function vistaNegocio(slug) {
     '<div class="fila g8">' + contacto.join("") +
       (YO && YO.rol === "usuario"
         ? '<button class="btn ' + (esFav ? "" : "linea") + '" onclick="alternarFavorito(' + n.id + ',' + esFav + ')">' +
-          (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>" : "") +
+          (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>" +
+        '<button class="btn ' + (esSeguidora ? "" : "linea") + '" onclick="alternarSeguir(' + n.id + ')">' +
+          (esSeguidora ? "🔔 Siguiendo" : "🔕 Seguir este negocio") + "</button>" : "") +
     "</div>" +
 
     (YO && YO.rol === "usuario" ? '<div class="tarjeta p20 pila g12"><p class="eyebrow">Escríbele a este negocio</p>' +
@@ -933,6 +951,9 @@ async function vistaNegocio(slug) {
       '<div><button class="btn" onclick="enviarMensajeNegocio(' + n.id + ')">Enviar mensaje</button></div></div>'
       : !YO ? '<div class="aviso">Para escribirle a este negocio ' +
           '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
+
+    (n.sobreNegocio ? '<div class="pila g12"><p class="eyebrow">Sobre este negocio</p>' +
+      '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.sobreNegocio) + "</p></div>" : "") +
 
     (n.fotos.length > 1 ? '<div class="pila g12"><p class="eyebrow">Fotografías</p>' +
       '<div class="galeria">' + n.fotos.map((f) =>
@@ -1051,6 +1072,14 @@ async function alternarFavorito(negocioId, eraFavorito) {
     else await api.post("/api/favoritos/" + negocioId);
     await pintar();
     avisar(eraFavorito ? "Lo quitamos de tus favoritos." : "Lo guardamos en tus favoritos.");
+  } catch (err) { avisarError(err); }
+}
+
+async function alternarSeguir(negocioId) {
+  try {
+    const r = await api.post("/api/negocios/" + negocioId + "/seguir");
+    await pintar();
+    avisar(r.siguiendo ? "Ahora sigues a este negocio. Te avisamos cuando publique." : "Dejaste de seguir este negocio.");
   } catch (err) { avisarError(err); }
 }
 
@@ -1332,6 +1361,24 @@ async function hacerRegistroCliente() {
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo crear tu cuenta."); }
 }
 
+/* ============================================================ NOTIFICACIONES */
+async function vistaNotificaciones() {
+  const { notificaciones } = await api.get("/api/notificaciones");
+  if (notificaciones.some((n) => !n.leida)) {
+    try { await api.post("/api/notificaciones/marcar-leidas"); } catch { /* no bloquea la vista */ }
+    actualizarBadgeNotificaciones();
+  }
+
+  return '<div class="envoltura bloque pila g24" style="max-width:640px">' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Notificaciones</h1></div>' +
+    (notificaciones.length ? '<div class="pila g8">' + notificaciones.map((n) =>
+      '<a class="tarjeta p16" style="text-decoration:none;display:block" href="' +
+        (n.negocio_slug ? "#/negocio/" + esc(n.negocio_slug) : "#/notificaciones") + '">' +
+        '<p' + (n.leida ? ' class="apagado"' : "") + '>' + esc(n.mensaje) + "</p>" +
+        '<p class="diminuto apagado">' + esc(fecha(n.creado_en)) + "</p></a>").join("") + "</div>"
+      : vacio("Sigue negocios para enterarte cuando publiquen algo nuevo.")) + "</div>";
+}
+
 /* =================================================================== MENSAJES */
 async function vistaBandejaMensajes() {
   const lista = await api.get("/api/mis-mensajes");
@@ -1552,6 +1599,24 @@ async function vistaEditar(id) {
         esc(n.descripcion || "") + "</textarea></label>" +
     "</div>" +
 
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Sobre mi negocio</p>' +
+      '<p class="pequeno apagado">Un espacio más para contar tu historia. Es un beneficio de ' +
+      "negocios verificados: se guarda siempre, pero solo se muestra en tu perfil público " +
+      "mientras MÍA te tenga verificada.</p>" +
+      '<textarea id="f_sobre" maxlength="3000" placeholder="Cuéntale a tus clientas quién eres, ' +
+      'tu historia, lo que te distingue…">' + esc(n.sobreNegocio || "") + "</textarea>" +
+      (n.sobreNegocioVisible ? '<span class="chip jade">Visible en tu perfil</span>'
+        : '<span class="chip">No se muestra todavía</span>') +
+    "</div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Reporte mensual</p>' +
+      (n.verificado && n.permisos.verificado
+        ? '<div class="pila g8"><p class="pequeno apagado">Vistas e interacciones de tu perfil, ' +
+          "mes por mes.</p><div><a class=\"btn linea chico\" href=\"#/reporte/" + n.id +
+          '">Ver mi reporte mensual</a></div></div>'
+        : cerrado('El reporte mensual de vistas e interacciones es un beneficio de negocios verificados.')) +
+    "</div>" +
+
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Redes sociales y WhatsApp</p>' +
       '<div class="rejilla-campos">' +
         '<label class="campo">WhatsApp<input id="f_whatsapp" value="' + esc(n.redes.whatsapp || "") +
@@ -1651,13 +1716,42 @@ async function vistaEditar(id) {
     "</div></div>";
 }
 
+/* ================================================================== REPORTE */
+const mesNombre = (mes) => {
+  const d = new Date(mes + "-02T00:00:00");
+  return isNaN(d) ? mes : d.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+};
+
+async function vistaReporte(id) {
+  let n, meses;
+  try {
+    n = await api.get("/api/negocios/" + id + "/panel");
+    meses = await api.get("/api/negocios/" + id + "/reporte");
+  } catch { return sinAcceso(); }
+
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="#/editar/' + n.id + '">← ' + esc(n.nombre) + "</a>" +
+      '<p class="eyebrow">Reporte mensual</p><h1>Vistas e interacciones</h1>' +
+      '<p class="apagado" style="max-width:58ch">Los últimos meses de tu perfil, actualizados en ' +
+      "tiempo real. Solo tú puedes verlo.</p></div>" +
+
+    (meses.length ? '<div class="tabla-envoltura"><table><thead><tr><th>Mes</th><th>Vistas</th>' +
+      "<th>Llamar</th><th>WhatsApp</th><th>Instagram</th><th>Facebook</th><th>TikTok</th></tr></thead><tbody>" +
+      meses.map((m) => "<tr><td>" + esc(mesNombre(m.mes)) + '</td><td class="mono">' + m.vistas +
+        '</td><td class="mono">' + m.telefono + '</td><td class="mono">' + m.whatsapp +
+        '</td><td class="mono">' + m.instagram + '</td><td class="mono">' + m.facebook +
+        '</td><td class="mono">' + m.tiktok + "</td></tr>").join("") + "</tbody></table></div>"
+      : vacio("Todavía no hay suficientes datos este mes. Vuelve más adelante.")) +
+  "</div>";
+}
+
 async function guardarNegocio(id) {
   const nombre = val("f_nombre");
   if (!nombre) return avisar("El negocio necesita un nombre.");
   try {
     await api.patch("/api/negocios/" + id, {
       nombre, ciudad: val("f_ciudad"), direccion: val("f_direccion"), telefono: val("f_telefono"),
-      descripcion: val("f_descripcion"),
+      descripcion: val("f_descripcion"), sobreNegocio: val("f_sobre"),
       redes: { whatsapp: val("f_whatsapp"), instagram: val("f_instagram"), facebook: val("f_facebook"), tiktok: val("f_tiktok") },
     });
     await pintar();

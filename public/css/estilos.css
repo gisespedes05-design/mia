@@ -123,6 +123,10 @@ input:disabled,textarea:disabled,select:disabled{background:var(--fondo2);color:
   border-color:color-mix(in srgb,var(--cobalto) 32%,transparent)}
 .chip.peligro{background:color-mix(in srgb,var(--peligro) 13%,transparent);color:var(--peligro);
   border-color:color-mix(in srgb,var(--peligro) 32%,transparent)}
+
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;
+  padding:0 4px;border-radius:100px;background:var(--peligro);color:#fff;font-size:.65rem;
+  font-weight:800;margin-left:4px;vertical-align:2px}
 button.chip{cursor:pointer}
 
 .hero{background:var(--acento);color:var(--acento-tinta);padding:52px 0 46px}

@@ -166,6 +166,33 @@ export function interaccionesDe(negocioId) {
   return conteos;
 }
 
+/**
+ * Vistas e interacciones agrupadas por mes (los últimos 12), para el
+ * reporte mensual de negocios verificados. El mes más reciente va primero.
+ */
+export function reporteMensual(negocioId) {
+  const vistasPorMes = todos(
+    `SELECT strftime('%Y-%m', creado_en) AS mes, COUNT(*) AS total
+       FROM vistas_perfil WHERE negocio_id = $id GROUP BY mes`,
+    { id: negocioId }
+  );
+  const interaccionesPorMes = todos(
+    `SELECT strftime('%Y-%m', creado_en) AS mes, tipo, COUNT(*) AS total
+       FROM interacciones WHERE negocio_id = $id GROUP BY mes, tipo`,
+    { id: negocioId }
+  );
+
+  const meses = new Map();
+  const mesDe = (mes) => {
+    if (!meses.has(mes)) meses.set(mes, { mes, vistas: 0, ...Object.fromEntries(TIPOS_INTERACCION.map((t) => [t, 0])) });
+    return meses.get(mes);
+  };
+  for (const v of vistasPorMes) mesDe(v.mes).vistas = v.total;
+  for (const i of interaccionesPorMes) mesDe(i.mes)[i.tipo] = i.total;
+
+  return [...meses.values()].sort((a, b) => b.mes.localeCompare(a.mes)).slice(0, 12);
+}
+
 /* ----------------------- aplicación de límites del plan -------------------- */
 // Sólo tres cosas se recortan por plan: fotos, publicaciones y el largo de la
 // descripción. Los productos siempre se muestran completos: lo único que
@@ -225,6 +252,9 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     ...base,
     direccion: negocio.direccion,
     comoLlegar: Boolean(permisos.mapa && negocio.direccion),
+    // "Sobre mi negocio" es un beneficio de negocios verificados: se sigue
+    // guardando aunque se pierda la verificación, pero deja de mostrarse.
+    sobreNegocio: base.verificado ? (negocio.sobre_negocio || '') : '',
     vistas: negocio.vistas,
     productos: productosDe(negocio.id).map((p) => ({ ...p, destacado: Boolean(p.destacado) && permisos.productosDestacados })),
     publicaciones: pubs.slice(0, tope).map((p) => ({ ...p, destacada: Boolean(p.destacada) && permisos.publicacionesDestacadas })),
@@ -279,6 +309,10 @@ export function vistaPanel(negocio) {
   if (negocio.verificado && !permisos.verificado) {
     bloqueos.push('MÍA te verificó, pero la insignia solo se muestra con Membresía.');
   }
+  const estaVerificado = Boolean(negocio.verificado) && permisos.verificado;
+  if ((negocio.sobre_negocio || '').trim() && !estaVerificado) {
+    bloqueos.push('Tu texto de "Sobre mi negocio" está guardado, pero solo se muestra en negocios verificados.');
+  }
 
   return {
     id: negocio.id,
@@ -288,6 +322,8 @@ export function vistaPanel(negocio) {
     categoria2: negocio.categoria2 || null,
     sub: parsearSub(negocio),
     descripcion: negocio.descripcion,
+    sobreNegocio: negocio.sobre_negocio || '',
+    sobreNegocioVisible: estaVerificado,
     ciudad: negocio.ciudad,
     direccion: negocio.direccion,
     telefono: negocio.telefono,

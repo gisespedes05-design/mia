@@ -287,6 +287,28 @@ omite el SMS (el correo sí se manda, y queda anotado en los logs). Los
 teléfonos de negocios sin código de país se asumen de México (`+52`)
 automáticamente.
 
+## Negocios verificados: reporte mensual y "Sobre mi negocio"
+
+Un negocio con la insignia de **verificado** (y un plan que la muestre,
+Membresía en adelante) desbloquea dos cosas más:
+
+- **Reporte mensual** — vistas del perfil y clics en Llamar/WhatsApp/redes,
+  agrupados por mes, en **Mi negocio › Editar › Reporte mensual**. Si el
+  negocio pierde la verificación, el reporte deja de estar disponible pero
+  no se borra nada.
+- **"Sobre mi negocio"** — un espacio de texto libre además de la
+  descripción normal, pensado para contar la historia del negocio. Se puede
+  escribir en cualquier momento, pero solo se muestra en el perfil público
+  mientras el negocio esté verificado.
+
+## Seguidoras y notificaciones
+
+Cualquier clienta puede seguir un negocio desde su perfil público. Cuando ese
+negocio publica algo nuevo, cada seguidora recibe una notificación dentro de
+MÍA (campana con contador en el menú, y la bandeja en **Notificaciones**).
+Dejar de seguir un negocio detiene los avisos futuros sin afectar los ya
+recibidos.
+
 ## Estructura del código
 
 ```

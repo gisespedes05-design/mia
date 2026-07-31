@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   categoria2      TEXT,
   sub             TEXT NOT NULL DEFAULT '[]',
   descripcion     TEXT NOT NULL DEFAULT '',
+  sobre_negocio   TEXT NOT NULL DEFAULT '',
   ciudad          TEXT NOT NULL DEFAULT '',
   direccion       TEXT NOT NULL DEFAULT '',
   telefono        TEXT NOT NULL DEFAULT '',
@@ -103,6 +104,25 @@ CREATE TABLE IF NOT EXISTS favoritos (
   negocio_id  INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
   creado_en   TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (usuario_id, negocio_id)
+);
+
+-- Una usuaria sigue a un negocio: cuando ese negocio publica, le llega una
+-- notificación (tabla de abajo). Distinta de "favoritos" porque un favorito
+-- es privado y esto SÍ dispara avisos.
+CREATE TABLE IF NOT EXISTS seguidores (
+  usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  negocio_id  INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  creado_en   TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (usuario_id, negocio_id)
+);
+
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  negocio_id  INTEGER REFERENCES negocios(id) ON DELETE CASCADE,
+  mensaje     TEXT NOT NULL,
+  leida       INTEGER NOT NULL DEFAULT 0,
+  creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- Lo que deja cada formulario de registro. No se exporta a ningún lado:
@@ -216,7 +236,19 @@ CREATE TABLE IF NOT EXISTS interacciones (
   creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Una fila por cada visita al perfil público, para poder agrupar por mes en
+-- el reporte de negocios verificados. "negocios.vistas" (el contador plano)
+-- se sigue llevando aparte para no tener que sumar esta tabla en cada carga.
+CREATE TABLE IF NOT EXISTS vistas_perfil (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  negocio_id  INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_interacciones_neg  ON interacciones(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_vistas_perfil_neg  ON vistas_perfil(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_seguidores_negocio ON seguidores(negocio_id);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_usu ON notificaciones(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_negocios_estado     ON negocios(estado);
 CREATE INDEX IF NOT EXISTS idx_negocios_categoria  ON negocios(categoria);
 CREATE INDEX IF NOT EXISTS idx_negocios_duena      ON negocios(propietaria_id);
@@ -272,6 +304,10 @@ if (!columnasUsuarios.includes('terminos_aceptados_en')) {
 // usa la vista pública (la primera foto de la galería, como miniatura de tarjeta).
 if (!columnasNegocios.includes('banner')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN banner TEXT`);
+}
+// Texto adicional para negocios verificados: "Sobre mi negocio".
+if (!columnasNegocios.includes('sobre_negocio')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN sobre_negocio TEXT NOT NULL DEFAULT ''`);
 }
 
 /** Consulta que devuelve varias filas. */

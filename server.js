@@ -16,6 +16,7 @@ import * as blog from './src/routes/blog.js';
 import * as catalogo from './src/routes/catalogo.js';
 import * as pagos from './src/routes/pagos.js';
 import * as mensajes from './src/routes/mensajes.js';
+import * as notificaciones from './src/routes/notificaciones.js';
 
 const r = new Enrutador();
 
@@ -46,6 +47,7 @@ r.get('/api/negocios/:slug', negocios.verDetalle);
 r.patch('/api/negocios/:id', negocios.actualizar);
 r.post('/api/negocios/:id/enviar-revision', negocios.enviarRevision);
 r.post('/api/negocios/:id/interaccion', negocios.registrarInteraccion);
+r.get('/api/negocios/:id/reporte', negocios.verReporte);
 r.post('/api/negocios/:id/pago/iniciar', pagos.crearCheckout);
 r.post('/api/negocios/:id/pago/portal', pagos.crearPortal);
 r.post('/api/negocios/:id/logo', negocios.subirLogo);
@@ -70,6 +72,13 @@ r.post('/api/resenas/:id/responder', resenas.responder);
 r.get('/api/favoritos', favoritos.listar);
 r.post('/api/favoritos/:negocioId', favoritos.agregar);
 r.delete('/api/favoritos/:negocioId', favoritos.quitar);
+
+// --------------------------------------------------------- seguidores --
+r.post('/api/negocios/:id/seguir', notificaciones.alternarSeguir);
+r.get('/api/mis-seguidos', notificaciones.misSeguidos);
+r.get('/api/notificaciones', notificaciones.misNotificaciones);
+r.post('/api/notificaciones/:id/leida', notificaciones.marcarLeida);
+r.post('/api/notificaciones/marcar-leidas', notificaciones.marcarTodasLeidas);
 
 // ------------------------------------------------------------------ blog --
 r.get('/api/blog', blog.listar);
