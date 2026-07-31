@@ -313,6 +313,26 @@ const vacio = (msg) => '<div class="tarjeta p24 pila g8"><h3>Nada por aquí toda
 const escalon = (n, t, d) => '<div class="escalon"><span class="num">' + n + "</span>" +
   "<div><strong>" + esc(t) + '</strong><p class="pequeno apagado">' + esc(d) + "</p></div></div>";
 
+/** Botones circulares de redes sociales: solo aparece el de la red que la dueña llenó. */
+const REDES_SOCIALES = {
+  whatsapp: { color: "#25D366", etiqueta: "WhatsApp",
+    svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.9c0 1.77.47 3.4 1.27 4.85L2 22l5.4-1.4a9.9 9.9 0 0 0 4.64 1.18h0c5.46 0 9.9-4.44 9.9-9.9C21.95 6.45 17.5 2 12.04 2Zm5.8 14.09c-.25.68-1.43 1.31-1.97 1.36-.5.06-1.13.09-1.83-.11-.42-.13-.96-.3-1.65-.6-2.9-1.25-4.8-4.17-4.94-4.36-.15-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.78-.36.19 0 .39 0 .56.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.71 1.18 1.53 1.91 1.05.94 1.94 1.23 2.22 1.37.28.14.44.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.68-.18 1.36Z"/></svg>' },
+  instagram: { color: "#C13584", etiqueta: "Instagram",
+    svg: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1" fill="#fff" stroke="none"/></svg>' },
+  facebook: { color: "#1877F2", etiqueta: "Facebook",
+    svg: '<svg viewBox="0 0 24 24" width="15" height="15" fill="#fff"><path d="M15 8.5h2.5V5.3c-.43-.06-1.9-.2-3.6-.2-3.57 0-5.9 2.18-5.9 6.17V14H4.5v3.6H8V24h3.7v-6.4h3.08l.5-3.6H11.7v-2.4c0-1.04.28-1.76 1.78-1.76H15Z"/></svg>' },
+  tiktok: { color: "#000", etiqueta: "TikTok",
+    svg: '<svg viewBox="0 0 24 24" width="15" height="15" fill="#fff"><path d="M16.7 3h-3.2v12.4a2.6 2.6 0 1 1-1.9-2.5V9.5a5.9 5.9 0 1 0 5.1 5.85V9.9a7.9 7.9 0 0 0 4.3 1.28V8a4.7 4.7 0 0 1-4.3-5Z"/></svg>' },
+};
+const botonesRedesSociales = (n) => Object.keys(REDES_SOCIALES)
+  .filter((tipo) => n.redes[tipo])
+  .map((tipo) => {
+    const r = REDES_SOCIALES[tipo];
+    return '<a class="red-social" style="background:' + r.color + '" target="_blank" rel="noopener" ' +
+      'title="' + r.etiqueta + '" aria-label="' + r.etiqueta + '" onclick="registrarClic(' + n.id +
+      ",'" + tipo + "')\" href=\"" + esc(n.redes[tipo]) + '">' + r.svg + "</a>";
+  }).join("");
+
 /** Casillas de consentimiento: obligatoria la de privacidad, opcional la de noticias. */
 const consentimientosHtml = (prefijo) =>
   '<label class="fila g8" style="align-items:flex-start">' +
@@ -933,16 +953,9 @@ async function vistaNegocio(slug) {
   const contacto = [];
   if (n.telefono) contacto.push('<a class="btn linea" onclick="registrarClic(' + n.id + ',\'telefono\')" href="tel:' +
     esc(n.telefono.replace(/\s/g, "")) + '">Llamar ' + esc(n.telefono) + "</a>");
-  if (n.redes.whatsapp) contacto.push('<a class="btn" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
-    ',\'whatsapp\')" href="https://wa.me/52' + esc(String(n.redes.whatsapp).replace(/\D/g, "")) + '">WhatsApp</a>');
   if (n.comoLlegar) contacto.push('<a class="btn linea" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' +
     encodeURIComponent(n.direccion + (n.ciudad ? ", " + n.ciudad : "")) + '">¿Cómo llegar?</a>');
-  if (n.redes.instagram) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
-    ',\'instagram\')" href="https://instagram.com/' + esc(String(n.redes.instagram).replace(/^@/, "")) + '">Instagram</a>');
-  if (n.redes.facebook) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
-    ',\'facebook\')" href="https://facebook.com/' + esc(String(n.redes.facebook).replace(/^@/, "")) + '">Facebook</a>');
-  if (n.redes.tiktok) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
-    ',\'tiktok\')" href="https://tiktok.com/@' + esc(String(n.redes.tiktok).replace(/^@/, "")) + '">TikTok</a>');
+  const redesBotones = botonesRedesSociales(n);
 
   const destacados = n.productos.filter((x) => x.destacado);
   const normales = n.productos.filter((x) => !x.destacado);
@@ -967,6 +980,7 @@ async function vistaNegocio(slug) {
           (n.categoria2 ? '<a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
             esc(n.categoria2) + '">' + esc(n.categoria2Icono) + " " + esc(n.categoria2Nombre) + "</a>" : "") +
           (n.sub || []).map((s) => '<span class="chip">' + esc(s) + "</span>").join("") + "</div>" +
+        (redesBotones ? '<div class="fila g8">' + redesBotones + "</div>" : "") +
       "</div>" +
     "</div>" +
 
@@ -1243,12 +1257,13 @@ function vistaRegistro(planId) {
     "</div>" +
 
     (P.redes ? '<div class="tarjeta p20 pila g16"><p class="eyebrow">Redes sociales</p>' +
-      '<p class="pequeno apagado">Incluidas en tu plan.</p>' +
+      '<p class="pequeno apagado">Incluidas en tu plan. Pega el link que abre directo tu chat o tu ' +
+      "perfil — no el usuario, el link completo.</p>" +
       '<div class="rejilla-campos">' +
-        '<label class="campo">WhatsApp<input id="g_whatsapp"></label>' +
-        '<label class="campo">Instagram<input id="g_instagram" placeholder="@tunegocio"></label>' +
-        '<label class="campo">Facebook<input id="g_facebook"></label>' +
-        '<label class="campo">TikTok<input id="g_tiktok" placeholder="@tunegocio"></label>' +
+        '<label class="campo">WhatsApp<input id="g_whatsapp" placeholder="https://wa.me/52..."></label>' +
+        '<label class="campo">Instagram<input id="g_instagram" placeholder="https://instagram.com/tunegocio"></label>' +
+        '<label class="campo">Facebook<input id="g_facebook" placeholder="https://facebook.com/tunegocio"></label>' +
+        '<label class="campo">TikTok<input id="g_tiktok" placeholder="https://tiktok.com/@tunegocio"></label>' +
       "</div></div>"
       : '<div class="aviso">Las redes sociales y el botón de WhatsApp empiezan en el plan ' +
         'Suscripción. <a href="#/registro/suscripcion" style="color:var(--acento);font-weight:700">Ver ese formulario</a></div>') +
@@ -1672,14 +1687,16 @@ async function vistaEditar(id) {
     "</div>" +
 
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Redes sociales y WhatsApp</p>' +
+      '<p class="pequeno apagado">Pega el link que abre directo tu chat o tu perfil — no el ' +
+      "usuario, el link completo. Así el botón en tu perfil lleva a la persona exactamente ahí.</p>" +
       '<div class="rejilla-campos">' +
-        '<label class="campo">WhatsApp<input id="f_whatsapp" value="' + esc(n.redes.whatsapp || "") +
+        '<label class="campo">WhatsApp<input id="f_whatsapp" placeholder="https://wa.me/52..." value="' + esc(n.redes.whatsapp || "") +
           '"' + (P.redes ? "" : " disabled") + "></label>" +
-        '<label class="campo">Instagram<input id="f_instagram" value="' + esc(n.redes.instagram || "") +
+        '<label class="campo">Instagram<input id="f_instagram" placeholder="https://instagram.com/tunegocio" value="' + esc(n.redes.instagram || "") +
           '"' + (P.redes ? "" : " disabled") + "></label>" +
-        '<label class="campo">Facebook<input id="f_facebook" value="' + esc(n.redes.facebook || "") +
+        '<label class="campo">Facebook<input id="f_facebook" placeholder="https://facebook.com/tunegocio" value="' + esc(n.redes.facebook || "") +
           '"' + (P.redes ? "" : " disabled") + "></label>" +
-        '<label class="campo">TikTok<input id="f_tiktok" value="' + esc(n.redes.tiktok || "") +
+        '<label class="campo">TikTok<input id="f_tiktok" placeholder="https://tiktok.com/@tunegocio" value="' + esc(n.redes.tiktok || "") +
           '"' + (P.redes ? "" : " disabled") + "></label>" +
       "</div>" +
       (P.redes ? "" : cerrado("Las redes sociales y el WhatsApp empiezan en el plan Suscripción. Lo que ya capturaste no se borra.")) +

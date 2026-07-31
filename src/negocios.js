@@ -43,10 +43,6 @@ export function exigirCorreo(valor) {
   return correo;
 }
 
-export function soloDigitos(valor, max = 20) {
-  return String(valor ?? '').replace(/[^\d+\s()-]/g, '').trim().slice(0, max);
-}
-
 const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1];
 
 /**
@@ -76,11 +72,37 @@ export function normalizarSub(categoriaId, categoria2Id, sub) {
 
 export function normalizarRedes(redes = {}) {
   return {
-    whatsapp: soloDigitos(redes.whatsapp, 20),
-    instagram: texto(redes.instagram, 60),
-    facebook: texto(redes.facebook, 60),
-    tiktok: texto(redes.tiktok, 60),
+    whatsapp: texto(redes.whatsapp, 300),
+    instagram: texto(redes.instagram, 300),
+    facebook: texto(redes.facebook, 300),
+    tiktok: texto(redes.tiktok, 300),
   };
+}
+
+/**
+ * Cada red se guarda como el link que la dueña pegó (a su chat de WhatsApp,
+ * a su perfil de Instagram/Facebook/TikTok). Si ya trae "http", se usa tal
+ * cual; si solo le falta "https://" se lo agrega. Lo único que se sigue
+ * armando a mano es lo que quedó guardado desde antes de este cambio, cuando
+ * el campo era nada más un teléfono o un @usuario.
+ */
+const DOMINIOS_RED = {
+  whatsapp: /wa\.me|whatsapp\.com/i,
+  instagram: /instagram\.com/i,
+  facebook: /facebook\.com|fb\.com|fb\.me/i,
+  tiktok: /tiktok\.com/i,
+};
+export function enlaceRed(tipo, valor) {
+  const v = texto(valor, 300);
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (DOMINIOS_RED[tipo] && DOMINIOS_RED[tipo].test(v)) return 'https://' + v;
+  const usuario = v.replace(/^@/, '');
+  if (tipo === 'whatsapp') return 'https://wa.me/52' + usuario.replace(/\D/g, '');
+  if (tipo === 'instagram') return 'https://instagram.com/' + usuario;
+  if (tipo === 'facebook') return 'https://facebook.com/' + usuario;
+  if (tipo === 'tiktok') return 'https://tiktok.com/@' + usuario;
+  return v;
 }
 
 const parsearSub = (fila) => {
@@ -207,7 +229,10 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
   const fotos = fotosDe(negocio.id)
     .slice(0, limites.fotos)
     .map((f) => `/subidas/${f.archivo}`);
-  const redes = permisos.redes ? parsearRedes(negocio) : { whatsapp: '', instagram: '', facebook: '', tiktok: '' };
+  const redesGuardadas = permisos.redes ? parsearRedes(negocio) : { whatsapp: '', instagram: '', facebook: '', tiktok: '' };
+  const redes = Object.fromEntries(
+    Object.entries(redesGuardadas).map(([tipo, valor]) => [tipo, enlaceRed(tipo, valor)])
+  );
 
   // Solo la más reciente y visible: alcanza para mostrarla en tarjetas y en
   // el inicio sin tener que pedir el detalle completo del negocio.
