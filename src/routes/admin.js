@@ -1,6 +1,6 @@
 import { ejecutar, uno, todos, anotar } from '../db.js';
 import { ErrorHttp, exigirRol } from '../auth.js';
-import { ROLES, PLANES, ORDEN_PLANES, reglasVigentes } from '../config.js';
+import { ROLES, PLANES, ORDEN_PLANES, ESTADOS_NEGOCIO, reglasVigentes } from '../config.js';
 import { obtenerNegocioPorId, vistaPanel, texto } from '../negocios.js';
 import { avisarNuevoNegocio, avisarNegocioVerificado } from '../correo.js';
 
@@ -167,6 +167,11 @@ export function confirmarPago(ctx) {
   const negocio = negocioOFallo(ctx.params.id);
   const vence = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
   ejecutar(`UPDATE negocios SET pago_confirmado = 1, plan_vence = $vence WHERE id = $id`, { vence, id: negocio.id });
+  // Misma regla que cuando lo confirma solo el webhook de Stripe: con el
+  // pago en regla, se publica sin pisar un rechazo o suspensión a propósito.
+  if (negocio.estado === ESTADOS_NEGOCIO.PENDIENTE) {
+    ejecutar(`UPDATE negocios SET estado = $publicado WHERE id = $id`, { publicado: ESTADOS_NEGOCIO.PUBLICADO, id: negocio.id });
+  }
   anotar(admin.id, 'Pago confirmado', `${negocio.nombre} — ${PLANES[negocio.plan].nombre}`);
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
