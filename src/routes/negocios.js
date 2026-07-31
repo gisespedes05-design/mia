@@ -114,14 +114,15 @@ export function actualizar(ctx) {
   ejecutar(
     `UPDATE negocios SET
        nombre = $nombre, categoria = $categoria, categoria2 = $categoria2, sub = $sub, descripcion = $descripcion,
-       sobre_negocio = $sobreNegocio, ciudad = $ciudad, direccion = $direccion, telefono = $telefono, redes = $redes,
-       actualizado_en = datetime('now')
+       sobre_negocio = $sobreNegocio, ciudad = $ciudad, alcaldia_municipio = $alcaldiaMunicipio, direccion = $direccion,
+       telefono = $telefono, redes = $redes, actualizado_en = datetime('now')
      WHERE id = $id`,
     {
       id: negocio.id, nombre, categoria, categoria2: categoria2 || null, sub: JSON.stringify(sub),
       descripcion: c.descripcion !== undefined ? texto(c.descripcion, 6000) : negocio.descripcion,
       sobreNegocio: c.sobreNegocio !== undefined ? texto(c.sobreNegocio, 3000) : negocio.sobre_negocio,
       ciudad: c.ciudad !== undefined ? texto(c.ciudad, 80) : negocio.ciudad,
+      alcaldiaMunicipio: c.alcaldiaMunicipio !== undefined ? texto(c.alcaldiaMunicipio, 100) : negocio.alcaldia_municipio,
       direccion: c.direccion !== undefined ? texto(c.direccion, 200) : negocio.direccion,
       telefono: c.telefono !== undefined ? texto(c.telefono, 20) : negocio.telefono,
       redes: JSON.stringify(redes),

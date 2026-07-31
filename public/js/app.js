@@ -160,6 +160,9 @@ function avisarError(err) {
 const pesos = (v) => (v === null || v === undefined || v === "") ? ""
   : "$" + Number(v).toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+/** "Ciudad de México, Xochimilco" si capturó la alcaldía/municipio; si no, solo la ciudad. */
+const ciudadCompleta = (n) => n.ciudad ? n.ciudad + (n.alcaldiaMunicipio ? ", " + n.alcaldiaMunicipio : "") : "";
+
 function fecha(iso) {
   if (!iso) return "";
   const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso);
@@ -436,7 +439,7 @@ function dibujarMapa(negocios) {
       const cx = x + Math.cos(ang) * rad, cy = y + Math.sin(ang) * rad;
       const clase = n.plan === "membresia" || n.plan === "crece" ? "membresia" : "suscripcion";
       return '<g class="pin ' + clase + '" onclick="location.hash=\'#/negocio/' + esc(n.slug) + '\'">' +
-        "<title>" + esc(n.nombre + " — " + ciudad) + "</title>" +
+        "<title>" + esc(n.nombre + " — " + ciudadCompleta(n)) + "</title>" +
         '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7"></circle></g>';
     }).join("") +
     '<text x="' + (x + 11).toFixed(1) + '" y="' + (y + 4).toFixed(1) +
@@ -546,7 +549,7 @@ function tarjeta(n) {
       "</div>" +
       "<h3>" + esc(n.nombre) + "</h3>" +
       '<p class="diminuto apagado">' + esc((n.sub || []).slice(0, 3).join(" · ")) + "</p>" +
-      '<p class="diminuto apagado">' + esc(n.ciudad || "") + "</p>" +
+      '<p class="diminuto apagado">' + esc(ciudadCompleta(n)) + "</p>" +
       '<p class="pequeno" style="color:var(--texto2);flex:1">' + esc((n.descripcion || "").slice(0, 90)) +
         ((n.descripcion || "").length > 90 ? "…" : "") + "</p>" +
       '<div class="fila g8">' + estrellasHtml(n.calificacion) +
@@ -979,7 +982,7 @@ async function vistaNegocio(slug) {
   if (n.telefono) contacto.push('<a class="btn linea" onclick="registrarClic(' + n.id + ',\'telefono\')" href="tel:' +
     esc(n.telefono.replace(/\s/g, "")) + '">Llamar ' + esc(n.telefono) + "</a>");
   if (n.comoLlegar) contacto.push('<a class="btn linea" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' +
-    encodeURIComponent(n.direccion + (n.ciudad ? ", " + n.ciudad : "")) + '">¿Cómo llegar?</a>');
+    encodeURIComponent(n.direccion + (n.ciudad ? ", " + ciudadCompleta(n) : "")) + '">¿Cómo llegar?</a>');
   const redesBotones = botonesRedesSociales(n);
 
   const destacados = n.productos.filter((x) => x.destacado);
@@ -998,7 +1001,7 @@ async function vistaNegocio(slug) {
         "<h1>" + esc(n.nombre) + "</h1>" +
         '<div class="fila g12">' + estrellasHtml(n.calificacion) +
           '<span class="pequeno apagado">' + n.totalResenas + (n.totalResenas === 1 ? " reseña" : " reseñas") + "</span>" +
-          (n.ciudad ? '<span class="pequeno apagado">· ' + esc(n.ciudad) + "</span>" : "") +
+          (n.ciudad ? '<span class="pequeno apagado">· ' + esc(ciudadCompleta(n)) + "</span>" : "") +
         "</div>" +
         '<div class="fila g8"><a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
           c.id + '">' + c.icono + " " + esc(c.nombre) + "</a>" +
@@ -1011,7 +1014,7 @@ async function vistaNegocio(slug) {
 
     '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.descripcion) + "</p>" +
     (n.direccion ? '<p class="pequeno apagado">📍 ' + esc(n.direccion) +
-      (n.ciudad ? ", " + esc(n.ciudad) : "") + "</p>" : "") +
+      (n.ciudad ? ", " + esc(ciudadCompleta(n)) : "") + "</p>" : "") +
 
     '<div class="fila g8">' + contacto.join("") +
       (YO && YO.rol === "usuario"
@@ -1259,6 +1262,8 @@ function vistaRegistro(planId) {
         '<label class="campo">Ciudad<select id="g_ciudad"><option value="">Elige…</option>' +
           ENTIDADES_CIUDAD.map((x) => '<option value="' + esc(x) + '">' + esc(x) + "</option>").join("") +
         "</select></label>" +
+        '<label class="campo">Alcaldía o municipio <span class="apagado">(opcional)</span>' +
+          '<input id="g_alcaldia" placeholder="Xochimilco, San Pedro Garza García…"></label>' +
       "</div>" +
       '<label class="campo">Dirección <span class="apagado">(opcional)</span>' +
         '<input id="g_direccion" placeholder="Calle, número, colonia"></label>' +
@@ -1370,7 +1375,7 @@ async function enviarRegistro(planId) {
     negocio: {
       nombre: val("g_negocio"), categoria: val("g_categoria"), categoria2: val("g_categoria2"),
       sub: subSeleccionadas.slice(),
-      ciudad: val("g_ciudad"), direccion: val("g_direccion"), descripcion: val("g_descripcion"),
+      ciudad: val("g_ciudad"), alcaldiaMunicipio: val("g_alcaldia"), direccion: val("g_direccion"), descripcion: val("g_descripcion"),
       redes: { whatsapp: val("g_whatsapp"), instagram: val("g_instagram"), facebook: val("g_facebook"), tiktok: val("g_tiktok") },
     },
   };
@@ -1681,6 +1686,8 @@ async function vistaEditar(id) {
         '<label class="campo">Ciudad<select id="f_ciudad"><option value="">Elige…</option>' +
           ENTIDADES_CIUDAD.map((x) => '<option value="' + esc(x) + '"' +
             (n.ciudad === x ? " selected" : "") + ">" + esc(x) + "</option>").join("") + "</select></label>" +
+        '<label class="campo">Alcaldía o municipio <span class="apagado">(opcional)</span>' +
+          '<input id="f_alcaldia" placeholder="Xochimilco, San Pedro Garza García…" value="' + esc(n.alcaldiaMunicipio || "") + '"></label>' +
       "</div>" +
       '<label class="campo">Dirección<input id="f_direccion" value="' + esc(n.direccion || "") + '"></label>' +
       '<label class="campo">Teléfono<input id="f_telefono" value="' + esc(n.telefono || "") + '"></label>' +
@@ -1907,7 +1914,7 @@ async function guardarNegocio(id) {
   if (!nombre) return avisar("El negocio necesita un nombre.");
   try {
     await api.patch("/api/negocios/" + id, {
-      nombre, ciudad: val("f_ciudad"), direccion: val("f_direccion"), telefono: val("f_telefono"),
+      nombre, ciudad: val("f_ciudad"), alcaldiaMunicipio: val("f_alcaldia"), direccion: val("f_direccion"), telefono: val("f_telefono"),
       descripcion: val("f_descripcion"), sobreNegocio: val("f_sobre"),
       redes: { whatsapp: val("f_whatsapp"), instagram: val("f_instagram"), facebook: val("f_facebook"), tiktok: val("f_tiktok") },
     });
@@ -2133,7 +2140,7 @@ async function adminNegocios() {
   const filas = negocios.map((n) => {
     return '<tr><td><div class="fila g8">' + logoHtml(n) + "<div><strong>" + esc(n.nombre) +
         '</strong><br><span class="diminuto apagado">' + esc(n.propietariaNombre || "—") +
-        " · " + esc(n.ciudad || "sin ciudad") + '</span><br><span class="diminuto apagado">' +
+        " · " + esc(ciudadCompleta(n) || "sin ciudad") + '</span><br><span class="diminuto apagado">' +
         cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) +
         (n.categoria2 ? " · " + cat(n.categoria2).icono + " " + esc(cat(n.categoria2).nombre) : "") +
         "</span></div></div></td>" +

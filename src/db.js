@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   descripcion     TEXT NOT NULL DEFAULT '',
   sobre_negocio   TEXT NOT NULL DEFAULT '',
   ciudad          TEXT NOT NULL DEFAULT '',
+  alcaldia_municipio TEXT NOT NULL DEFAULT '',
   direccion       TEXT NOT NULL DEFAULT '',
   telefono        TEXT NOT NULL DEFAULT '',
   logo            TEXT,
@@ -335,6 +336,11 @@ if (!columnasNegocios.includes('banner')) {
 // misma imagen que ya se ve en su perfil.
 if (!columnasNegocios.includes('foto_destacada')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN foto_destacada TEXT`);
+}
+// Más fino que la ciudad: la alcaldía (en la Ciudad de México) o el
+// municipio (en el resto del país) donde de verdad está el negocio.
+if (!columnasNegocios.includes('alcaldia_municipio')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN alcaldia_municipio TEXT NOT NULL DEFAULT ''`);
 }
 // Texto adicional para negocios verificados: "Sobre mi negocio".
 if (!columnasNegocios.includes('sobre_negocio')) {

@@ -58,6 +58,7 @@ export async function registrarNegocio(ctx) {
   const sub = normalizarSub(categoria, categoria2, negocio.sub);
   const descripcion = exigirTexto(negocio.descripcion, 'descripción', { min: 20, max: 6000 });
   const ciudad = String(negocio.ciudad || '').slice(0, 80);
+  const alcaldiaMunicipio = String(negocio.alcaldiaMunicipio || '').slice(0, 100);
   const direccion = String(negocio.direccion || '').slice(0, 200);
   const redes = normalizarRedes(negocio.redes);
   const mensaje = String(ctx.cuerpo.mensaje || '').slice(0, 2000);
@@ -68,15 +69,15 @@ export async function registrarNegocio(ctx) {
   const slug = generarSlug(nombreNegocio);
   const rNegocio = ejecutar(
     `INSERT INTO negocios (
-       propietaria_id, nombre, slug, categoria, categoria2, sub, descripcion, ciudad, direccion,
+       propietaria_id, nombre, slug, categoria, categoria2, sub, descripcion, ciudad, alcaldia_municipio, direccion,
        telefono, redes, plan, plan_vence, pago_confirmado, estado
      ) VALUES (
-       $duena, $nombre, $slug, $categoria, $categoria2, $sub, $descripcion, $ciudad, $direccion,
+       $duena, $nombre, $slug, $categoria, $categoria2, $sub, $descripcion, $ciudad, $alcaldiaMunicipio, $direccion,
        $telefono, $redes, $plan, $vence, $pago, 'pendiente'
      )`,
     {
       duena: usuarioId, nombre: nombreNegocio, slug, categoria, categoria2: categoria2 || null, sub: JSON.stringify(sub),
-      descripcion, ciudad, direccion, telefono, redes: JSON.stringify(redes), plan,
+      descripcion, ciudad, alcaldiaMunicipio, direccion, telefono, redes: JSON.stringify(redes), plan,
       vence: esPago ? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) : null,
       pago: esPago ? 0 : 1,
     }
