@@ -1,9 +1,10 @@
 import { ejecutar, uno, todos, anotar } from '../db.js';
 import { ErrorHttp, exigirSesion, exigirRol } from '../auth.js';
-import { CATEGORIAS } from '../config.js';
+import { CATEGORIAS, ESTADO_VISIBLE } from '../config.js';
 import {
   buscarNegocios, negociosEnMapa, obtenerNegocioPorId, obtenerNegocioPorSlug,
   vistaPublica, vistaPanel, exigirPropiedad, esVisiblePara, texto, normalizarCategoria2, normalizarSub, normalizarRedes,
+  TIPOS_INTERACCION,
 } from '../negocios.js';
 import { guardarImagenBase64, borrarImagen } from '../subidas.js';
 
@@ -122,6 +123,25 @@ export function quitarLogo(ctx) {
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
 
+/* ---------------------------------------------------------------- banner -- */
+
+export function subirBanner(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const archivo = guardarImagenBase64(ctx.cuerpo.imagen);
+  borrarImagen(negocio.banner);
+  ejecutar(`UPDATE negocios SET banner = $banner WHERE id = $id`, { banner: archivo, id: negocio.id });
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
+export function quitarBanner(ctx) {
+  const usuario = exigirSesion(ctx);
+  const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  borrarImagen(negocio.banner);
+  ejecutar(`UPDATE negocios SET banner = NULL WHERE id = $id`, { id: negocio.id });
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
 /* ----------------------------------------------------------------- fotos -- */
 
 export function subirFoto(ctx) {
@@ -217,4 +237,18 @@ export function alternarPublicacionDestacada(ctx) {
     { id: Number(ctx.params.publicacionId), negocioId: negocio.id }
   );
   return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
+/* -------------------------------------------------------------- clics -- */
+// Público, sin sesión: cualquiera que toque el botón de WhatsApp, redes o
+// teléfono en un perfil publicado deja un registro, para que la dueña vea
+// cuánto la están contactando.
+
+export function registrarInteraccion(ctx) {
+  const negocio = obtenerNegocioPorId(ctx.params.id);
+  if (!negocio || negocio.estado !== ESTADO_VISIBLE) throw new ErrorHttp(404, 'No encontramos ese negocio.');
+  const tipo = String(ctx.cuerpo.tipo || '');
+  if (!TIPOS_INTERACCION.includes(tipo)) throw new ErrorHttp(400, 'Ese tipo de interacción no existe.');
+  ejecutar(`INSERT INTO interacciones (negocio_id, tipo) VALUES ($id, $tipo)`, { id: negocio.id, tipo });
+  return { ok: true };
 }

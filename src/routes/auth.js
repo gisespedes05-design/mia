@@ -6,15 +6,17 @@ import { exigirTexto, exigirCorreo, generarSlug, normalizarCategoria2, normaliza
 import { PLANES, ROLES } from '../config.js';
 import { enviarCorreo, correoBienvenidaUsuaria, correoBienvenidaNegocio } from '../correo.js';
 
-function crearCuenta({ nombre, correo, clave, telefono = '', rol }) {
+function crearCuenta({ nombre, correo, clave, telefono = '', rol, terminos, noticias }) {
   const yaExiste = uno(`SELECT id FROM usuarios WHERE correo = $correo`, { correo });
   if (yaExiste) throw new ErrorHttp(409, 'Ya existe una cuenta con ese correo. Entra con tu contraseña.');
   if (String(clave).length < 8) throw new ErrorHttp(400, 'La contraseña necesita al menos 8 caracteres.');
+  if (!terminos) throw new ErrorHttp(400, 'Debes aceptar el aviso de privacidad y seguridad para continuar.');
 
   const hash = cifrarContrasena(clave);
   const r = ejecutar(
-    `INSERT INTO usuarios (nombre, correo, hash, rol, telefono) VALUES ($nombre, $correo, $hash, $rol, $telefono)`,
-    { nombre, correo, hash, rol, telefono }
+    `INSERT INTO usuarios (nombre, correo, hash, rol, telefono, acepta_noticias, terminos_aceptados_en)
+     VALUES ($nombre, $correo, $hash, $rol, $telefono, $noticias, datetime('now'))`,
+    { nombre, correo, hash, rol, telefono, noticias: noticias ? 1 : 0 }
   );
   return Number(r.lastInsertRowid);
 }
@@ -24,8 +26,10 @@ export async function registrarClienta(ctx) {
   const nombre = exigirTexto(ctx.cuerpo.nombre, 'nombre', { min: 2, max: 120 });
   const correo = exigirCorreo(ctx.cuerpo.correo);
   const clave = String(ctx.cuerpo.clave || '');
+  const terminos = ctx.cuerpo.terminos === true;
+  const noticias = ctx.cuerpo.noticias !== false;
 
-  const id = crearCuenta({ nombre, correo, clave, rol: ROLES.USUARIO });
+  const id = crearCuenta({ nombre, correo, clave, rol: ROLES.USUARIO, terminos, noticias });
   ctx.cookies.push(cookieDeSesion(id));
   await enviarCorreo({ para: correo, ...correoBienvenidaUsuaria(nombre) });
   return { id, nombre, correo, rol: ROLES.USUARIO };
@@ -45,6 +49,8 @@ export async function registrarNegocio(ctx) {
   const correo = exigirCorreo(ctx.cuerpo.correo);
   const clave = String(ctx.cuerpo.clave || '');
   const telefono = String(ctx.cuerpo.telefono || '').slice(0, 20);
+  const terminos = ctx.cuerpo.terminos === true;
+  const noticias = ctx.cuerpo.noticias !== false;
 
   const nombreNegocio = exigirTexto(negocio.nombre, 'nombre del negocio', { min: 2, max: 120 });
   const categoria = exigirTexto(negocio.categoria, 'categoría', { min: 1, max: 40 });
@@ -56,7 +62,7 @@ export async function registrarNegocio(ctx) {
   const redes = normalizarRedes(negocio.redes);
   const mensaje = String(ctx.cuerpo.mensaje || '').slice(0, 2000);
 
-  const usuarioId = crearCuenta({ nombre, correo, clave, telefono, rol: ROLES.NEGOCIO });
+  const usuarioId = crearCuenta({ nombre, correo, clave, telefono, rol: ROLES.NEGOCIO, terminos, noticias });
 
   const esPago = PLANES[plan].precioMensual > 0;
   const slug = generarSlug(nombreNegocio);

@@ -109,6 +109,24 @@ Las solicitudes se ven en **Administración › Solicitudes**: negocio, plan,
 categoría, fecha y estado, con lo que la dueña haya escrito para Crece con MÍA.
 Todo se revisa y se marca como atendido dentro de la misma página.
 
+Al registrarse (clienta o negocio), es obligatorio aceptar el
+[aviso de privacidad y seguridad](#/privacidad); aceptar noticias por correo
+(negocios verificados, artículos nuevos) es opcional y se guarda por cuenta.
+Quien diga que no, solo recibe su bienvenida y, si es negocio, los avisos de
+mensajes nuevos — nunca los boletines.
+
+## Foto de portada, botón "¿Cómo llegar?" y clics en tus botones
+
+Cada negocio puede subir, además de su logo, una **foto de portada** (como la
+de Facebook) que se muestra arriba de su perfil y en sus tarjetas. Los planes
+Suscripción en adelante, si capturan su dirección, muestran un botón
+**"¿Cómo llegar?"** que abre Google Maps con la ruta desde donde esté la
+clienta. Cada clic en Llamar, WhatsApp, Instagram, Facebook o TikTok queda
+contado — la dueña ve los totales en el editor de su perfil.
+
+El plan Gratuito ahora incluye **hasta 3 publicaciones** (antes 1); borrar una
+libera el cupo de inmediato.
+
 ## Cobros automáticos con Stripe
 
 Suscripción y Membresía se cobran solas con Stripe: al registrarse (o al

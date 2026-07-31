@@ -185,8 +185,12 @@ fotosPara(idUnas, 'Uñas de Azúcar', 3);
 crearProducto(idUnas, 'Acrílico con diseño', 'Dos horas.', 550, false, 0);
 crearPublicacion(idUnas, 'Nuevos horarios de sábado',
   'A partir de este mes abrimos sábados de 9 a 3 con cita previa.', 6, false);
-crearPublicacion(idUnas, 'Promoción de temporada',
-  'Con el plan Gratuito solo se muestra la publicación más reciente. Esta quedó oculta, pero no se borró: al subir de plan vuelve a aparecer.', 30, false);
+crearPublicacion(idUnas, 'Diseños de temporada',
+  'Ya tenemos catálogo de diseños navideños para reservar tu cita de diciembre.', 12, false);
+crearPublicacion(idUnas, 'Nuevos colores de esmalte',
+  'Llegaron seis colores nuevos, todos de larga duración.', 20, false);
+crearPublicacion(idUnas, 'Promoción de apertura',
+  'Con el plan Gratuito se muestran las 3 publicaciones más recientes. Esta ya no entra, pero no se borró: al subir de plan o borrar otra vuelve a aparecer.', 30, false);
 
 const idCasa = crearNegocio({
   duena: idPaulina, nombre: 'Casa Cempasúchil', categoria: 'artesania',

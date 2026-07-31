@@ -40,14 +40,14 @@ export const PLANES = {
     precioMensual: 0,
     peso: 0,
     resumen: 'Para que tu negocio aparezca en el directorio desde hoy.',
-    limites: { subcategorias: 7, publicaciones: 1, fotos: 0, caracteresDescripcion: 400 },
+    limites: { subcategorias: 7, publicaciones: 3, fotos: 0, caracteresDescripcion: 400 },
     permisos: {
       logo: true, contacto: true, redes: false, mapa: false, productosDestacados: false,
       verificado: false, prioridad: false, publicacionesDestacadas: false,
       estadisticas: false, campanas: false, responder: false, acompanamiento: false,
     },
     incluye: [
-      'Perfil básico', 'Logo', 'Una publicación', 'Datos de contacto',
+      'Perfil básico', 'Logo', 'Hasta tres publicaciones', 'Datos de contacto',
       'Hasta dos categorías', 'Hasta siete subcategorías',
     ],
     excluye: ['No aparece en el mapa'],

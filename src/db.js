@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   rol           TEXT NOT NULL DEFAULT 'usuario',
   estado        TEXT NOT NULL DEFAULT 'activo',
   telefono      TEXT NOT NULL DEFAULT '',
+  acepta_noticias        INTEGER NOT NULL DEFAULT 1,
+  terminos_aceptados_en  TEXT,
   creado_en     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -42,6 +44,7 @@ CREATE TABLE IF NOT EXISTS negocios (
   direccion       TEXT NOT NULL DEFAULT '',
   telefono        TEXT NOT NULL DEFAULT '',
   logo            TEXT,
+  banner          TEXT,
   redes           TEXT NOT NULL DEFAULT '{"whatsapp":"","instagram":"","facebook":"","tiktok":""}',
   plan            TEXT NOT NULL DEFAULT 'gratuito',
   plan_vence      TEXT,
@@ -203,6 +206,17 @@ CREATE TABLE IF NOT EXISTS mensajes (
   creado_en        TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Clics en los botones de contacto del perfil público (WhatsApp, redes,
+-- teléfono). Guardado como eventos con fecha, no como contadores planos,
+-- para poder armar más adelante el reporte mensual de negocios verificados.
+CREATE TABLE IF NOT EXISTS interacciones (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  negocio_id  INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  tipo        TEXT NOT NULL CHECK (tipo IN ('whatsapp', 'instagram', 'facebook', 'tiktok', 'telefono')),
+  creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_interacciones_neg  ON interacciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_negocios_estado     ON negocios(estado);
 CREATE INDEX IF NOT EXISTS idx_negocios_categoria  ON negocios(categoria);
 CREATE INDEX IF NOT EXISTS idx_negocios_duena      ON negocios(propietaria_id);
@@ -242,6 +256,23 @@ if (!columnasNegocios.includes('categoria2')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN categoria2 TEXT`);
 }
 db.exec(`CREATE INDEX IF NOT EXISTS idx_negocios_categoria2 ON negocios(categoria2)`);
+
+// Consentimiento de privacidad (obligatorio al registrarse) y de noticias
+// por correo (opcional). Las cuentas creadas antes de esto quedan con
+// terminos_aceptados_en en NULL — no se les exige retroactivamente.
+const columnasUsuarios = todos(`SELECT name FROM pragma_table_info('usuarios')`).map((c) => c.name);
+if (!columnasUsuarios.includes('acepta_noticias')) {
+  db.exec(`ALTER TABLE usuarios ADD COLUMN acepta_noticias INTEGER NOT NULL DEFAULT 1`);
+}
+if (!columnasUsuarios.includes('terminos_aceptados_en')) {
+  db.exec(`ALTER TABLE usuarios ADD COLUMN terminos_aceptados_en TEXT`);
+}
+// Foto de banner/portada del perfil, aparte del logo (foto de perfil) y de
+// la galería. Se llama "banner" para no chocar con el campo "portada" que ya
+// usa la vista pública (la primera foto de la galería, como miniatura de tarjeta).
+if (!columnasNegocios.includes('banner')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN banner TEXT`);
+}
 
 /** Consulta que devuelve varias filas. */
 export function todos(sql, params = {}) {

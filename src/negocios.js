@@ -153,6 +153,19 @@ export function resenasDe(negocioId, { incluirOcultas = false } = {}) {
   );
 }
 
+export const TIPOS_INTERACCION = ['whatsapp', 'instagram', 'facebook', 'tiktok', 'telefono'];
+
+/** Cuántas veces le tocaron cada botón de contacto, para el panel de la dueña. */
+export function interaccionesDe(negocioId) {
+  const filas = todos(
+    `SELECT tipo, COUNT(*) AS total FROM interacciones WHERE negocio_id = $id GROUP BY tipo`,
+    { id: negocioId }
+  );
+  const conteos = Object.fromEntries(TIPOS_INTERACCION.map((t) => [t, 0]));
+  for (const f of filas) conteos[f.tipo] = f.total;
+  return conteos;
+}
+
 /* ----------------------- aplicación de límites del plan -------------------- */
 // Sólo tres cosas se recortan por plan: fotos, publicaciones y el largo de la
 // descripción. Los productos siempre se muestran completos: lo único que
@@ -190,6 +203,7 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
     ciudad: negocio.ciudad,
     telefono: negocio.telefono,
     logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
+    banner: negocio.banner ? `/subidas/${negocio.banner}` : null,
     redes,
     fotos,
     portada: fotos[0] || null,
@@ -210,6 +224,7 @@ export function vistaPublica(negocio, { conDetalle = false } = {}) {
   return {
     ...base,
     direccion: negocio.direccion,
+    comoLlegar: Boolean(permisos.mapa && negocio.direccion),
     vistas: negocio.vistas,
     productos: productosDe(negocio.id).map((p) => ({ ...p, destacado: Boolean(p.destacado) && permisos.productosDestacados })),
     publicaciones: pubs.slice(0, tope).map((p) => ({ ...p, destacada: Boolean(p.destacada) && permisos.publicacionesDestacadas })),
@@ -251,7 +266,7 @@ export function vistaPanel(negocio) {
   }
   if (limites.publicaciones !== Infinity && publicaciones.length > limites.publicaciones) {
     bloqueos.push(
-      `${publicaciones.length - limites.publicaciones} de tus ${publicaciones.length} publicaciones no se muestran. El plan Gratuito incluye una.`
+      `${publicaciones.length - limites.publicaciones} de tus ${publicaciones.length} publicaciones no se muestran. El plan Gratuito incluye ${limites.publicaciones}.`
     );
   }
   if (!permisos.redes && (redes.instagram || redes.facebook || redes.tiktok || redes.whatsapp)) {
@@ -277,6 +292,7 @@ export function vistaPanel(negocio) {
     direccion: negocio.direccion,
     telefono: negocio.telefono,
     logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
+    banner: negocio.banner ? `/subidas/${negocio.banner}` : null,
     redes,
     estado: negocio.estado,
     notaRevision: negocio.nota_revision,
@@ -306,6 +322,7 @@ export function vistaPanel(negocio) {
       : null,
     propietariaId: negocio.propietaria_id,
     enlacePagoCrece: negocio.enlace_pago_crece || null,
+    interacciones: interaccionesDe(negocio.id),
   };
 }
 

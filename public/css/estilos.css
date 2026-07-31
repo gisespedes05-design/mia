@@ -142,6 +142,13 @@ button.chip{cursor:pointer}
 .logo-negocio.grande{width:82px;height:82px}
 .logo-vacio{display:grid;place-items:center;font-weight:800;font-size:1.5rem;color:#fff}
 
+.banner-vista{aspect-ratio:3/1;border-radius:var(--r);overflow:hidden;background:var(--fondo2);
+  border:1px solid var(--linea)}
+.banner-vista img{width:100%;height:100%;object-fit:cover;display:block}
+.banner-perfil{aspect-ratio:3/1;max-height:260px;border-radius:var(--r);overflow:hidden;
+  background:var(--fondo2)}
+.banner-perfil img{width:100%;height:100%;object-fit:cover;display:block}
+
 .rejilla{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(256px,1fr))}
 .rejilla.dos{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .rejilla.planes{grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px}

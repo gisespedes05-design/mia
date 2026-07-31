@@ -140,6 +140,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = (id) => document.getElementById(id);
 const val = (id) => ($(id) ? $(id).value.trim() : "");
+const marcado = (id) => Boolean($(id) && $(id).checked);
 
 function avisar(msg) {
   const t = $("toast"); t.textContent = msg; t.classList.add("ver");
@@ -185,8 +186,9 @@ function logoHtml(n, grande) {
     t[0] + "," + t[1] + ')">' + esc((n.nombre || "M").trim()[0] || "M") + "</div>";
 }
 
-/** El primer plano de un negocio: la portada pública, o la primera foto capturada. */
+/** El primer plano de un negocio: su foto de portada elegida, o si no hay, la primera foto capturada. */
 function primeraFotoUrl(n) {
+  if (n.banner) return n.banner;
   if (n.portada) return n.portada;
   if (Array.isArray(n.fotos) && n.fotos.length) {
     const f = n.fotos[0];
@@ -285,6 +287,19 @@ const vacio = (msg) => '<div class="tarjeta p24 pila g8"><h3>Nada por aquí toda
 
 const escalon = (n, t, d) => '<div class="escalon"><span class="num">' + n + "</span>" +
   "<div><strong>" + esc(t) + '</strong><p class="pequeno apagado">' + esc(d) + "</p></div></div>";
+
+/** Casillas de consentimiento: obligatoria la de privacidad, opcional la de noticias. */
+const consentimientosHtml = (prefijo) =>
+  '<label class="fila g8" style="align-items:flex-start">' +
+    '<input type="checkbox" id="' + prefijo + '_terminos" style="margin-top:3px">' +
+    '<span class="pequeno">Acepto el <a href="#/privacidad" target="_blank" ' +
+    'style="color:var(--acento);font-weight:700">aviso de privacidad y seguridad</a> de MÍA.</span>' +
+  "</label>" +
+  '<label class="fila g8" style="align-items:flex-start">' +
+    '<input type="checkbox" id="' + prefijo + '_noticias" checked style="margin-top:3px">' +
+    '<span class="pequeno apagado">Quiero recibir noticias de MÍA en mi correo ' +
+    "(negocios verificados, artículos nuevos).</span>" +
+  "</label>";
 
 window.addEventListener("hashchange", pintar);
 
@@ -434,6 +449,13 @@ async function vistaInicio() {
       '<a class="btn linea" href="#/planes">Comparar planes</a></div>' +
     "</div>" +
   "</div>");
+}
+
+/** No espera respuesta ni bloquea la navegación del enlace que la disparó. */
+function registrarClic(id, tipo) {
+  fetch("/api/negocios/" + id + "/interaccion", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo }),
+  }).catch(() => {});
 }
 
 function buscarDesdeInicio() {
@@ -856,15 +878,18 @@ async function vistaNegocio(slug) {
   const miReseña = YO && YO.rol === "usuario" ? n.resenas.find((r) => r.usuario_id === YO.id) : null;
 
   const contacto = [];
-  if (n.telefono) contacto.push('<a class="btn linea" href="tel:' +
+  if (n.telefono) contacto.push('<a class="btn linea" onclick="registrarClic(' + n.id + ',\'telefono\')" href="tel:' +
     esc(n.telefono.replace(/\s/g, "")) + '">Llamar ' + esc(n.telefono) + "</a>");
-  if (n.redes.whatsapp) contacto.push('<a class="btn" target="_blank" rel="noopener" href="https://wa.me/52' +
-    esc(String(n.redes.whatsapp).replace(/\D/g, "")) + '">WhatsApp</a>');
-
-  const redes = [];
-  if (n.redes.instagram) redes.push("Instagram " + esc(n.redes.instagram));
-  if (n.redes.facebook) redes.push("Facebook " + esc(n.redes.facebook));
-  if (n.redes.tiktok) redes.push("TikTok " + esc(n.redes.tiktok));
+  if (n.redes.whatsapp) contacto.push('<a class="btn" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
+    ',\'whatsapp\')" href="https://wa.me/52' + esc(String(n.redes.whatsapp).replace(/\D/g, "")) + '">WhatsApp</a>');
+  if (n.comoLlegar) contacto.push('<a class="btn linea" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' +
+    encodeURIComponent(n.direccion + (n.ciudad ? ", " + n.ciudad : "")) + '">¿Cómo llegar?</a>');
+  if (n.redes.instagram) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
+    ',\'instagram\')" href="https://instagram.com/' + esc(String(n.redes.instagram).replace(/^@/, "")) + '">Instagram</a>');
+  if (n.redes.facebook) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
+    ',\'facebook\')" href="https://facebook.com/' + esc(String(n.redes.facebook).replace(/^@/, "")) + '">Facebook</a>');
+  if (n.redes.tiktok) contacto.push('<a class="btn linea" target="_blank" rel="noopener" onclick="registrarClic(' + n.id +
+    ',\'tiktok\')" href="https://tiktok.com/@' + esc(String(n.redes.tiktok).replace(/^@/, "")) + '">TikTok</a>');
 
   const destacados = n.productos.filter((x) => x.destacado);
   const normales = n.productos.filter((x) => !x.destacado);
@@ -901,7 +926,6 @@ async function vistaNegocio(slug) {
         ? '<button class="btn ' + (esFav ? "" : "linea") + '" onclick="alternarFavorito(' + n.id + ',' + esFav + ')">' +
           (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>" : "") +
     "</div>" +
-    (redes.length ? '<p class="pequeno apagado">' + redes.join(" · ") + "</p>" : "") +
 
     (YO && YO.rol === "usuario" ? '<div class="tarjeta p20 pila g12"><p class="eyebrow">Escríbele a este negocio</p>' +
       '<textarea id="msg_cuerpo" style="min-height:80px" placeholder="Escribe tu mensaje…"></textarea>' +
@@ -1169,6 +1193,7 @@ function vistaRegistro(planId) {
         + "</p></div>" : "") +
 
     '<div class="pila g12">' +
+      consentimientosHtml("g") +
       '<button class="btn ancho" onclick="enviarRegistro(\'' + planId + '\')">' +
         (plan.cotizado ? "Enviar mi solicitud"
           : PLANES_AUTOMATIZADOS.includes(planId) ? "Continuar y pagar con Stripe" : "Enviar mi registro") +
@@ -1213,10 +1238,12 @@ async function enviarRegistro(planId) {
   const decir = (m) => { if ($("g_error")) $("g_error").textContent = m; avisar(m); };
   if (!val("g_categoria")) return decir("Elige la categoría principal de tu negocio.");
   if (!subSeleccionadas.length) return decir("Elige al menos una subcategoría.");
+  if (!marcado("g_terminos")) return decir("Debes aceptar el aviso de privacidad y seguridad para continuar.");
 
   const cuerpo = {
     nombre: val("g_nombre"), correo: val("g_correo"), clave: val("g_clave"), telefono: val("g_telefono"),
     plan: planId, mensaje: val("g_mensaje"),
+    terminos: marcado("g_terminos"), noticias: marcado("g_noticias"),
     negocio: {
       nombre: val("g_negocio"), categoria: val("g_categoria"), categoria2: val("g_categoria2"),
       sub: subSeleccionadas.slice(),
@@ -1279,6 +1306,7 @@ function vistaEntrar(tipo) {
       '<label class="campo">Tu nombre<input id="r_nombre"></label>' +
       '<label class="campo">Correo electrónico<input id="r_correo" type="email"></label>' +
       '<label class="campo">Contraseña<input id="r_clave" type="password" placeholder="Mínimo 8 caracteres"></label>' +
+      consentimientosHtml("r") +
       '<button class="btn linea ancho" onclick="hacerRegistroCliente()">Crear cuenta de clienta</button>' +
       '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p></div>') +
     "</div>";
@@ -1291,8 +1319,12 @@ async function hacerEntrar() {
 
 async function hacerRegistroCliente() {
   const decir = (m) => { if ($("r_error")) $("r_error").textContent = m; };
+  if (!marcado("r_terminos")) return decir("Debes aceptar el aviso de privacidad y seguridad para continuar.");
   try {
-    await api.post("/api/auth/registro-clienta", { nombre: val("r_nombre"), correo: val("r_correo"), clave: val("r_clave") });
+    await api.post("/api/auth/registro-clienta", {
+      nombre: val("r_nombre"), correo: val("r_correo"), clave: val("r_clave"),
+      terminos: marcado("r_terminos"), noticias: marcado("r_noticias"),
+    });
     await refrescarSesion();
     location.hash = "#/inicio";
     await pintar();
@@ -1480,6 +1512,16 @@ async function vistaEditar(id) {
           ')">Quitar logo</button>' : "") +
         '<p class="diminuto apagado">Incluido en todos los planes.</p></div></div></div>' +
 
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Foto de portada</p>' +
+      (n.banner ? '<div class="banner-vista"><img src="' + esc(n.banner) + '" alt="Portada de ' + esc(n.nombre) + '"></div>' : "") +
+      '<div class="fila g12">' +
+        '<label class="btn linea chico">Subir foto de portada' +
+        '<input type="file" accept="image/*" style="display:none" onchange="subirBanner(' + n.id + ',this)"></label>' +
+        (n.banner ? '<button class="btn fantasma chico" onclick="quitarBanner(' + n.id +
+          ')">Quitar portada</button>' : "") +
+      "</div>" +
+      '<p class="diminuto apagado">Se muestra en la parte de arriba de tu perfil, como la portada de Facebook. Incluido en todos los planes.</p></div>' +
+
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Datos del negocio</p>' +
       '<div class="rejilla-campos">' +
         '<label class="campo">Nombre<input id="f_nombre" value="' + esc(n.nombre) + '"></label>' +
@@ -1523,6 +1565,16 @@ async function vistaEditar(id) {
       "</div>" +
       (P.redes ? "" : cerrado("Las redes sociales y el WhatsApp empiezan en el plan Suscripción. Lo que ya capturaste no se borra.")) +
     "</div>" +
+
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Clics en tus botones de contacto</p>' +
+      '<p class="pequeno apagado">Cuántas veces tocaron cada botón en tu perfil público.</p>' +
+      '<div class="metricas">' +
+        metrica(n.interacciones.telefono, "Llamar") +
+        metrica(n.interacciones.whatsapp, "WhatsApp", "jade") +
+        metrica(n.interacciones.instagram, "Instagram", "cobalto") +
+        metrica(n.interacciones.facebook, "Facebook", "cobalto") +
+        metrica(n.interacciones.tiktok, "TikTok", "sol") +
+      "</div></div>" +
 
     '<div class="tarjeta p20 pila g16"><p class="eyebrow">Fotografías</p>' +
       (L.fotos === 0
@@ -1676,6 +1728,16 @@ function subirLogo(id, input) {
 }
 async function quitarLogo(id) {
   try { await api.del("/api/negocios/" + id + "/logo"); await pintar(); avisar("Quitamos el logo."); }
+  catch (err) { avisarError(err); }
+}
+function subirBanner(id, input) {
+  procesarImagen(input, 1200, 0.75, async (dataUrl) => {
+    try { await api.post("/api/negocios/" + id + "/banner", { imagen: dataUrl }); await pintar(); avisar("Actualizamos tu foto de portada."); }
+    catch (err) { avisarError(err); }
+  });
+}
+async function quitarBanner(id) {
+  try { await api.del("/api/negocios/" + id + "/banner"); await pintar(); avisar("Quitamos la foto de portada."); }
   catch (err) { avisarError(err); }
 }
 async function quitarFoto(id, fotoId) {

@@ -65,8 +65,13 @@ const botonSitio = (ruta, texto) => !SITIO_URL ? '' : `
 // nuevo. Nunca truenan la acción de la administradora que los dispara — por
 // eso nadie los espera (await) donde se llaman.
 
+// Solo a quien aceptó recibir noticias por correo al registrarse. La
+// bienvenida y los avisos de mensajes/cuenta no pasan por aquí — esos son
+// transaccionales y le llegan a todas sin importar esta preferencia.
 function usuariasActivas() {
-  return todos(`SELECT correo, nombre FROM usuarios WHERE rol = 'usuario' AND estado = 'activo'`);
+  return todos(
+    `SELECT correo, nombre FROM usuarios WHERE rol = 'usuario' AND estado = 'activo' AND acepta_noticias = 1`
+  );
 }
 
 function avisarATodas(fabricarCorreo) {
