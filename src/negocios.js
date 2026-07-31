@@ -151,17 +151,19 @@ export function fotosDe(negocioId) {
 
 export function productosDe(negocioId) {
   return todos(
-    `SELECT id, nombre, descripcion, precio, destacado, orden FROM productos WHERE negocio_id = $id ORDER BY orden, id`,
+    `SELECT id, nombre, descripcion, precio, imagen, destacado, orden FROM productos WHERE negocio_id = $id ORDER BY orden, id`,
     { id: negocioId }
-  );
+  ).map((p) => ({ ...p, imagen: p.imagen ? `/subidas/${p.imagen}` : null }));
 }
 
 export function publicacionesDe(negocioId) {
   return todos(
-    `SELECT id, titulo, texto, destacada, creado_en FROM publicaciones WHERE negocio_id = $id
-      ORDER BY destacada DESC, creado_en DESC`,
+    `SELECT p.id, p.titulo, p.texto, p.imagen, p.vistas, p.destacada, p.creado_en,
+            (SELECT COUNT(*) FROM publicacion_comentarios c WHERE c.publicacion_id = p.id) AS total_comentarios
+       FROM publicaciones p WHERE p.negocio_id = $id
+      ORDER BY p.destacada DESC, p.creado_en DESC`,
     { id: negocioId }
-  );
+  ).map((p) => ({ ...p, imagen: p.imagen ? `/subidas/${p.imagen}` : null }));
 }
 
 export function resenasDe(negocioId, { incluirOcultas = false } = {}) {

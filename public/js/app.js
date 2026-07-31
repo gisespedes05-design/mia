@@ -204,6 +204,17 @@ function pintarAlcaldias(prefijo) {
 /* ================================================================= UTILIDAD */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/** El servidor manda Infinity como null (JSON no la soporta): se restaura
+ * aquí para poder seguir comparando "=== Infinity" con los límites del
+ * panel de un negocio, igual que ya se hace con el catálogo de planes. */
+function conLimitesRestaurados(n) {
+  if (n && n.limites) for (const k of Object.keys(n.limites)) if (n.limites[k] === null) n.limites[k] = Infinity;
+  return n;
+}
+async function obtenerPanel(id) {
+  return conLimitesRestaurados(await api.get("/api/negocios/" + id + "/panel"));
+}
 const $ = (id) => document.getElementById(id);
 const val = (id) => ($(id) ? $(id).value.trim() : "");
 const marcado = (id) => Boolean($(id) && $(id).checked);
@@ -348,10 +359,12 @@ function barraTabs() {
   // impulsar el suyo. Su barra es otra por completo.
   if (YO && YO.rol === "negocio") {
     const base = MI_NEGOCIO_ID ? "#/editar/" + MI_NEGOCIO_ID : "#/panel";
+    const basePub = MI_NEGOCIO_ID ? "#/publicaciones/" + MI_NEGOCIO_ID : "#/panel";
+    const baseProd = MI_NEGOCIO_ID ? "#/productos/" + MI_NEGOCIO_ID : "#/panel";
     $("tabs").innerHTML =
       tab("#/panel", ICONO_NEGOCIO, "Perfil", v === "panel" || v === "editar") +
-      tab(base, ICONO_PUBLICACION, "Publicación", false) +
-      tab(base, ICONO_PRODUCTO, "Producto", false) +
+      tab(basePub, ICONO_PUBLICACION, "Publicación", v === "publicaciones" || v === "publicacion") +
+      tab(baseProd, ICONO_PRODUCTO, "Producto", v === "productos") +
       tab(MI_NEGOCIO_ID ? "#/negocio-mensajes/" + MI_NEGOCIO_ID : "#/panel", ICONO_MENSAJE, "Mensajes",
         v === "negocio-mensajes", true);
     actualizarBadgeNotificaciones();
@@ -407,6 +420,9 @@ async function pintar() {
       ? await vistaMensajesNegocio(arg) : sinAcceso();
     else if (vista === "panel") html = YO && (YO.rol === "negocio" || YO.rol === "admin") ? await vistaPanel() : sinAcceso();
     else if (vista === "editar") html = YO ? await vistaEditar(arg) : sinAcceso();
+    else if (vista === "publicaciones") html = YO ? await vistaPublicaciones(arg) : sinAcceso();
+    else if (vista === "productos") html = YO ? await vistaProductos(arg) : sinAcceso();
+    else if (vista === "publicacion") html = await vistaPublicacionDetalle(arg);
     else if (vista === "reporte") html = YO ? await vistaReporte(arg) : sinAcceso();
     else if (vista === "admin") html = esAdmin() ? await vistaAdmin(arg) : sinAcceso();
     else if (vista === "cuenta") html = YO && YO.rol === "usuario" ? vistaCuenta() : sinAcceso();
@@ -1226,12 +1242,7 @@ async function vistaNegocio(slug) {
       "</div>" : "") +
 
     (n.publicaciones.length ? '<div class="pila g12"><p class="eyebrow">Publicaciones</p>' +
-      '<div class="pila g12">' + n.publicaciones.map((x) =>
-        '<div class="publicacion' + (x.destacada ? " destacada" : "") + '">' +
-        '<div class="fila entre g8"><strong>' + esc(x.titulo) + "</strong>" +
-        (x.destacada ? '<span class="chip rosa">Destacada</span>' : "") + "</div>" +
-        '<p class="diminuto apagado">' + esc(fecha(x.creado_en)) + "</p>" +
-        '<p class="pequeno" style="white-space:pre-wrap">' + esc(x.texto) + "</p></div>").join("") +
+      '<div class="pila g12">' + n.publicaciones.map((x) => fichaPublicacion(x)).join("") +
       "</div></div>" : "") +
 
     '<hr class="separador">' +
@@ -1245,18 +1256,46 @@ async function vistaNegocio(slug) {
   "</div>";
 }
 
-const fichaProducto = (x, destacado, negocioId, puedeConsultar) => '<div class="tarjeta p16 pila g8"' +
-  (destacado ? ' style="border-left:3px solid var(--acento)"' : "") + ">" +
-  (destacado ? '<span class="chip rosa">Destacado</span>' : "") +
-  "<strong>" + esc(x.nombre) + "</strong>" +
-  (x.descripcion ? '<p class="pequeno apagado">' + esc(x.descripcion) + "</p>" : "") +
-  (x.precio ? '<p class="mono" style="font-weight:700">' + pesos(x.precio) + "</p>" : "") +
-  (puedeConsultar ? '<div class="fila g8">' +
-    '<button class="btn linea chico" onclick="consultarProducto(' + negocioId + "," + x.id +
-      ',\'disponible\')">¿Aún disponible?</button>' +
-    '<button class="btn chico" onclick="consultarProducto(' + negocioId + "," + x.id +
-      ',\'interesa\')">Me interesa</button>' +
-  "</div>" : "") + "</div>";
+/** El mismo estilo de tarjeta que las del directorio: foto (o degradado con
+ * su inicial si no hay), nombre, descripción y precio. */
+function productoImagenHtml(p, destacado) {
+  return '<div class="portada">' + (p.imagen ? imagenHtml(p.imagen, p.nombre) :
+    '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + tonoDe(p.nombre).join(",") +
+    ')"></div><span class="inicial">' + esc((p.nombre || "P").trim()[0] || "P") + "</span>") +
+    (destacado ? '<span class="chip rosa" style="position:absolute;top:10px;left:10px">Destacado</span>' : "") +
+  "</div>";
+}
+
+const fichaProducto = (x, destacado, negocioId, puedeConsultar) => '<div class="tarjeta tarjeta-negocio">' +
+  productoImagenHtml(x, destacado) +
+  '<div class="cuerpo">' +
+    "<strong>" + esc(x.nombre) + "</strong>" +
+    (x.descripcion ? '<p class="pequeno apagado">' + esc(x.descripcion) + "</p>" : "") +
+    (x.precio ? '<p class="mono" style="font-weight:700">' + pesos(x.precio) + "</p>" : "") +
+    (puedeConsultar ? '<div class="fila g8">' +
+      '<button class="btn linea chico" onclick="consultarProducto(' + negocioId + "," + x.id +
+        ',\'disponible\')">¿Aún disponible?</button>' +
+      '<button class="btn chico" onclick="consultarProducto(' + negocioId + "," + x.id +
+        ',\'interesa\')">Me interesa</button>' +
+    "</div>" : "") +
+  "</div></div>";
+
+/** Publicación tal como la ve cualquier visitante: como un post, con foto
+ * (si tiene), texto y un enlace a verla completa con sus comentarios. */
+function fichaPublicacion(x) {
+  const previa = x.texto.length > 220 ? x.texto.slice(0, 220) + "…" : x.texto;
+  return '<a class="publicacion' + (x.destacada ? " destacada" : "") + '" style="text-decoration:none;color:inherit" ' +
+    'href="#/publicacion/' + x.id + '">' +
+    (x.imagen ? '<div class="portada" style="aspect-ratio:16/9;margin:-16px -16px 12px;width:calc(100% + 32px)">' +
+      imagenHtml(x.imagen, x.titulo) + "</div>" : "") +
+    '<div class="fila entre g8"><strong>' + esc(x.titulo) + "</strong>" +
+    (x.destacada ? '<span class="chip rosa">Destacada</span>' : "") + "</div>" +
+    '<p class="diminuto apagado">' + esc(fecha(x.creado_en)) + "</p>" +
+    '<p class="pequeno" style="white-space:pre-wrap">' + esc(previa) + "</p>" +
+    '<p class="diminuto apagado" style="margin-top:4px">👁 ' + x.vistas + " · 💬 " + x.total_comentarios +
+      (x.total_comentarios === 1 ? " comentario" : " comentarios") + "</p>" +
+  "</a>";
+}
 
 function formularioResena(n, mia) {
   const cal = mia ? mia.calificacion : 0;
@@ -1820,7 +1859,7 @@ async function mandarRevision(id) {
 /* ==================================================================== EDITOR */
 async function vistaEditar(id) {
   let n;
-  try { n = await api.get("/api/negocios/" + id + "/panel"); }
+  try { n = await obtenerPanel(id); }
   catch { return sinAcceso(); }
 
   const L = n.limites, P = n.permisos, c = cat(n.categoria);
@@ -1960,52 +1999,21 @@ async function vistaEditar(id) {
         ',this)"></label>' : "") +
     "</div>" +
 
-    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Publicaciones</p>' +
-      '<p class="pequeno apagado">' + (tope === Infinity
-        ? "Publicaciones ilimitadas con tu plan."
-        : "Tu plan muestra " + tope + (tope === 1 ? " publicación." : " publicaciones.")) +
-        " Tienes " + pubs.length + ".</p>" +
-      (pubs.length ? '<div class="pila g8">' + pubs.map((p) =>
-        '<div class="publicacion' + (p.destacada ? " destacada" : "") +
-        (p.visible ? '"' : '" style="opacity:.5"') + '>' +
-        '<div class="fila entre g8"><strong>' + esc(p.titulo) + "</strong>" +
-        '<div class="fila g8">' +
-          (P.publicacionesDestacadas ? '<button class="btn fantasma chico" onclick="alternarDestacadaPub(' +
-            n.id + "," + p.id + ')">' + (p.destacada ? "Quitar destacada" : "Destacar") + "</button>" : "") +
-          '<button class="btn fantasma chico" onclick="quitarPublicacion(' + n.id + "," + p.id +
-            ')">Borrar</button></div></div>' +
-        '<p class="diminuto apagado">' + esc(fecha(p.creado_en)) +
-          (p.visible ? "" : " · no se muestra con tu plan") + "</p>" +
-        '<p class="pequeno">' + esc(p.texto) + "</p></div>").join("") + "</div>" : "") +
-      '<div class="pila g8"><label class="campo">Título<input id="pu_titulo" ' +
-        'placeholder="Agenda abierta para diciembre"></label>' +
-        '<label class="campo">Texto<textarea id="pu_texto" style="min-height:80px"></textarea></label>' +
-        '<div><button class="btn linea" onclick="agregarPublicacion(' + n.id +
-          ')">Publicar</button></div></div>' +
-    "</div>" +
+    '<div class="tarjeta p20 pila g12"><div class="fila entre g12">' +
+      '<div class="pila g4"><p class="eyebrow">Publicaciones</p>' +
+        '<p class="pequeno apagado">' + (tope === Infinity
+          ? "Publicaciones ilimitadas con tu plan."
+          : "Tu plan muestra " + tope + (tope === 1 ? " publicación." : " publicaciones.")) +
+          " Tienes " + pubs.length + ".</p></div>" +
+      '<a class="btn linea chico" href="#/publicaciones/' + n.id + '">Administrar →</a>' +
+    "</div></div>" +
 
-    '<div class="tarjeta p20 pila g16"><p class="eyebrow">Productos y servicios</p>' +
-      (n.productos.length ? '<div class="pila g8">' + n.productos.map((p) =>
-        '<div class="fila entre g8 tarjeta p12"><div><strong>' + esc(p.nombre) + "</strong>" +
-        (p.precio ? ' <span class="mono">' + pesos(p.precio) + "</span>" : "") +
-        (p.destacado ? ' <span class="chip rosa">Destacado</span>' : "") +
-        (p.descripcion ? '<p class="diminuto apagado">' + esc(p.descripcion) + "</p>" : "") + "</div>" +
-        '<div class="fila g8">' +
-        (P.productosDestacados ? '<button class="btn fantasma chico" onclick="alternarDestacadoProd(' +
-          n.id + "," + p.id + ')">' + (p.destacado ? "Quitar" : "Destacar") + "</button>" : "") +
-        '<button class="btn fantasma chico" onclick="quitarProducto(' + n.id + "," + p.id +
-          ')">Borrar</button></div></div>').join("") + "</div>"
-        : '<p class="pequeno apagado">Todavía no agregas productos.</p>') +
-      (P.productosDestacados ? "" : cerrado("Destacar productos empieza en el plan Suscripción.")) +
-      '<div class="rejilla-campos">' +
-        '<label class="campo">Producto o servicio<input id="p_nombre"></label>' +
-        '<label class="campo">Precio<input id="p_precio" type="number" min="0"></label>' +
-      "</div>" +
-      '<label class="campo">Descripción corta<input id="p_desc"></label>' +
-      '<div><button class="btn linea" onclick="agregarProducto(' + n.id + ')">Agregar</button></div>' +
-      (n.productos.length ? '<div><a class="btn fantasma chico" href="#/ventas/' + n.id +
-        '">Ver mi registro de ventas</a></div>' : "") +
-    "</div>" +
+    '<div class="tarjeta p20 pila g12"><div class="fila entre g12">' +
+      '<div class="pila g4"><p class="eyebrow">Productos y servicios</p>' +
+        '<p class="pequeno apagado">Tienes ' + n.productos.length +
+          (n.productos.length === 1 ? " producto." : " productos.") + "</p></div>" +
+      '<a class="btn linea chico" href="#/productos/' + n.id + '">Administrar →</a>' +
+    "</div></div>" +
 
     '<div class="tarjeta p20 pila g12"><p class="eyebrow">Tu plan</p>' +
       "<p><strong>" + esc(PLANES[n.plan].nombre) + "</strong> · " + esc(PLANES[n.plan].etiqueta) +
@@ -2022,6 +2030,218 @@ async function vistaEditar(id) {
       (n.estado === "borrador" || n.estado === "rechazado"
         ? '<button class="btn linea" onclick="mandarRevision(' + n.id + ')">Mandar a revisión</button>' : "") +
     "</div></div>";
+}
+
+/* ============================================================= PUBLICACIONES */
+/* La pestaña "Publicación" de la dueña: un feed de sus propias publicaciones,
+ * como en cualquier red social — con foto, vistas y comentarios — en vez de
+ * la lista de texto plano que vivía antes dentro del editor de perfil. */
+
+let imagenPublicacionNueva = null;
+
+async function vistaPublicaciones(id) {
+  let n;
+  try { n = await obtenerPanel(id); }
+  catch { return sinAcceso(); }
+
+  const tope = n.limites.publicaciones;
+
+  return '<div class="envoltura bloque pila g24" style="max-width:640px">' +
+    '<div class="fila entre g12 arriba"><div class="pila g4"><p class="eyebrow">' + esc(n.nombre) + "</p>" +
+      "<h1>Publicaciones</h1></div>" +
+      '<a class="btn linea chico" href="#/editar/' + n.id + '">← Mi negocio</a></div>' +
+    '<p class="pequeno apagado">' + (tope === Infinity
+      ? "Publicaciones ilimitadas con tu plan."
+      : "Tu plan muestra " + tope + (tope === 1 ? " publicación." : " publicaciones.") + " Tienes " + n.publicaciones.length + ".") +
+    "</p>" +
+
+    formularioNuevaPublicacion(n.id) +
+
+    (n.publicaciones.length ? '<div class="pila g16">' +
+      n.publicaciones.map((p) => tarjetaPublicacionPanel(p, n.id, n.permisos.publicacionesDestacadas)).join("") +
+      "</div>" : vacio("Todavía no publicas nada. Cuéntale a tus clientas qué hay de nuevo.")) +
+  "</div>";
+}
+
+function formularioNuevaPublicacion(negocioId) {
+  return '<div class="tarjeta p20 pila g12">' +
+    '<p class="eyebrow">Nueva publicación</p>' +
+    '<label style="position:relative;display:block;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;' +
+      'border:1.5px dashed var(--linea);cursor:pointer;background:var(--fondo2)">' +
+      '<input type="file" accept="image/*" style="display:none" onchange="previsualizarImagenPublicacion(this)">' +
+      '<img id="prev_pub_img" style="display:none;width:100%;height:100%;object-fit:cover">' +
+      '<span id="prev_pub_txt" style="position:absolute;inset:0;display:flex;align-items:center;' +
+        'justify-content:center;color:var(--texto2);font-size:.85rem">📷 Agregar una foto (opcional)</span>' +
+    "</label>" +
+    '<label class="campo">Título<input id="pu_titulo" placeholder="Agenda abierta para diciembre"></label>' +
+    '<label class="campo">Texto<textarea id="pu_texto" style="min-height:90px" ' +
+      'placeholder="¿Qué quieres contarle a tus clientas?"></textarea></label>' +
+    '<div><button class="btn" onclick="agregarPublicacion(' + negocioId + ')">Publicar</button></div>' +
+  "</div>";
+}
+
+/** Tarjeta de una publicación para la dueña: además del texto, sus vistas y
+ * comentarios (que llevan a la publicación completa) y sus acciones. */
+function tarjetaPublicacionPanel(p, negocioId, puedeDestacar) {
+  return '<div class="publicacion' + (p.destacada ? " destacada" : "") + '"' +
+    (p.visible ? "" : ' style="opacity:.5"') + ">" +
+    (p.imagen ? '<div class="portada" style="aspect-ratio:16/9;margin:-16px -16px 12px;width:calc(100% + 32px)">' +
+      imagenHtml(p.imagen, p.titulo) + "</div>" : "") +
+    '<div class="fila entre g8"><strong>' + esc(p.titulo) + "</strong>" +
+      (p.destacada ? '<span class="chip rosa">Destacada</span>' : "") + "</div>" +
+    '<p class="diminuto apagado">' + esc(fecha(p.creado_en)) +
+      (p.visible ? "" : " · no se muestra con tu plan") + "</p>" +
+    '<p class="pequeno" style="white-space:pre-wrap">' + esc(p.texto) + "</p>" +
+    '<div class="fila entre g8" style="margin-top:2px">' +
+      '<a class="pequeno apagado" style="text-decoration:none" href="#/publicacion/' + p.id + '">' +
+        "👁 " + p.vistas + " · 💬 " + p.total_comentarios +
+        (p.total_comentarios === 1 ? " comentario" : " comentarios") + "</a>" +
+      '<div class="fila g8">' +
+        (puedeDestacar ? '<button class="btn fantasma chico" onclick="alternarDestacadaPub(' + negocioId + "," + p.id +
+          ')">' + (p.destacada ? "Quitar destacada" : "Destacar") + "</button>" : "") +
+        '<button class="btn fantasma chico" onclick="quitarPublicacion(' + negocioId + "," + p.id + ')">Borrar</button>' +
+      "</div>" +
+    "</div>" +
+  "</div>";
+}
+
+function previsualizarImagenPublicacion(input) {
+  procesarImagen(input, 1000, 0.75, (dataUrl) => {
+    imagenPublicacionNueva = dataUrl;
+    if ($("prev_pub_img")) { $("prev_pub_img").src = dataUrl; $("prev_pub_img").style.display = "block"; }
+    if ($("prev_pub_txt")) $("prev_pub_txt").style.display = "none";
+  });
+}
+
+/** Una sola publicación, como un post: su foto, su texto completo, sus
+ * vistas (que se cuentan al abrir esta página) y su hilo de comentarios. */
+async function vistaPublicacionDetalle(id) {
+  let p;
+  try { p = await api.get("/api/publicaciones/" + id); }
+  catch { return '<div class="envoltura bloque"><h2>No encontramos esa publicación</h2>' +
+    '<p style="margin-top:14px"><a class="btn" href="#/directorio">Ver el directorio</a></p></div>'; }
+
+  return '<div class="envoltura bloque pila g24" style="max-width:640px">' +
+    '<div class="pila g8">' +
+      '<a class="pequeno apagado" style="text-decoration:none" href="#/negocio/' + esc(p.negocio.slug) +
+        '">← ' + esc(p.negocio.nombre) + "</a>" +
+      '<p class="eyebrow">' + esc(fecha(p.creadoEn)) + (p.destacada ? " · Destacada" : "") + "</p>" +
+      "<h1>" + esc(p.titulo) + "</h1>" +
+    "</div>" +
+    (p.imagen ? '<div class="portada" style="aspect-ratio:16/9">' + imagenHtml(p.imagen, p.titulo) + "</div>" : "") +
+    '<p style="white-space:pre-wrap">' + esc(p.texto) + "</p>" +
+    '<p class="pequeno apagado">👁 ' + p.vistas + (p.vistas === 1 ? " vista" : " vistas") + "</p>" +
+    '<hr class="separador">' +
+    '<div class="pila g16"><p class="eyebrow">Comentarios</p>' +
+      (YO ? '<div class="tarjeta p16 pila g8">' +
+        '<textarea id="pc_texto" style="min-height:70px" placeholder="Escribe un comentario…"></textarea>' +
+        '<p id="pc_error" class="pequeno" style="color:var(--peligro)"></p>' +
+        '<div><button class="btn chico" onclick="comentarPublicacion(' + p.id + ')">Comentar</button></div></div>'
+        : '<div class="aviso">Para comentar <a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>') +
+      (p.comentarios.length ? p.comentarios.map((c) => bloqueComentarioPublicacion(c, p.negocio.id)).join("")
+        : '<p class="apagado pequeno">Sé la primera en comentar.</p>') +
+    "</div>" +
+  "</div>";
+}
+
+function bloqueComentarioPublicacion(c, negocioId) {
+  const puedeBorrar = YO && (YO.rol === "admin" || YO.id === c.usuario_id ||
+    (YO.rol === "negocio" && MI_NEGOCIO_ID === negocioId));
+  return '<div class="tarjeta p16 pila g4">' +
+    '<div class="fila entre g8"><strong class="pequeno">' + esc(c.autora) + "</strong>" +
+    '<span class="diminuto apagado">' + esc(fecha(c.creado_en)) + "</span></div>" +
+    "<p>" + esc(c.texto) + "</p>" +
+    (puedeBorrar ? '<div><button class="btn fantasma chico" onclick="borrarComentarioPublicacion(' + c.id +
+      ')">Borrar</button></div>' : "") +
+  "</div>";
+}
+
+async function comentarPublicacion(id) {
+  const texto = val("pc_texto");
+  const decir = (m) => { if ($("pc_error")) $("pc_error").textContent = m; };
+  if (texto.length < 2) return decir("Escribe tu comentario.");
+  try {
+    await api.post("/api/publicaciones/" + id + "/comentarios", { texto });
+    await pintar();
+    avisar("Comentario publicado.");
+  } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo publicar tu comentario."); }
+}
+
+async function borrarComentarioPublicacion(id) {
+  if (!confirm("¿Borrar este comentario?")) return;
+  try { await api.del("/api/publicaciones/comentarios/" + id); await pintar(); avisar("Borramos el comentario."); }
+  catch (err) { avisarError(err); }
+}
+
+/* =================================================================== PRODUCTOS */
+/* La pestaña "Producto" de la dueña: una cuadrícula igual a la del
+ * directorio de negocios, con una casilla fija para agregar uno nuevo. */
+
+let imagenProductoNueva = null;
+
+async function vistaProductos(id) {
+  let n;
+  try { n = await obtenerPanel(id); }
+  catch { return sinAcceso(); }
+
+  return '<div class="envoltura bloque pila g24">' +
+    '<div class="fila entre g12 arriba"><div class="pila g4"><p class="eyebrow">' + esc(n.nombre) + "</p>" +
+      "<h1>Productos y servicios</h1></div>" +
+      '<a class="btn linea chico" href="#/editar/' + n.id + '">← Mi negocio</a></div>' +
+    (n.permisos.productosDestacados ? "" :
+      '<p class="pequeno apagado">🔒 Destacar productos empieza en el plan Suscripción.</p>') +
+    '<div class="rejilla">' +
+      tarjetaAgregarProducto(n.id) +
+      n.productos.map((p) => tarjetaProductoPanel(p, n.id, n.permisos.productosDestacados)).join("") +
+    "</div>" +
+    (n.productos.length ? '<div><a class="btn fantasma chico" href="#/ventas/' + n.id +
+      '">Ver mi registro de ventas</a></div>' : "") +
+  "</div>";
+}
+
+function tarjetaAgregarProducto(negocioId) {
+  return '<div class="tarjeta tarjeta-negocio" style="border:1.5px dashed var(--linea)">' +
+    '<label class="portada" style="display:block;cursor:pointer;background:var(--fondo2)">' +
+      '<input type="file" accept="image/*" style="display:none" onchange="previsualizarImagenProducto(this)">' +
+      '<img id="prev_prod_img" style="display:none;width:100%;height:100%;object-fit:cover">' +
+      '<span id="prev_prod_txt" style="position:absolute;inset:0;display:flex;align-items:center;' +
+        'justify-content:center;color:var(--texto2);font-size:.8rem;text-align:center;padding:10px">' +
+        "📷 Agregar foto</span>" +
+    "</label>" +
+    '<div class="cuerpo">' +
+      '<p class="eyebrow">Agregar nuevo producto</p>' +
+      '<label class="campo">Nombre<input id="p_nombre" placeholder="Ej. Pastel de tres leches"></label>' +
+      '<label class="campo">Descripción<input id="p_desc" placeholder="Corta y clara"></label>' +
+      '<label class="campo">Precio<input id="p_precio" type="number" min="0" placeholder="0"></label>' +
+      '<button class="btn" onclick="agregarProducto(' + negocioId + ')">Agregar producto</button>' +
+    "</div>" +
+  "</div>";
+}
+
+/** Tarjeta de un producto para la dueña: la misma foto/nombre/precio que ve
+ * cualquier clienta, más sus acciones de destacar y borrar. */
+function tarjetaProductoPanel(p, negocioId, puedeDestacar) {
+  return '<div class="tarjeta tarjeta-negocio">' +
+    productoImagenHtml(p, p.destacado) +
+    '<div class="cuerpo">' +
+      "<h3>" + esc(p.nombre) + "</h3>" +
+      (p.descripcion ? '<p class="pequeno apagado" style="flex:1">' + esc(p.descripcion) + "</p>" : "") +
+      (p.precio ? '<p class="mono" style="font-weight:700">' + pesos(p.precio) + "</p>" : "") +
+      '<div class="fila g8">' +
+        (puedeDestacar ? '<button class="btn fantasma chico" onclick="alternarDestacadoProd(' + negocioId + "," + p.id +
+          ')">' + (p.destacado ? "Quitar destacado" : "Destacar") + "</button>" : "") +
+        '<button class="btn fantasma chico" onclick="quitarProducto(' + negocioId + "," + p.id + ')">Borrar</button>' +
+      "</div>" +
+    "</div>" +
+  "</div>";
+}
+
+function previsualizarImagenProducto(input) {
+  procesarImagen(input, 700, 0.78, (dataUrl) => {
+    imagenProductoNueva = dataUrl;
+    if ($("prev_prod_img")) { $("prev_prod_img").src = dataUrl; $("prev_prod_img").style.display = "block"; }
+    if ($("prev_prod_txt")) $("prev_prod_txt").style.display = "none";
+  });
 }
 
 /* ================================================================== REPORTE */
@@ -2209,7 +2429,8 @@ async function agregarPublicacion(id) {
   const titulo = val("pu_titulo"), texto = val("pu_texto");
   if (!titulo) return avisar("Ponle título a tu publicación.");
   try {
-    const n = await api.post("/api/negocios/" + id + "/publicaciones", { titulo, texto });
+    const n = conLimitesRestaurados(await api.post("/api/negocios/" + id + "/publicaciones", { titulo, texto, imagen: imagenPublicacionNueva }));
+    imagenPublicacionNueva = null;
     await pintar();
     const L = n.limites.publicaciones;
     avisar(L !== Infinity && n.publicaciones.length > L
@@ -2231,7 +2452,10 @@ async function agregarProducto(id) {
   const nombre = val("p_nombre");
   if (!nombre) return avisar("Escribe el nombre del producto.");
   try {
-    await api.post("/api/negocios/" + id + "/productos", { nombre, precio: val("p_precio"), descripcion: val("p_desc") });
+    await api.post("/api/negocios/" + id + "/productos", {
+      nombre, precio: val("p_precio"), descripcion: val("p_desc"), imagen: imagenProductoNueva,
+    });
+    imagenProductoNueva = null;
     await pintar();
     avisar("Agregamos el producto.");
   } catch (err) { avisarError(err); }

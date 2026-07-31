@@ -352,6 +352,33 @@ const columnasNotificaciones = todos(`SELECT name FROM pragma_table_info('notifi
 if (columnasNotificaciones.length && !columnasNotificaciones.includes('enlace')) {
   db.exec(`ALTER TABLE notificaciones ADD COLUMN enlace TEXT`);
 }
+// Foto del producto: para que el catálogo de cada negocio se vea como una
+// tarjeta (foto, nombre, descripción, precio), no solo texto.
+const columnasProductos = todos(`SELECT name FROM pragma_table_info('productos')`).map((c) => c.name);
+if (!columnasProductos.includes('imagen')) {
+  db.exec(`ALTER TABLE productos ADD COLUMN imagen TEXT`);
+}
+// Foto y contador de vistas en publicaciones, para que funcionen como el
+// feed de un negocio: cada publicación puede traer una foto y sabe cuántas
+// veces se abrió. Los comentarios viven en su propia tabla, igual que los
+// de un artículo del blog.
+const columnasPublicaciones = todos(`SELECT name FROM pragma_table_info('publicaciones')`).map((c) => c.name);
+if (!columnasPublicaciones.includes('imagen')) {
+  db.exec(`ALTER TABLE publicaciones ADD COLUMN imagen TEXT`);
+}
+if (!columnasPublicaciones.includes('vistas')) {
+  db.exec(`ALTER TABLE publicaciones ADD COLUMN vistas INTEGER NOT NULL DEFAULT 0`);
+}
+db.exec(`
+CREATE TABLE IF NOT EXISTS publicacion_comentarios (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  publicacion_id  INTEGER NOT NULL REFERENCES publicaciones(id) ON DELETE CASCADE,
+  usuario_id      INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  texto           TEXT NOT NULL,
+  creado_en       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_publicacion_com_pub ON publicacion_comentarios(publicacion_id);
+`);
 
 /** Consulta que devuelve varias filas. */
 export function todos(sql, params = {}) {

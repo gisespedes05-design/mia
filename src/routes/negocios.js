@@ -236,11 +236,12 @@ export function agregarProducto(ctx) {
   if (!nombre) throw new ErrorHttp(400, 'Escribe el nombre del producto.');
   const precio = ctx.cuerpo.precio !== undefined && ctx.cuerpo.precio !== '' ? Number(ctx.cuerpo.precio) : null;
   const orden = uno(`SELECT COALESCE(MAX(orden), -1) + 1 AS n FROM productos WHERE negocio_id = $id`, { id: negocio.id }).n;
+  const imagen = ctx.cuerpo.imagen ? guardarImagenBase64(ctx.cuerpo.imagen) : null;
 
   ejecutar(
-    `INSERT INTO productos (negocio_id, nombre, descripcion, precio, orden)
-     VALUES ($id, $nombre, $desc, $precio, $orden)`,
-    { id: negocio.id, nombre, desc: texto(ctx.cuerpo.descripcion, 300), precio, orden }
+    `INSERT INTO productos (negocio_id, nombre, descripcion, precio, orden, imagen)
+     VALUES ($id, $nombre, $desc, $precio, $orden, $imagen)`,
+    { id: negocio.id, nombre, desc: texto(ctx.cuerpo.descripcion, 300), precio, orden, imagen }
   );
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
@@ -248,6 +249,10 @@ export function agregarProducto(ctx) {
 export function quitarProducto(ctx) {
   const usuario = exigirSesion(ctx);
   const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const producto = uno(`SELECT * FROM productos WHERE id = $id AND negocio_id = $negocioId`, {
+    id: Number(ctx.params.productoId), negocioId: negocio.id,
+  });
+  if (producto) borrarImagen(producto.imagen);
   ejecutar(`DELETE FROM productos WHERE id = $id AND negocio_id = $negocioId`, {
     id: Number(ctx.params.productoId), negocioId: negocio.id,
   });
@@ -273,9 +278,10 @@ export function agregarPublicacion(ctx) {
   const cuerpoTexto = texto(ctx.cuerpo.texto, 3000);
   if (!titulo) throw new ErrorHttp(400, 'Ponle título a tu publicación.');
   if (cuerpoTexto.length < 10) throw new ErrorHttp(400, 'Escribe un poco más en tu publicación.');
+  const imagen = ctx.cuerpo.imagen ? guardarImagenBase64(ctx.cuerpo.imagen) : null;
 
-  ejecutar(`INSERT INTO publicaciones (negocio_id, titulo, texto) VALUES ($id, $titulo, $texto)`, {
-    id: negocio.id, titulo, texto: cuerpoTexto,
+  ejecutar(`INSERT INTO publicaciones (negocio_id, titulo, texto, imagen) VALUES ($id, $titulo, $texto, $imagen)`, {
+    id: negocio.id, titulo, texto: cuerpoTexto, imagen,
   });
   if (negocio.estado === 'publicado') {
     notificarASeguidoras(
@@ -289,6 +295,10 @@ export function agregarPublicacion(ctx) {
 export function quitarPublicacion(ctx) {
   const usuario = exigirSesion(ctx);
   const negocio = exigirPropiedad(obtenerNegocioPorId(ctx.params.id), usuario);
+  const publicacion = uno(`SELECT * FROM publicaciones WHERE id = $id AND negocio_id = $negocioId`, {
+    id: Number(ctx.params.publicacionId), negocioId: negocio.id,
+  });
+  if (publicacion) borrarImagen(publicacion.imagen);
   ejecutar(`DELETE FROM publicaciones WHERE id = $id AND negocio_id = $negocioId`, {
     id: Number(ctx.params.publicacionId), negocioId: negocio.id,
   });
@@ -303,6 +313,81 @@ export function alternarPublicacionDestacada(ctx) {
     { id: Number(ctx.params.publicacionId), negocioId: negocio.id }
   );
   return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
+/* -------------------------------------------------- publicación: detalle -- */
+// Vista de una sola publicación, como un post: cuenta la vista, trae sus
+// comentarios y a qué negocio pertenece (para el título y el enlace de
+// regreso). Vive fuera de /api/negocios/:id porque se navega directo por
+// el id de la publicación, sin pasar antes por su negocio.
+
+function publicacionOFallo(id) {
+  const p = uno(`SELECT * FROM publicaciones WHERE id = $id`, { id: Number(id) });
+  if (!p) throw new ErrorHttp(404, 'Esa publicación ya no existe.');
+  return p;
+}
+
+function comentariosDePublicacion(publicacionId) {
+  return todos(
+    `SELECT c.id, c.texto, c.creado_en, c.usuario_id, u.nombre AS autora
+       FROM publicacion_comentarios c JOIN usuarios u ON u.id = c.usuario_id
+      WHERE c.publicacion_id = $id ORDER BY c.creado_en ASC`,
+    { id: publicacionId }
+  );
+}
+
+export function verPublicacion(ctx) {
+  const p = publicacionOFallo(ctx.params.publicacionId);
+  const negocio = obtenerNegocioPorId(p.negocio_id);
+  if (!negocio || !esVisiblePara(negocio, ctx.usuario)) throw new ErrorHttp(404, 'Esa publicación ya no existe.');
+
+  // Igual que en el perfil: la propia dueña abriendo su publicación no
+  // infla sus propias vistas.
+  const esSuPropiaDuena = Boolean(ctx.usuario) && ctx.usuario.id === negocio.propietaria_id;
+  if (negocio.estado === 'publicado' && !esSuPropiaDuena) {
+    ejecutar(`UPDATE publicaciones SET vistas = vistas + 1 WHERE id = $id`, { id: p.id });
+  }
+  const actual = uno(`SELECT * FROM publicaciones WHERE id = $id`, { id: p.id });
+
+  return {
+    id: actual.id,
+    titulo: actual.titulo,
+    texto: actual.texto,
+    imagen: actual.imagen ? `/subidas/${actual.imagen}` : null,
+    destacada: Boolean(actual.destacada),
+    vistas: actual.vistas,
+    creadoEn: actual.creado_en,
+    negocio: { id: negocio.id, slug: negocio.slug, nombre: negocio.nombre, logo: negocio.logo ? `/subidas/${negocio.logo}` : null },
+    comentarios: comentariosDePublicacion(p.id),
+  };
+}
+
+export function comentarPublicacion(ctx) {
+  const usuario = exigirSesion(ctx);
+  const p = publicacionOFallo(ctx.params.publicacionId);
+  const negocio = obtenerNegocioPorId(p.negocio_id);
+  if (!negocio || negocio.estado !== ESTADO_VISIBLE) throw new ErrorHttp(404, 'Esa publicación ya no existe.');
+  const cuerpoTexto = texto(ctx.cuerpo.texto, 1000);
+  if (cuerpoTexto.length < 2) throw new ErrorHttp(400, 'Escribe tu comentario.');
+
+  ejecutar(`INSERT INTO publicacion_comentarios (publicacion_id, usuario_id, texto) VALUES ($id, $u, $texto)`, {
+    id: p.id, u: usuario.id, texto: cuerpoTexto,
+  });
+  return comentariosDePublicacion(p.id);
+}
+
+export function borrarComentarioPublicacion(ctx) {
+  const usuario = exigirSesion(ctx);
+  const c = uno(`SELECT * FROM publicacion_comentarios WHERE id = $id`, { id: Number(ctx.params.id) });
+  if (!c) throw new ErrorHttp(404, 'Ese comentario ya no existe.');
+  const p = uno(`SELECT * FROM publicaciones WHERE id = $id`, { id: c.publicacion_id });
+  const negocio = p ? obtenerNegocioPorId(p.negocio_id) : null;
+  const esDueña = Boolean(negocio) && negocio.propietaria_id === usuario.id;
+  if (usuario.rol !== 'admin' && c.usuario_id !== usuario.id && !esDueña) {
+    throw new ErrorHttp(403, 'Ese comentario no es tuyo.');
+  }
+  ejecutar(`DELETE FROM publicacion_comentarios WHERE id = $id`, { id: c.id });
+  return comentariosDePublicacion(c.publicacion_id);
 }
 
 /* -------------------------------------------------------------- clics -- */

@@ -69,6 +69,9 @@ r.post('/api/negocios/:id/productos/:productoId/consultar', mensajes.consultarPr
 r.post('/api/negocios/:id/publicaciones', negocios.agregarPublicacion);
 r.patch('/api/negocios/:id/publicaciones/:publicacionId', negocios.alternarPublicacionDestacada);
 r.delete('/api/negocios/:id/publicaciones/:publicacionId', negocios.quitarPublicacion);
+r.get('/api/publicaciones/:publicacionId', negocios.verPublicacion);
+r.post('/api/publicaciones/:publicacionId/comentarios', negocios.comentarPublicacion);
+r.delete('/api/publicaciones/comentarios/:id', negocios.borrarComentarioPublicacion);
 
 // --------------------------------------------------------------- reseñas --
 r.post('/api/negocios/:id/resenas', resenas.crearOActualizar);

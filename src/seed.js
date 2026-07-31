@@ -12,7 +12,7 @@ const reset = process.argv.includes('--reset');
 
 const TABLAS = [
   'bitacora', 'solicitudes', 'articulos', 'favoritos', 'resenas',
-  'publicaciones', 'productos', 'fotos', 'negocios', 'usuarios',
+  'publicacion_comentarios', 'publicaciones', 'productos', 'fotos', 'negocios', 'usuarios',
 ];
 
 if (reset) {
