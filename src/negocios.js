@@ -333,6 +333,7 @@ export function vistaPanel(negocio) {
     estado: negocio.estado,
     notaRevision: negocio.nota_revision,
     verificado: Boolean(negocio.verificado),
+    vistas: negocio.vistas,
     plan: reglas.planContratado,
     planEfectivo: reglas.planEfectivo,
     planVence: negocio.plan_vence,
