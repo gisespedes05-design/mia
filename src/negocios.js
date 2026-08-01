@@ -370,6 +370,7 @@ export function vistaPanel(negocio) {
     planVence: negocio.plan_vence,
     pagoConfirmado: Boolean(negocio.pago_confirmado),
     membresiaVencida: reglas.vencida,
+    descuentoPorcentaje: negocio.descuento_porcentaje || 0,
     limites,
     permisos,
     bloqueos,

@@ -2629,7 +2629,12 @@ async function adminNegocios() {
           n.id + ')">Confirmar pago</button>' : "") +
         (n.plan === "crece" ? '<br><button class="btn linea chico" style="margin-top:4px" onclick="adminEnlacePago(' +
           n.id + ",'" + encodeURIComponent(n.enlacePagoCrece || "") + "')\">" +
-          (n.enlacePagoCrece ? "Editar enlace de pago" : "Agregar enlace de pago") + "</button>" : "") + "</td>" +
+          (n.enlacePagoCrece ? "Editar enlace de pago" : "Agregar enlace de pago") + "</button>" : "") +
+        (n.descuentoPorcentaje > 0 ? '<br><span class="chip jade" style="margin-top:4px">' +
+          n.descuentoPorcentaje + "% de descuento</span>" : "") +
+        '<br><button class="btn fantasma chico" style="margin-top:4px" onclick="adminDescuento(' + n.id + "," +
+          n.descuentoPorcentaje + ')">' + (n.descuentoPorcentaje > 0 ? "Cambiar descuento" : "Dar descuento") +
+          "</button></td>" +
       '<td class="mono">' + n.vistas + "</td>" +
       '<td><div class="fila g8">' +
         (n.estado === "pendiente"
@@ -2675,6 +2680,24 @@ async function adminPlan(id, plan) {
 async function confirmarPago(id) {
   try { await api.post("/api/admin/negocios/" + id + "/confirmar-pago"); await pintar(); avisar("Confirmamos el pago. Ya tiene todos sus beneficios."); }
   catch (err) { avisarError(err); }
+}
+
+async function adminDescuento(id, actual) {
+  const texto = prompt(
+    "Descuento permanente para este negocio, de 0 a 100 (por ejemplo, 100 para un negocio de cortesía que nunca " +
+    "paga). Se resta del precio de lista al calcular cuánto gana MÍA; no le cambia nada a la dueña ni a Stripe.",
+    String(actual || 0)
+  );
+  if (texto === null) return;
+  const porcentaje = Number(texto);
+  if (!Number.isInteger(porcentaje) || porcentaje < 0 || porcentaje > 100) {
+    return avisar("Escribe un número entero entre 0 y 100.");
+  }
+  try {
+    await api.patch("/api/admin/negocios/" + id + "/descuento", { porcentaje });
+    await pintar();
+    avisar(porcentaje > 0 ? "Descuento del " + porcentaje + "% aplicado." : "Quitamos el descuento.");
+  } catch (err) { avisarError(err); }
 }
 
 async function adminEnlacePago(id, actualCodificado) {

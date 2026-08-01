@@ -13,13 +13,23 @@ const soloAdmin = (ctx) => exigirRol(ctx, ROLES.ADMIN);
  * precio de lista — así una promoción o cupón sí se refleja en el ingreso.
  * Si nunca ha pagado por Stripe (p. ej. Crece con MÍA, que se cotiza a
  * mano), se usa el precio de lista como estimado.
+ *
+ * Si la organización le dio un descuento a mano (negocios de cortesía o
+ * convenio que nunca pasan por Stripe), ese descuento manda sobre
+ * cualquier otra fuente: es la palabra oficial de MÍA sobre cuánto
+ * aporta de verdad ese negocio, así haya quedado un cobro viejo en Stripe
+ * de antes del convenio.
  */
-function ingresoRealDe(negocioId, plan) {
+function ingresoRealDe(negocio, plan) {
+  const precioLista = PLANES[plan].precioMensual;
+  const descuento = negocio.descuento_porcentaje || 0;
+  if (descuento > 0) return precioLista * (1 - descuento / 100);
+
   const ultimoPago = uno(
     `SELECT monto FROM pagos_stripe WHERE negocio_id = $id AND estado = 'pagado' ORDER BY creado_en DESC LIMIT 1`,
-    { id: negocioId }
+    { id: negocio.id }
   );
-  return ultimoPago ? ultimoPago.monto : PLANES[plan].precioMensual;
+  return ultimoPago ? ultimoPago.monto : precioLista;
 }
 
 export function resumen(ctx) {
@@ -32,7 +42,7 @@ export function resumen(ctx) {
   const nuevasSolicitudes = uno(`SELECT COUNT(*) c FROM solicitudes WHERE estado = 'nueva'`).c;
   const enMapa = conReglas.filter(({ n, r }) => n.estado === 'publicado' && r.permisos.mapa && n.ciudad).length;
   const ingresoMensual = conReglas.reduce(
-    (acc, { n, r }) => acc + (r.planEfectivo === 'gratuito' ? 0 : ingresoRealDe(n.id, r.planEfectivo)),
+    (acc, { n, r }) => acc + (r.planEfectivo === 'gratuito' ? 0 : ingresoRealDe(n, r.planEfectivo)),
     0
   );
   const totalUsuarios = uno(`SELECT COUNT(*) c FROM usuarios`).c;
@@ -139,6 +149,24 @@ export function cambiarPlan(ctx) {
     plan, vence, id: negocio.id,
   });
   anotar(admin.id, 'Plan cambiado', `${negocio.nombre} → ${PLANES[plan].nombre}`);
+  return vistaPanel(obtenerNegocioPorId(negocio.id));
+}
+
+/**
+ * Descuento permanente sobre el precio de lista (0 a 100), para negocios de
+ * cortesía o convenio. No cambia lo que ve la dueña ni lo que se le cobra
+ * en Stripe (eso se arregla allá, con un cupón) — solo corrige cuánto
+ * cuenta ese negocio en el ingreso mensual que ve la organización.
+ */
+export function establecerDescuento(ctx) {
+  const admin = soloAdmin(ctx);
+  const negocio = negocioOFallo(ctx.params.id);
+  const porcentaje = Number(ctx.cuerpo.porcentaje);
+  if (!Number.isInteger(porcentaje) || porcentaje < 0 || porcentaje > 100) {
+    throw new ErrorHttp(400, 'El descuento debe ser un número entero entre 0 y 100.');
+  }
+  ejecutar(`UPDATE negocios SET descuento_porcentaje = $p WHERE id = $id`, { p: porcentaje, id: negocio.id });
+  anotar(admin.id, porcentaje > 0 ? 'Descuento aplicado' : 'Descuento quitado', `${negocio.nombre} → ${porcentaje}%`);
   return vistaPanel(obtenerNegocioPorId(negocio.id));
 }
 

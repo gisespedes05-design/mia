@@ -346,6 +346,13 @@ if (!columnasNegocios.includes('alcaldia_municipio')) {
 if (!columnasNegocios.includes('sobre_negocio')) {
   db.exec(`ALTER TABLE negocios ADD COLUMN sobre_negocio TEXT NOT NULL DEFAULT ''`);
 }
+// Descuento permanente que la organización le da a un negocio (0 a 100),
+// para negocios de cortesía o convenio que nunca pasan por Stripe. Se
+// descuenta del precio de lista al calcular el ingreso mensual real, para
+// no contar como ganancia lo que en realidad no se cobra.
+if (!columnasNegocios.includes('descuento_porcentaje')) {
+  db.exec(`ALTER TABLE negocios ADD COLUMN descuento_porcentaje INTEGER NOT NULL DEFAULT 0`);
+}
 // A dónde navegar al tocar la notificación: el perfil del negocio (nueva
 // publicación de quien sigues) o el registro de ventas (confirmar una venta).
 const columnasNotificaciones = todos(`SELECT name FROM pragma_table_info('notificaciones')`).map((c) => c.name);
