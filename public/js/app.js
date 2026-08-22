@@ -1841,6 +1841,36 @@ async function vistaPanel() {
       "</div></div>";
 }
 
+/** El número que le importa de verdad a una dueña: cuántas veces alguien
+ * la contactó este mes (mensajes nuevos, preguntas por un producto, clics
+ * de WhatsApp/teléfono/redes), no cuántas veces la vieron. Visible en
+ * cualquier plan — es, entre otras cosas, el argumento para subir de plan. */
+function tarjetaContactos(c) {
+  const cambioHtml = c.cambioPorcentual !== null
+    ? '<span class="chip ' + (c.cambioPorcentual >= 0 ? "jade" : "peligro") + '">' +
+      (c.cambioPorcentual >= 0 ? "+" : "") + c.cambioPorcentual + "% vs. mes anterior</span>"
+    : c.actual.total > 0 ? '<span class="chip cobalto">Nuevo este mes</span>' : "";
+
+  return '<div class="tarjeta p20 pila g12" style="border-left:3px solid var(--acento)">' +
+    '<div class="fila entre g12 arriba">' +
+      '<div class="pila g4"><p class="eyebrow">Contactos generados este mes</p>' +
+        '<span style="font-size:2.3rem;font-weight:800;letter-spacing:-.03em;line-height:1">' +
+          c.actual.total + (c.actual.total > 0 ? " 🔥" : "") + "</span></div>" +
+      cambioHtml +
+    "</div>" +
+    '<div class="metricas">' +
+      metrica(c.actual.conversaciones, "Conversaciones") +
+      metrica(c.actual.consultas, "Consultas de producto", "cobalto") +
+      metrica(c.actual.whatsapp, "WhatsApp", "jade") +
+      metrica(c.actual.telefono, "Llamadas") +
+      metrica(c.actual.redes, "Clics en redes", "sol") +
+    "</div>" +
+    '<p class="diminuto apagado">Suma cada vez que una clienta te escribe por primera vez, pregunta por un ' +
+    "producto, o toca WhatsApp, teléfono o tus redes desde tu perfil. Los clics de contacto son anónimos, " +
+    "así que este número cuenta acciones, no personas distintas.</p>" +
+  "</div>";
+}
+
 function fichaPanel(n) {
   const pubsVisibles = n.publicaciones.filter((p) => p.visible).length;
   return '<div class="tarjeta p20 pila g12">' +
@@ -1865,6 +1895,8 @@ function fichaPanel(n) {
         (n.estado === "publicado" ? '<a class="btn fantasma chico" href="#/negocio/' +
           esc(n.slug) + '">Ver perfil</a>' : "") +
       "</div></div>" +
+
+    tarjetaContactos(n.contactos) +
 
     (n.estado === "borrador" ? '<div class="aviso">Este perfil todavía no lo ve nadie.' +
       '<button class="btn chico" style="margin-left:auto" onclick="mandarRevision(' + n.id +
@@ -2533,13 +2565,14 @@ async function vistaAdmin(seccion) {
   const solicitudes = s === "solicitudes" || s === "resumen" ? await api.get("/api/admin/solicitudes") : [];
   const nuevas = solicitudes.filter((x) => x.estado === "nueva").length;
   const tabs = [["resumen", "Resumen"], ["solicitudes", "Solicitudes" + (nuevas ? " (" + nuevas + ")" : "")],
-    ["negocios", "Negocios"], ["usuarias", "Usuarias"], ["resenas", "Reseñas"],
+    ["negocios", "Negocios"], ["contactos", "Contactos"], ["usuarias", "Usuarias"], ["resenas", "Reseñas"],
     ["pagos", "Pagos"], ["blog", "Blog"], ["bitacora", "Bitácora"]];
 
   let contenido;
   if (s === "resumen") contenido = await adminResumen();
   else if (s === "solicitudes") contenido = adminSolicitudes(solicitudes);
   else if (s === "negocios") contenido = await adminNegocios();
+  else if (s === "contactos") contenido = await adminContactos();
   else if (s === "usuarias") contenido = await adminUsuarias();
   else if (s === "resenas") contenido = await adminResenas();
   else if (s === "pagos") contenido = await adminPagos();
@@ -2566,6 +2599,7 @@ async function adminResumen() {
       metrica(r.nuevasSolicitudes, "Solicitudes nuevas", "cobalto") +
       metrica(r.enMapa, "En el mapa", "jade") +
       metrica(pesos(r.ingresoMensual), "Ingreso mensual", "jade") +
+      metrica(r.contactosMensuales, "Contactos generados este mes", "cobalto") +
       metrica(r.totalUsuarios, "Cuentas") +
     "</div>" +
     (r.nuevasSolicitudes ? '<div class="aviso alerta">Tienes ' + r.nuevasSolicitudes + " solicitud(es) sin atender. " +
@@ -2713,6 +2747,43 @@ async function adminEnlacePago(id, actualCodificado) {
     await pintar();
     avisar(enlace.trim() ? "Enlace de pago guardado." : "Enlace de pago quitado.");
   } catch (err) { avisarError(err); }
+}
+
+/* -------------------------------------------------------------- contactos */
+async function adminContactos() {
+  const r = await api.get("/api/admin/contactos");
+  const filas = r.porNegocio.map((n) =>
+    "<tr><td>" + esc(n.nombre) + "</td>" +
+    '<td><span class="chip cobalto">' + esc(PLANES[n.plan].nombre) + "</span></td>" +
+    '<td class="mono" style="font-weight:700">' + n.total + "</td>" +
+    '<td class="mono diminuto">' + n.conversaciones + "</td>" +
+    '<td class="mono diminuto">' + n.consultas + "</td>" +
+    '<td class="mono diminuto">' + n.whatsapp + "</td>" +
+    '<td class="mono diminuto">' + n.telefono + "</td>" +
+    '<td class="mono diminuto">' + n.redes + "</td></tr>"
+  ).join("");
+
+  return encabezado("Contactos", "Cada vez que una clienta le escribe a un negocio, pregunta por un producto, o " +
+    "toca WhatsApp/teléfono/redes desde su perfil — este mes, en toda MÍA.") +
+    '<div class="metricas">' +
+      metrica(r.total, "Total este mes", "cobalto") +
+      metrica(r.porTipo.conversaciones, "Conversaciones") +
+      metrica(r.porTipo.consultas, "Consultas de producto") +
+      metrica(r.porTipo.whatsapp, "WhatsApp", "jade") +
+      metrica(r.porTipo.telefono, "Llamadas") +
+      metrica(r.porTipo.redes, "Clics en redes", "sol") +
+    "</div>" +
+    '<div class="pila g12"><p class="eyebrow">Por plan</p><div class="metricas">' +
+      ORDEN_PLANES.map((k) => metrica(r.porPlan[k] || 0, PLANES[k].nombre,
+        { gratuito: "sol", suscripcion: "cobalto", membresia: "", crece: "jade" }[k])).join("") +
+    "</div></div>" +
+    '<div class="pila g12"><p class="eyebrow">Por negocio</p>' +
+    (r.porNegocio.length
+      ? '<div class="tabla-envoltura"><table><thead><tr><th>Negocio</th><th>Plan</th><th>Total</th>' +
+        "<th>Conversaciones</th><th>Consultas</th><th>WhatsApp</th><th>Llamadas</th><th>Redes</th></tr></thead>" +
+        "<tbody>" + filas + "</tbody></table></div>"
+      : vacio("Todavía no hay contactos registrados este mes.")) +
+    "</div>";
 }
 
 /* --------------------------------------------------------------- usuarias */

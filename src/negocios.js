@@ -1,6 +1,7 @@
 import { todos, uno } from './db.js';
 import { ErrorHttp } from './auth.js';
 import { CATEGORIAS, ESTADOS_NEGOCIO, ESTADO_VISIBLE, PLANES, MAX_SUBCATEGORIAS, reglasVigentes } from './config.js';
+import { resumenContactos } from './contactos.js';
 
 /* --------------------------------- utilidades ----------------------------- */
 
@@ -392,6 +393,7 @@ export function vistaPanel(negocio) {
     propietariaId: negocio.propietaria_id,
     enlacePagoCrece: negocio.enlace_pago_crece || null,
     interacciones: interaccionesDe(negocio.id),
+    contactos: resumenContactos(negocio.id),
   };
 }
 

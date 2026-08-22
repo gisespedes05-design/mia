@@ -104,6 +104,7 @@ r.post('/api/blog/:id/reaccion', blog.reaccionar);
 
 // ----------------------------------------------------------------- admin --
 r.get('/api/admin/resumen', admin.resumen);
+r.get('/api/admin/contactos', admin.contactosAdmin);
 r.get('/api/admin/solicitudes', admin.listarSolicitudes);
 r.patch('/api/admin/solicitudes/:id', admin.alternarSolicitud);
 r.get('/api/admin/negocios', admin.listarNegocios);

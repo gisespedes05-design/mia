@@ -400,6 +400,12 @@ export function registrarInteraccion(ctx) {
   if (!negocio || negocio.estado !== ESTADO_VISIBLE) throw new ErrorHttp(404, 'No encontramos ese negocio.');
   const tipo = String(ctx.cuerpo.tipo || '');
   if (!TIPOS_INTERACCION.includes(tipo)) throw new ErrorHttp(400, 'Ese tipo de interacción no existe.');
-  ejecutar(`INSERT INTO interacciones (negocio_id, tipo) VALUES ($id, $tipo)`, { id: negocio.id, tipo });
+
+  // Igual que las vistas de perfil: la propia dueña probando su botón de
+  // WhatsApp no debe inflar su propio contador de contactos.
+  const esSuPropiaDuena = Boolean(ctx.usuario) && ctx.usuario.id === negocio.propietaria_id;
+  if (!esSuPropiaDuena) {
+    ejecutar(`INSERT INTO interacciones (negocio_id, tipo) VALUES ($id, $tipo)`, { id: negocio.id, tipo });
+  }
   return { ok: true };
 }

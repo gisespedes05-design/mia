@@ -3,6 +3,7 @@ import { ErrorHttp, exigirRol } from '../auth.js';
 import { ROLES, PLANES, ORDEN_PLANES, ESTADOS_NEGOCIO, reglasVigentes } from '../config.js';
 import { obtenerNegocioPorId, vistaPanel, texto } from '../negocios.js';
 import { avisarNuevoNegocio, avisarNegocioVerificado } from '../correo.js';
+import { resumenContactos } from '../contactos.js';
 
 const soloAdmin = (ctx) => exigirRol(ctx, ROLES.ADMIN);
 
@@ -46,6 +47,7 @@ export function resumen(ctx) {
     0
   );
   const totalUsuarios = uno(`SELECT COUNT(*) c FROM usuarios`).c;
+  const contactosMensuales = negocios.reduce((acc, n) => acc + resumenContactos(n.id).actual.total, 0);
 
   const porPlan = {};
   for (const plan of ORDEN_PLANES) {
@@ -53,10 +55,49 @@ export function resumen(ctx) {
   }
 
   return {
-    publicados, pendientes, nuevasSolicitudes, enMapa, ingresoMensual, totalUsuarios, porPlan,
+    publicados, pendientes, nuevasSolicitudes, enMapa, ingresoMensual, totalUsuarios, porPlan, contactosMensuales,
     sinPagoConfirmar: conReglas.filter(({ r }) => r.sinPago).length,
     membresiasVencidas: conReglas.filter(({ r }) => r.vencida).length,
   };
+}
+
+/**
+ * Contactos generados por MÍA este mes, desglosados por tipo, por plan y
+ * por negocio — la vista detallada detrás del número grande del resumen.
+ */
+export function contactosAdmin(ctx) {
+  soloAdmin(ctx);
+  const negocios = todos(`SELECT * FROM negocios`);
+
+  const filas = negocios.map((n) => ({
+    id: n.id,
+    nombre: n.nombre,
+    plan: reglasVigentes(n).planEfectivo,
+    contactos: resumenContactos(n.id).actual,
+  }));
+
+  const total = filas.reduce((acc, f) => acc + f.contactos.total, 0);
+  const porTipo = filas.reduce(
+    (acc, f) => {
+      acc.conversaciones += f.contactos.conversaciones;
+      acc.consultas += f.contactos.consultas;
+      acc.whatsapp += f.contactos.whatsapp;
+      acc.telefono += f.contactos.telefono;
+      acc.redes += f.contactos.redes;
+      return acc;
+    },
+    { conversaciones: 0, consultas: 0, whatsapp: 0, telefono: 0, redes: 0 }
+  );
+  const porPlan = {};
+  for (const plan of ORDEN_PLANES) {
+    porPlan[plan] = filas.filter((f) => f.plan === plan).reduce((acc, f) => acc + f.contactos.total, 0);
+  }
+  const porNegocio = filas
+    .filter((f) => f.contactos.total > 0)
+    .sort((a, b) => b.contactos.total - a.contactos.total)
+    .map((f) => ({ id: f.id, nombre: f.nombre, plan: f.plan, ...f.contactos }));
+
+  return { total, porTipo, porPlan, porNegocio };
 }
 
 const reglasDe = (negocioFila) => reglasVigentes(negocioFila);
