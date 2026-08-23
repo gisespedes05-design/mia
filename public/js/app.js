@@ -473,7 +473,8 @@ async function pintar() {
     else if (vista === "planes") html = vistaPlanes();
     else if (vista === "registro") html = vistaRegistro(arg);
     else if (vista === "entrar") html = vistaEntrar(arg, arg2);
-    else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
+    else if (vista === "favoritos") html = !YO ? vistaFavoritosSinSesion()
+      : YO.rol === "usuario" ? await vistaFavoritos() : sinAcceso();
     else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
     else if (vista === "notificaciones") html = YO && (YO.rol === "usuario" || YO.rol === "negocio") ? await vistaNotificaciones() : sinAcceso();
     else if (vista === "ventas") html = YO ? await vistaVentas(arg) : sinAcceso();
@@ -1463,6 +1464,25 @@ async function alternarSeguir(negocioId) {
     await pintar();
     avisar(r.siguiendo ? "Ahora sigues a este negocio. Te avisamos cuando publique." : "Dejaste de seguir este negocio.");
   } catch (err) { avisarError(err); }
+}
+
+/** Favoritos es una función de clientas. Sin sesión, no sabemos todavía qué
+ * tipo de cuenta tiene quien toca esta pestaña — así que en vez del genérico
+ * "esta sección no es para tu tipo de cuenta" (que da a entender que ya
+ * sabemos que no le corresponde), se le explica para qué sirve y se le
+ * manda al mismo selector "¿Qué eres?" de siempre. */
+function vistaFavoritosSinSesion() {
+  return '<div class="envoltura bloque" style="max-width:520px">' +
+    '<div class="tarjeta"><div class="estado-vacio">' +
+      '<div class="glifo">' + ICONO_CORAZON + "</div>" +
+      "<h2>Guarda tus negocios favoritos</h2>" +
+      "<p>Inicia sesión como clienta para guardar los negocios que te interesan, " +
+      "encontrarlos fácilmente después y tenerlos siempre a la mano.</p>" +
+      '<div class="pila g8" style="width:100%;max-width:280px">' +
+        '<a class="btn ancho" href="#/entrar">Iniciar sesión</a>' +
+        '<a class="btn linea ancho" href="#/entrar">Crear una cuenta</a>' +
+      "</div>" +
+    "</div></div></div>";
 }
 
 async function vistaFavoritos() {
