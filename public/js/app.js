@@ -458,7 +458,7 @@ async function actualizarBadgeNotificaciones() {
 
 /** Cada vista es una función async que arma su propio HTML. */
 async function pintar() {
-  const { vista, arg } = ruta();
+  const { vista, arg, arg2 } = ruta();
   const app = $("app");
   app.setAttribute("aria-busy", "true");
   try {
@@ -472,7 +472,7 @@ async function pintar() {
     else if (vista === "privacidad") html = vistaPrivacidad();
     else if (vista === "planes") html = vistaPlanes();
     else if (vista === "registro") html = vistaRegistro(arg);
-    else if (vista === "entrar") html = vistaEntrar(arg);
+    else if (vista === "entrar") html = vistaEntrar(arg, arg2);
     else if (vista === "favoritos") html = YO ? await vistaFavoritos() : sinAcceso();
     else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
     else if (vista === "notificaciones") html = YO && (YO.rol === "usuario" || YO.rol === "negocio") ? await vistaNotificaciones() : sinAcceso();
@@ -1683,49 +1683,114 @@ async function enviarRegistro(planId) {
   } catch (err) { decir(err instanceof ErrorApi ? err.message : "No se pudo completar el registro."); }
 }
 
-/* ==================================================================== ENTRAR */
+/* ==================================================================== ENTRAR
+ * Flujo de acceso en pasos: 1) ¿qué eres? 2) cuenta de negocio/clienta →
+ * iniciar sesión o crear cuenta 3) el formulario real. El equipo de MÍA
+ * tiene su propia entrada, separada, al pie del paso 1. Los tres "tipos"
+ * comparten el mismo formulario de login y el mismo endpoint de siempre
+ * (/api/auth/entrar) — el tipo solo cambia el texto que ve la persona, no
+ * la autenticación: el rol y los permisos los decide el servidor. */
 const TIPOS_ENTRADA = {
-  negocio: ["Negocio", "Entra con el correo y la contraseña de tu negocio."],
-  usuario: ["Usuaria", "Entra con el correo y la contraseña de tu cuenta."],
-  admin: ["Organización MÍA", "Entra con tu correo y contraseña de administradora."],
+  negocio: ["Cuenta de negocio", "Iniciar sesión", "Entra con el correo y la contraseña de tu negocio."],
+  usuario: ["Cuenta de clienta", "Iniciar sesión", "Entra con el correo y la contraseña de tu cuenta."],
+  admin: ["Equipo MÍA", "Acceso administrativo", "Entra con tu correo y tu contraseña de administradora."],
 };
 
-function vistaEntrar(tipo) {
-  const datos = TIPOS_ENTRADA[tipo];
+const OPCIONES_TIPO = {
+  negocio: {
+    titulo: "Cuenta de negocio",
+    entrar: "Ya tengo una cuenta de negocio en MÍA.",
+    crear: "Quiero registrar mi negocio en MÍA.",
+    hrefCrear: "#/planes",
+  },
+  usuario: {
+    titulo: "Cuenta de clienta",
+    entrar: "Ya tengo una cuenta en MÍA.",
+    crear: "Quiero descubrir y guardar negocios en MÍA.",
+    hrefCrear: "#/entrar/usuario/registro",
+  },
+};
 
-  const eleccion = '<div class="tarjeta p20 pila g12">' +
-    '<a class="btn ancho" href="#/entrar/negocio">Soy un negocio</a>' +
-    '<a class="btn linea ancho" href="#/entrar/usuario">Soy usuaria / clienta</a>' +
-    '<p class="pequeno apagado" style="text-align:center;margin-top:4px">¿Eres del equipo de MÍA? ' +
-    '<a href="#/entrar/admin">Entra aquí</a></p></div>';
+function vistaEntrar(tipo, paso) {
+  if (tipo === "admin") return pasoLogin("admin", "#/entrar");
+  if (tipo && OPCIONES_TIPO[tipo]) {
+    if (paso === "login") return pasoLogin(tipo, "#/entrar/" + tipo);
+    if (paso === "registro" && tipo === "usuario") return pasoRegistroClienta();
+    return pasoTipoCuenta(tipo);
+  }
+  return pasoQueEres();
+}
 
-  const formulario = !datos ? "" : '<div class="tarjeta p20 pila g12">' +
-    '<p class="eyebrow">' + esc(datos[0]) + "</p>" +
-    '<p class="pequeno apagado">' + esc(datos[1]) + "</p>" +
-    '<label class="campo">Correo electrónico<input id="e_correo" type="email" autocomplete="username"></label>' +
-    '<label class="campo">Contraseña<input id="e_clave" type="password" autocomplete="current-password" ' +
-      'onkeydown="if(event.key===\'Enter\')hacerEntrar()"></label>' +
-    '<button class="btn ancho" onclick="hacerEntrar()">Entrar</button>' +
-    '<p id="e_error" class="pequeno" style="color:var(--peligro)"></p>' +
-    '<a class="pequeno" href="#/entrar">‹ Elegir otro tipo de cuenta</a>' +
-  "</div>";
+function opcionTipoLink(tipo, titulo, texto, icono) {
+  return '<a class="opcion-tipo" href="#/entrar/' + tipo + '">' +
+    '<div class="glifo">' + icono + "</div>" +
+    '<div class="pila g4"><h3>' + esc(titulo) + "</h3><p>" + esc(texto) + "</p></div>" +
+    ICONO_CHEVRON +
+  "</a>";
+}
 
+function pasoQueEres() {
   return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
-    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Iniciar sesión</h1></div>' +
-    (datos ? formulario : eleccion) +
-    (datos ? "" :
-      '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Tienes un negocio?</p>' +
-      '<p class="pequeno apagado">El registro se hace desde el plan que elijas: cada uno tiene ' +
-      "su propio formulario.</p>" +
-      '<a class="btn linea ancho" href="#/planes">Ver los planes y registrarme</a></div>' +
-      '<div class="tarjeta p20 pila g12"><p class="eyebrow">¿Solo quieres comprar?</p>' +
+    '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Iniciar sesión</h1>' +
+      '<p class="pequeno" style="font-weight:700">¿Qué eres?</p></div>' +
+    '<div class="pila g12">' +
+      opcionTipoLink("negocio", "Soy un negocio",
+        "Administro un negocio y quiero usar MÍA para hacerlo crecer.", ICONO_NEGOCIO) +
+      opcionTipoLink("usuario", "Soy clienta",
+        "Quiero descubrir negocios, guardar favoritos y contactar emprendedoras.", ICONO_CORAZON) +
+    "</div>" +
+    '<p class="pequeno apagado" style="text-align:center">¿Eres parte del equipo de MÍA? ' +
+      '<a class="enlace-acento" href="#/entrar/admin">Acceso administrativo</a></p>' +
+  "</div>";
+}
+
+function pasoTipoCuenta(tipo) {
+  const o = OPCIONES_TIPO[tipo];
+  return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="#/entrar">‹ Volver</a>' +
+      '<p class="eyebrow">Tu cuenta</p><h1>' + esc(o.titulo) + "</h1></div>" +
+    '<div class="tarjeta p20 pila g16">' +
+      '<div class="pila g8">' +
+        '<a class="btn ancho" href="#/entrar/' + tipo + '/login">Iniciar sesión</a>' +
+        '<p class="diminuto apagado" style="text-align:center">' + esc(o.entrar) + "</p>" +
+      "</div>" +
+      '<div class="pila g8">' +
+        '<a class="btn linea ancho" href="' + o.hrefCrear + '">Crear una cuenta</a>' +
+        '<p class="diminuto apagado" style="text-align:center">' + esc(o.crear) + "</p>" +
+      "</div>" +
+    "</div>" +
+  "</div>";
+}
+
+function pasoLogin(tipo, volverHref) {
+  const [eyebrow, titulo, sub] = TIPOS_ENTRADA[tipo];
+  return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="' + volverHref + '">‹ Volver</a>' +
+      '<p class="eyebrow">' + esc(eyebrow) + "</p><h1>" + esc(titulo) + "</h1></div>" +
+    '<div class="tarjeta p20 pila g12">' +
+      '<p class="pequeno apagado">' + esc(sub) + "</p>" +
+      '<label class="campo">Correo electrónico<input id="e_correo" type="email" autocomplete="username"></label>' +
+      '<label class="campo">Contraseña<input id="e_clave" type="password" autocomplete="current-password" ' +
+        'onkeydown="if(event.key===\'Enter\')hacerEntrar()"></label>' +
+      '<button class="btn ancho" onclick="hacerEntrar()">Entrar</button>' +
+      '<p id="e_error" class="pequeno" style="color:var(--peligro)"></p>' +
+    "</div>" +
+  "</div>";
+}
+
+function pasoRegistroClienta() {
+  return '<div class="envoltura bloque pila g24" style="max-width:440px">' +
+    '<div class="pila g8"><a class="pequeno apagado" href="#/entrar/usuario">‹ Volver</a>' +
+      '<p class="eyebrow">Cuenta de clienta</p><h1>Crear una cuenta</h1></div>' +
+    '<div class="tarjeta p20 pila g12">' +
       '<label class="campo">Tu nombre<input id="r_nombre"></label>' +
       '<label class="campo">Correo electrónico<input id="r_correo" type="email"></label>' +
       '<label class="campo">Contraseña<input id="r_clave" type="password" placeholder="Mínimo 8 caracteres"></label>' +
       consentimientosHtml("r") +
-      '<button class="btn linea ancho" onclick="hacerRegistroCliente()">Crear cuenta de clienta</button>' +
-      '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p></div>') +
-    "</div>";
+      '<button class="btn ancho" onclick="hacerRegistroCliente()">Crear cuenta de clienta</button>' +
+      '<p id="r_error" class="pequeno" style="color:var(--peligro)"></p>' +
+    "</div>" +
+  "</div>";
 }
 
 async function hacerEntrar() {

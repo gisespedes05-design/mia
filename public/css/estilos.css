@@ -374,6 +374,20 @@ footer{border-top:1px solid var(--linea);padding:26px 0 90px;background:var(--fo
 .burbuja.mia{align-self:flex-end;background:var(--acento);border-color:transparent;color:var(--acento-tinta)}
 .numero-destacado{font-family:var(--display);font-size:2.4rem;font-weight:600;letter-spacing:-.01em;line-height:1}
 
+/* pantalla de acceso: elección grande de tipo de cuenta (paso 1 de /entrar) */
+.opcion-tipo{display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left;
+  background:var(--superficie);border:1.5px solid var(--linea);border-radius:var(--r-grande);
+  box-shadow:var(--sombra);text-decoration:none;color:inherit;
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+.opcion-tipo:hover{transform:translateY(-2px);box-shadow:var(--sombra-alta);border-color:var(--acento)}
+.opcion-tipo .glifo{width:52px;height:52px;border-radius:50%;background:var(--acento-suave);
+  color:var(--acento);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opcion-tipo .glifo svg{width:var(--icono-grande);height:var(--icono-grande)}
+.opcion-tipo .pila{flex:1;min-width:0}
+.opcion-tipo h3{margin:0 0 2px}
+.opcion-tipo p{margin:0;color:var(--texto2);font-size:.85rem}
+.opcion-tipo>svg{width:var(--icono-medio);height:var(--icono-medio);color:var(--texto2);flex-shrink:0}
+
 .estado-vacio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:38px 22px}
 .estado-vacio .glifo{width:52px;height:52px;border-radius:50%;background:var(--fondo2);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;color:var(--texto2)}
