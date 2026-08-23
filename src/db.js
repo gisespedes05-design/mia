@@ -108,6 +108,24 @@ CREATE TABLE IF NOT EXISTS favoritos (
   PRIMARY KEY (usuario_id, negocio_id)
 );
 
+-- Favorito de un producto puntual (distinto de "favoritos", que es de
+-- negocio completo — misma idea que ya separa "favoritos" de "seguidores").
+-- producto_id se pone en NULL si el negocio borra ese producto: la fila
+-- sobrevive (con el nombre que tenía) en vez de desaparecer sin avisar,
+-- igual que ya hace consultas_producto con sus propias preguntas viejas.
+-- negocio_id se guarda aparte (no solo vía producto_id) para que la señal
+-- de "qué categorías le interesan a esta clienta" sobreviva aunque el
+-- producto ya no exista — es la base para la futura "Recomendado para ti".
+CREATE TABLE IF NOT EXISTS favoritos_productos (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id       INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  producto_id      INTEGER REFERENCES productos(id) ON DELETE SET NULL,
+  producto_nombre  TEXT NOT NULL,
+  negocio_id       INTEGER NOT NULL REFERENCES negocios(id) ON DELETE CASCADE,
+  creado_en        TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (usuario_id, producto_id)
+);
+
 -- Una usuaria sigue a un negocio: cuando ese negocio publica, le llega una
 -- notificación (tabla de abajo). Distinta de "favoritos" porque un favorito
 -- es privado y esto SÍ dispara avisos.
@@ -268,6 +286,9 @@ CREATE TABLE IF NOT EXISTS vistas_perfil (
   creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_favoritos_prod_usu  ON favoritos_productos(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_favoritos_prod_prod  ON favoritos_productos(producto_id);
+CREATE INDEX IF NOT EXISTS idx_favoritos_prod_neg   ON favoritos_productos(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_interacciones_neg  ON interacciones(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_vistas_perfil_neg  ON vistas_perfil(negocio_id);
 CREATE INDEX IF NOT EXISTS idx_seguidores_negocio ON seguidores(negocio_id);

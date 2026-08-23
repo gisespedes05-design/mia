@@ -465,6 +465,7 @@ async function pintar() {
     let html;
     if (vista === "directorio") html = arg ? await vistaCategoria(arg) : await vistaDirectorio();
     else if (vista === "negocio") html = await vistaNegocio(arg);
+    else if (vista === "producto") html = await vistaProductoDetalle(arg);
     else if (vista === "mapa") html = await vistaMapa();
     else if (vista === "blog") html = arg ? await vistaArticulo(arg) : await vistaBlog();
     else if (vista === "sobre") html = vistaSobre();
@@ -474,7 +475,7 @@ async function pintar() {
     else if (vista === "registro") html = vistaRegistro(arg);
     else if (vista === "entrar") html = vistaEntrar(arg, arg2);
     else if (vista === "favoritos") html = !YO ? vistaFavoritosSinSesion()
-      : YO.rol === "usuario" ? await vistaFavoritos() : sinAcceso();
+      : YO.rol === "usuario" ? await vistaFavoritos(arg) : sinAcceso();
     else if (vista === "mensajes") html = YO ? (arg ? await vistaHiloMensaje(arg) : await vistaBandejaMensajes()) : sinAcceso();
     else if (vista === "notificaciones") html = YO && (YO.rol === "usuario" || YO.rol === "negocio") ? await vistaNotificaciones() : sinAcceso();
     else if (vista === "ventas") html = YO ? await vistaVentas(arg) : sinAcceso();
@@ -1235,10 +1236,14 @@ async function vistaNegocio(slug) {
 
   const mio = YO && YO.rol === "admin"; // la comparación con la dueña real se resuelve en el servidor
   const c = cat(n.categoria);
-  let esFav = false, esSeguidora = false;
+  let esFav = false, esSeguidora = false, favoritoProductoIds = new Set();
   if (YO && YO.rol === "usuario") {
     try { esFav = (await api.get("/api/favoritos")).some((f) => f.id === n.id); } catch { /* sin favoritos */ }
     try { esSeguidora = (await api.get("/api/mis-seguidos")).some((f) => f.id === n.id); } catch { /* sin seguidos */ }
+    if (n.productos.length) {
+      try { favoritoProductoIds = new Set((await api.get("/api/favoritos/productos")).map((f) => f.productoId)); }
+      catch { /* sin favoritos de producto */ }
+    }
   }
   const miReseña = YO && YO.rol === "usuario" ? n.resenas.find((r) => r.usuario_id === YO.id) : null;
 
@@ -1304,9 +1309,9 @@ async function vistaNegocio(slug) {
 
     (n.productos.length ? '<div class="pila g12"><p class="eyebrow">Productos y servicios</p>' +
       (destacados.length ? '<div class="rejilla">' + destacados.map((x) =>
-        fichaProducto(x, true, n.id, Boolean(YO && YO.rol === "usuario"))).join("") + "</div>" : "") +
+        fichaProducto(x, true, n.id, Boolean(YO && YO.rol === "usuario"), favoritoProductoIds.has(x.id))).join("") + "</div>" : "") +
       (normales.length ? '<div class="rejilla">' + normales.map((x) =>
-        fichaProducto(x, false, n.id, Boolean(YO && YO.rol === "usuario"))).join("") + "</div>" : "") +
+        fichaProducto(x, false, n.id, Boolean(YO && YO.rol === "usuario"), favoritoProductoIds.has(x.id))).join("") + "</div>" : "") +
       "</div>" : "") +
 
     (n.publicaciones.length ? '<div class="pila g12"><p class="eyebrow">Publicaciones</p>' +
@@ -1325,17 +1330,39 @@ async function vistaNegocio(slug) {
 }
 
 /** El mismo estilo de tarjeta que las del directorio: foto (o degradado con
- * su inicial si no hay), nombre, descripción y precio. */
-function productoImagenHtml(p, destacado) {
+ * su inicial si no hay), nombre, descripción y precio. `corazon` es el HTML
+ * del botón de favorito (ver corazonProducto); se omite por completo en la
+ * vista de la propia dueña, que nunca debe verlo. */
+function productoImagenHtml(p, destacado, corazon) {
   return '<div class="portada">' + (p.imagen ? imagenHtml(p.imagen, p.nombre) :
     '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + tonoDe(p.nombre).join(",") +
     ')"></div><span class="inicial">' + esc((p.nombre || "P").trim()[0] || "P") + "</span>") +
     (destacado ? '<span class="chip rosa" style="position:absolute;top:10px;left:10px">Destacado</span>' : "") +
+    (corazon ? '<div style="position:absolute;top:10px;right:10px">' + corazon + "</div>" : "") +
   "</div>";
 }
 
-const fichaProducto = (x, destacado, negocioId, puedeConsultar) => '<div class="tarjeta tarjeta-negocio">' +
-  productoImagenHtml(x, destacado) +
+/** Favorito de producto ("me gusta, quiero guardarlo para después") — no
+ * confundir con "Me interesa" (consultarProducto, más abajo), que es una
+ * acción totalmente distinta: le escribe al negocio y sí cuenta como
+ * contacto generado. Este botón nunca hace ninguna de esas dos cosas.
+ * Mismo ícono de siempre (ICONO_CORAZON): el estado "guardado" es solo CSS
+ * (.activo rellena el trazo), así que hay un único corazón en todo MÍA. */
+function corazonProducto(productoId, esFavorito) {
+  if (YO && YO.rol !== "usuario") return ""; // los negocios no tienen favoritos de producto
+  const activo = Boolean(YO) && esFavorito;
+  const etiqueta = activo ? "Quitar de favoritos" : "Guardar en favoritos";
+  if (!YO) {
+    return '<a class="btn-corazon" href="#/entrar" aria-label="Inicia sesión para guardar en favoritos" ' +
+      'onclick="avisar(\'Inicia sesión como clienta para guardar tus favoritos.\')">' + ICONO_CORAZON + "</a>";
+  }
+  return '<button type="button" class="btn-corazon' + (activo ? " activo" : "") + '" aria-label="' + etiqueta +
+    '" aria-pressed="' + activo + '" onclick="event.preventDefault();event.stopPropagation();' +
+    "alternarFavoritoProducto(" + productoId + "," + activo + ')">' + ICONO_CORAZON + "</button>";
+}
+
+const fichaProducto = (x, destacado, negocioId, puedeConsultar, esFavorito) => '<div class="tarjeta tarjeta-negocio">' +
+  productoImagenHtml(x, destacado, corazonProducto(x.id, esFavorito)) +
   '<div class="cuerpo">' +
     "<strong>" + esc(x.nombre) + "</strong>" +
     (x.descripcion ? '<p class="pequeno apagado">' + esc(x.descripcion) + "</p>" : "") +
@@ -1347,6 +1374,47 @@ const fichaProducto = (x, destacado, negocioId, puedeConsultar) => '<div class="
         ',\'interesa\')">Me interesa</button>' +
     "</div>" : "") +
   "</div></div>";
+
+/** Página individual de un producto: hace posible que un favorito ("tocar
+ * la tarjeta y regresar directamente al producto") o una futura recomendación
+ * lleven a un solo producto sin tener que abrir todo el perfil del negocio.
+ * El negocio que lo ofrece siempre queda a la vista, con su propio enlace. */
+async function vistaProductoDetalle(id) {
+  let p;
+  try { p = await api.get("/api/productos/" + id); }
+  catch { return vacio("Este producto ya no está disponible."); }
+
+  let esFavorito = false;
+  if (YO && YO.rol === "usuario") {
+    try { esFavorito = (await api.get("/api/favoritos/productos")).some((f) => f.productoId === p.id); }
+    catch { /* sin favoritos */ }
+  }
+  const n = p.negocio;
+
+  return '<div class="envoltura bloque pila g24" style="max-width:560px">' +
+    '<a class="pequeno apagado" href="#/negocio/' + esc(n.slug) + '">‹ ' + esc(n.nombre) + "</a>" +
+    '<div class="tarjeta" style="overflow:hidden">' +
+      productoImagenHtml(p, p.destacado, corazonProducto(p.id, esFavorito)) +
+      '<div class="pila g8" style="padding:20px">' +
+        "<h1>" + esc(p.nombre) + "</h1>" +
+        '<a class="fila g8" href="#/negocio/' + esc(n.slug) + '" style="text-decoration:none;color:inherit">' +
+          (n.categoriaIcono ? n.categoriaIcono + " " : "") + "<strong>" + esc(n.nombre) + "</strong>" +
+          (n.verificado ? '<span class="chip jade">Verificado</span>' : "") +
+        "</a>" +
+        (n.ciudad ? '<p class="pequeno apagado">📍 ' + esc(ciudadCompleta(n)) + "</p>" : "") +
+        (p.descripcion ? '<p class="pequeno" style="white-space:pre-wrap">' + esc(p.descripcion) + "</p>" : "") +
+        (p.precio ? '<p class="mono" style="font-weight:700;font-size:1.3rem">' + pesos(p.precio) + "</p>" : "") +
+        (YO && YO.rol === "usuario" ? '<div class="fila g8">' +
+          '<button class="btn linea chico" onclick="consultarProducto(' + n.id + "," + p.id +
+            ',\'disponible\')">¿Aún disponible?</button>' +
+          '<button class="btn chico" onclick="consultarProducto(' + n.id + "," + p.id +
+            ',\'interesa\')">Me interesa</button>' +
+        "</div>" : !YO ? '<div class="aviso">Para preguntar por este producto ' +
+          '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
+      "</div>" +
+    "</div>" +
+  "</div>";
+}
 
 /** Publicación tal como la ve cualquier visitante: como un post, con foto
  * (si tiene), texto y un enlace a verla completa con sus comentarios. */
@@ -1458,6 +1526,28 @@ async function alternarFavorito(negocioId, eraFavorito) {
   } catch (err) { avisarError(err); }
 }
 
+/** El único mecanismo para guardar/quitar un producto favorito — lo usan
+ * por igual la ficha del producto en el perfil del negocio y su página
+ * individual, para no duplicar esta lógica en dos lados. */
+async function alternarFavoritoProducto(productoId, eraFavorito) {
+  try {
+    if (eraFavorito) await api.del("/api/favoritos/productos/" + productoId);
+    else await api.post("/api/favoritos/productos/" + productoId);
+    await pintar();
+    avisar(eraFavorito ? "Lo quitamos de tus favoritos." : "Lo guardamos en tus favoritos.");
+  } catch (err) { avisarError(err); }
+}
+
+/** Solo para limpiar de la lista de Favoritos un producto que el negocio ya
+ * borró (no tiene producto_id con el que llamar a alternarFavoritoProducto). */
+async function quitarFavoritoProductoRegistro(id) {
+  try {
+    await api.del("/api/favoritos/productos/registro/" + id);
+    await pintar();
+    avisar("Lo quitamos de tus favoritos.");
+  } catch (err) { avisarError(err); }
+}
+
 async function alternarSeguir(negocioId) {
   try {
     const r = await api.post("/api/negocios/" + negocioId + "/seguir");
@@ -1485,12 +1575,71 @@ function vistaFavoritosSinSesion() {
     "</div></div></div>";
 }
 
-async function vistaFavoritos() {
-  const lista = await api.get("/api/favoritos");
+/** Tarjeta de un producto guardado, tal como la ve la lista de Favoritos:
+ * siempre con el negocio que lo ofrece a la vista (nunca "un producto
+ * suelto"), y con un estado propio si el negocio ya lo borró — la fila
+ * sobrevive porque favoritos_productos guarda un snapshot del nombre. */
+function tarjetaProductoFavorito(f) {
+  if (!f.disponible) {
+    return '<div class="tarjeta tarjeta-negocio" style="opacity:.6">' +
+      '<div class="portada" style="display:flex;align-items:center;justify-content:center;padding:14px;text-align:center">' +
+        '<span class="pequeno apagado">Ya no disponible</span></div>' +
+      '<div class="cuerpo">' +
+        "<strong>" + esc(f.nombre) + "</strong>" +
+        '<p class="diminuto apagado">Este producto ya no está disponible.</p>' +
+        '<button class="btn linea chico" onclick="quitarFavoritoProductoRegistro(' + f.id + ')">Quitar de favoritos</button>' +
+      "</div></div>";
+  }
+  return '<div class="tarjeta tarjeta-negocio">' +
+    productoImagenHtml(f, f.destacado) +
+    '<div class="cuerpo">' +
+      "<strong>" + esc(f.nombre) + "</strong>" +
+      '<p class="diminuto apagado">' + (f.negocio.categoriaIcono ? f.negocio.categoriaIcono + " " : "") +
+        esc(f.negocio.nombre) + "</p>" +
+      (f.negocio.ciudad ? '<p class="diminuto apagado">📍 ' + esc(ciudadCompleta(f.negocio)) + "</p>" : "") +
+      (f.precio ? '<p class="mono" style="font-weight:700">' + pesos(f.precio) + "</p>" : "") +
+      '<div class="fila entre g8">' + corazonProducto(f.productoId, true) +
+        '<a class="btn linea chico" href="#/producto/' + f.productoId + '">Ver producto</a>' +
+      "</div>" +
+    "</div></div>";
+}
+
+/** Favoritos de clienta: negocios y productos son dos cosas distintas para
+ * ella (guardar un negocio ≠ guardar un producto puntual), así que se
+ * muestran en secciones separadas con pestañas — nunca mezclados en la
+ * misma cuadrícula sin etiqueta de qué es cada cosa. */
+async function vistaFavoritos(sub) {
+  const tab = sub === "negocios" || sub === "productos" ? sub : "todos";
+  const [negociosFav, productosFav] = await Promise.all([
+    api.get("/api/favoritos"), api.get("/api/favoritos/productos"),
+  ]);
+
+  const chip = (id, etiqueta) => '<a class="chip' + (tab === id ? " rosa" : "") + '" style="text-decoration:none" ' +
+    'href="#/favoritos' + (id === "todos" ? "" : "/" + id) + '">' + etiqueta + "</a>";
+  const pestañas = '<div class="fila g8">' + chip("todos", "Todos") + chip("negocios", "🏪 Negocios") +
+    chip("productos", "🛍️ Productos") + "</div>";
+
+  let cuerpo = "";
+  if (tab !== "productos") {
+    cuerpo += negociosFav.length
+      ? '<div class="pila g12"><p class="eyebrow">🏪 Negocios</p><div class="rejilla">' +
+        negociosFav.map(tarjeta).join("") + "</div></div>"
+      : (tab === "negocios" ? vacio("Todavía no guardas ningún negocio. Toca ♡ en el perfil de un negocio para guardarlo.") : "");
+  }
+  if (tab !== "negocios") {
+    cuerpo += productosFav.length
+      ? '<div class="pila g12"><p class="eyebrow">🛍️ Productos</p><div class="rejilla">' +
+        productosFav.map(tarjetaProductoFavorito).join("") + "</div></div>"
+      : (tab === "productos" ? vacio("Todavía no guardas ningún producto. Toca el corazón en un producto que te guste.") : "");
+  }
+  if (tab === "todos" && !negociosFav.length && !productosFav.length) {
+    cuerpo = vacio("Guarda negocios y productos que te interesen para encontrarlos fácilmente después.");
+  }
+
   return '<div class="envoltura bloque pila g24">' +
     '<div class="pila g8"><p class="eyebrow">Tu cuenta</p><h1>Tus favoritos</h1></div>' +
-    (lista.length ? '<div class="rejilla">' + lista.map(tarjeta).join("") + "</div>"
-      : vacio("Abre cualquier negocio y toca “Guardar en favoritos”.")) + "</div>";
+    pestañas + cuerpo +
+  "</div>";
 }
 /* ==================================================================== PLANES */
 function vistaPlanes() {

@@ -4,7 +4,7 @@ import { CATEGORIAS, ESTADO_VISIBLE } from '../config.js';
 import {
   buscarNegocios, negociosEnMapa, obtenerNegocioPorId, obtenerNegocioPorSlug,
   vistaPublica, vistaPanel, exigirPropiedad, esVisiblePara, texto, normalizarCategoria2, normalizarSub, normalizarRedes,
-  TIPOS_INTERACCION, reporteMensual,
+  TIPOS_INTERACCION, reporteMensual, cat,
 } from '../negocios.js';
 import { reglasVigentes } from '../config.js';
 import { notificarASeguidoras } from '../notificaciones.js';
@@ -359,6 +359,32 @@ export function verPublicacion(ctx) {
     creadoEn: actual.creado_en,
     negocio: { id: negocio.id, slug: negocio.slug, nombre: negocio.nombre, logo: negocio.logo ? `/subidas/${negocio.logo}` : null },
     comentarios: comentariosDePublicacion(p.id),
+  };
+}
+
+/** Página individual de un producto: mismo criterio de visibilidad que un
+ * negocio o una publicación (esVisiblePara). El id de producto ya es único
+ * por sí solo, así que no hace falta anidarlo bajo /negocios/:id. */
+export function verProducto(ctx) {
+  const p = uno(`SELECT * FROM productos WHERE id = $id`, { id: Number(ctx.params.id) });
+  if (!p) throw new ErrorHttp(404, 'Ese producto ya no existe.');
+  const negocio = obtenerNegocioPorId(p.negocio_id);
+  if (!negocio || !esVisiblePara(negocio, ctx.usuario)) throw new ErrorHttp(404, 'Ese producto ya no existe.');
+  const c = cat(negocio.categoria);
+
+  return {
+    id: p.id,
+    nombre: p.nombre,
+    descripcion: p.descripcion,
+    precio: p.precio,
+    imagen: p.imagen ? `/subidas/${p.imagen}` : null,
+    destacado: Boolean(p.destacado),
+    negocio: {
+      id: negocio.id, slug: negocio.slug, nombre: negocio.nombre,
+      logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
+      categoriaIcono: c.icono, ciudad: negocio.ciudad, alcaldiaMunicipio: negocio.alcaldia_municipio || '',
+      verificado: Boolean(negocio.verificado),
+    },
   };
 }
 

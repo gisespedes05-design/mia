@@ -374,6 +374,21 @@ footer{border-top:1px solid var(--linea);padding:26px 0 90px;background:var(--fo
 .burbuja.mia{align-self:flex-end;background:var(--acento);border-color:transparent;color:var(--acento-tinta)}
 .numero-destacado{font-family:var(--display);font-size:2.4rem;font-weight:600;letter-spacing:-.01em;line-height:1}
 
+/* corazón de favorito de producto: deliberadamente redondo e icónico, para
+   no confundirse nunca con los botones rectangulares de "Me interesa" —
+   son dos acciones distintas y deben distinguirse a simple vista.
+   Un solo ícono (ICONO_CORAZON) para los dos estados: activo solo cambia
+   fill/stroke por CSS, así que el trazo "se rellena" en vez de necesitar
+   un segundo SVG. */
+.btn-corazon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border-radius:50%;border:1px solid var(--linea);background:var(--superficie);color:var(--texto2);
+  cursor:pointer;padding:0;flex-shrink:0;text-decoration:none;
+  transition:transform .12s ease,background .12s ease,color .12s ease,border-color .12s ease}
+.btn-corazon svg{width:var(--icono-medio);height:var(--icono-medio)}
+.btn-corazon:hover{transform:scale(1.07)}
+.btn-corazon.activo{background:var(--acento-suave);border-color:transparent;color:var(--acento)}
+.btn-corazon.activo svg{fill:var(--acento)}
+
 /* pantalla de acceso: elección grande de tipo de cuenta (paso 1 de /entrar) */
 .opcion-tipo{display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left;
   background:var(--superficie);border:1.5px solid var(--linea);border-radius:var(--r-grande);

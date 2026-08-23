@@ -44,7 +44,7 @@ export function exigirCorreo(valor) {
   return correo;
 }
 
-const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1];
+export const cat = (id) => CATEGORIAS.find((c) => c.id === id) || CATEGORIAS[CATEGORIAS.length - 1];
 
 /**
  * La segunda categoría es opcional: sirve para negocios que cruzan dos

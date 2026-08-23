@@ -72,6 +72,7 @@ r.delete('/api/negocios/:id/publicaciones/:publicacionId', negocios.quitarPublic
 r.get('/api/publicaciones/:publicacionId', negocios.verPublicacion);
 r.post('/api/publicaciones/:publicacionId/comentarios', negocios.comentarPublicacion);
 r.delete('/api/publicaciones/comentarios/:id', negocios.borrarComentarioPublicacion);
+r.get('/api/productos/:id', negocios.verProducto);
 
 // --------------------------------------------------------------- reseñas --
 r.post('/api/negocios/:id/resenas', resenas.crearOActualizar);
@@ -82,6 +83,10 @@ r.post('/api/resenas/:id/responder', resenas.responder);
 r.get('/api/favoritos', favoritos.listar);
 r.post('/api/favoritos/:negocioId', favoritos.agregar);
 r.delete('/api/favoritos/:negocioId', favoritos.quitar);
+r.get('/api/favoritos/productos', favoritos.listarProductos);
+r.post('/api/favoritos/productos/:productoId', favoritos.agregarProducto);
+r.delete('/api/favoritos/productos/:productoId', favoritos.quitarProducto);
+r.delete('/api/favoritos/productos/registro/:id', favoritos.quitarRegistro);
 
 // --------------------------------------------------------- seguidores --
 r.post('/api/negocios/:id/seguir', notificaciones.alternarSeguir);
