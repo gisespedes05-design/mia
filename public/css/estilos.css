@@ -4,16 +4,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
 
 /* Paleta clara: "Vanilla Cream / Blush Petal / Rosewood / Sage Leaf /
-   Misty Sky / Midnight Lagoon". Paleta oscura: "Back in Black / Mountain
-   Heather / Decanting / Funkie Friday / Moonscape". --jade y --cobalto se
+   Misty Sky / Midnight Lagoon". Paleta oscura: "Azul Noche MÍA" — azul
+   marino profundo (nunca morado), con el mismo rosa empolvado que en
+   claro como acento, no como color dominante. --jade y --cobalto se
    derivan de Sage Leaf y Misty Sky, oscurecidas un poco (color-mix) para
    que el texto de los chips siga leyéndose bien sobre fondo claro.
 
-   --texto2 SIEMPRE se deriva de --texto (nunca copia el valor de --acento
-   ni --acento-suave): son dos roles distintos — texto2 es "lectura
-   secundaria", acento es "marca y acción" — y si alguna vez coinciden en
-   valor, todo el texto secundario se lee como si fuera de marca por
-   accidente (así pasaba en oscuro antes de esta fase). */
+   --texto2 nunca copia el valor de --acento ni --acento-suave: son dos
+   roles distintos — texto2 es "lectura secundaria", acento es "marca y
+   acción" — y si alguna vez coinciden en valor, todo el texto secundario
+   se lee como si fuera de marca por accidente (así pasaba en oscuro antes
+   de esta fase, cuando además todo el tema se sentía morado en vez de
+   azul marino). En claro, texto2 se deriva de texto por color-mix; en
+   oscuro se fija un azul grisáceo propio en vez de derivarlo, porque
+   mezclar el texto crema con el fondo da un gris neutro, no el azul frío
+   que pide la identidad de "noche". */
 :root{
   --fondo:#FFF7E6; --fondo2:#F7C8D3; --superficie:#FFFFFF;
   --texto:#2D3A47; --texto2:color-mix(in srgb, #2D3A47 55%, #FFF7E6);
@@ -33,23 +38,23 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --fondo:#16131F; --fondo2:#4A3F4B; --superficie:#4A3F4B;
-    --texto:#F0D9E4; --texto2:color-mix(in srgb, #F0D9E4 62%, #16131F);
-    --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
-    --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
-    --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
-    --mapa-tierra:#7A6672; --hero-tinte:color-mix(in srgb, #4A3F4B 55%, #16131F);
+    --fondo:#101B2B; --fondo2:#263C53; --superficie:#1B2A3A;
+    --texto:#F3ECE1; --texto2:#94A7BD;
+    --linea:color-mix(in srgb, #F3ECE1 20%, #101B2B);
+    --acento:#A8546F; --acento-tinta:#FFF7E6; --acento-suave:#33212A;
+    --cobalto:#93A8DD; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+    --mapa-tierra:#34506B; --hero-tinte:color-mix(in srgb, #1B2A3A 55%, #101B2B);
     --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
     --sombra-alta:0 4px 14px rgba(0,0,0,.45), 0 24px 48px -12px rgba(0,0,0,.65);
   }
 }
 :root[data-theme="dark"]{
-  --fondo:#16131F; --fondo2:#4A3F4B; --superficie:#4A3F4B;
-  --texto:#F0D9E4; --texto2:color-mix(in srgb, #F0D9E4 62%, #16131F);
-  --linea:color-mix(in srgb, #F0D9E4 22%, #16131F);
-  --acento:#806C79; --acento-tinta:#F0D9E4; --acento-suave:#C1A0AC;
-  --cobalto:#A6ACDA; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
-  --mapa-tierra:#7A6672; --hero-tinte:color-mix(in srgb, #4A3F4B 55%, #16131F);
+  --fondo:#101B2B; --fondo2:#263C53; --superficie:#1B2A3A;
+  --texto:#F3ECE1; --texto2:#94A7BD;
+  --linea:color-mix(in srgb, #F3ECE1 20%, #101B2B);
+  --acento:#A8546F; --acento-tinta:#FFF7E6; --acento-suave:#33212A;
+  --cobalto:#93A8DD; --sol:#F5C43A; --jade:#46C89E; --peligro:#FF8080;
+  --mapa-tierra:#34506B; --hero-tinte:color-mix(in srgb, #1B2A3A 55%, #101B2B);
   --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   --sombra-alta:0 4px 14px rgba(0,0,0,.45), 0 24px 48px -12px rgba(0,0,0,.65);
 }
