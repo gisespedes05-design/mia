@@ -393,6 +393,9 @@ const ICONO_ESCUDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICONO_ENTRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
   'stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>' +
   '<polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>';
+const ICONO_VACIO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 3h4l2-3h4"></path>' +
+  '<path d="M5.5 6h13L21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6L5.5 6Z"></path></svg>';
 const ICONO_PUBLICACION = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
   'stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5v3a2 2 0 0 0 2 2h1l3 5v-5h2l7 4V5l-7 4H6a2 2 0 0 0-2 2Z">' +
   "</path></svg>";
@@ -501,11 +504,14 @@ async function pintar() {
 }
 
 function sinAcceso() {
-  return '<div class="envoltura bloque pila g16" style="max-width:520px">' +
-    "<h2>Esta sección no es para tu tipo de cuenta</h2>" +
-    '<p class="apagado">En MÍA cada quien ve lo suyo: la organización administra, los negocios ' +
-    "editan su perfil y las visitantes dejan reseñas y guardan favoritos.</p>" +
-    '<div class="fila g8"><a class="btn" href="#/entrar">Iniciar sesión</a></div></div>';
+  return '<div class="envoltura bloque" style="max-width:520px">' +
+    '<div class="tarjeta"><div class="estado-vacio">' +
+      '<div class="glifo">' + ICONO_ESCUDO + "</div>" +
+      "<h2>Esta sección no es para tu tipo de cuenta</h2>" +
+      "<p>En MÍA cada quien ve lo suyo: la organización administra, los negocios " +
+      "editan su perfil y las visitantes dejan reseñas y guardan favoritos.</p>" +
+      '<a class="btn" href="#/entrar">Iniciar sesión</a>' +
+    "</div></div></div>";
 }
 
 /** "Perfil" de una clienta: sus atajos y, aparte, todo lo que ya no cabe en la barra de abajo. */
@@ -527,8 +533,10 @@ function vistaCuenta() {
   "</div>";
 }
 
-const vacio = (msg) => '<div class="tarjeta p24 pila g8"><h3>Nada por aquí todavía</h3>' +
-  '<p class="apagado pequeno">' + esc(msg) + "</p></div>";
+const vacio = (msg) => '<div class="tarjeta"><div class="estado-vacio">' +
+  '<div class="glifo">' + ICONO_VACIO + "</div>" +
+  "<h3>Nada por aquí todavía</h3>" +
+  '<p class="pequeno">' + esc(msg) + "</p></div></div>";
 
 const escalon = (n, t, d) => '<div class="escalon"><span class="num">' + n + "</span>" +
   "<div><strong>" + esc(t) + '</strong><p class="pequeno apagado">' + esc(d) + "</p></div></div>";
