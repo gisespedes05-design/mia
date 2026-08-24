@@ -822,21 +822,19 @@ function buscarCercaDeTi() {
 }
 
 /* ============================================================== TARJETAS */
-/** Insignias reales de un negocio — nunca inventadas, solo las que tienen
- * dato real detrás. n.permisos, cuando existe (vistaPanel, la propia
- * dueña), decide si "verificado" hay que cruzarlo con el plan; en los
- * objetos públicos (vistaPublica) ya viene resuelto. `sinPlan` se usa en
- * "Mi negocio", donde ya hay un chip de plan propio con más detalle
- * (vencido / sin confirmar) y no tiene sentido duplicarlo. */
-function insigniasNegocio(n, { sinPlan } = {}) {
+/** Insignias reales de un negocio — máximo 2, nunca inventadas, solo las
+ * que tienen dato real detrás: verificado y nuevo en MÍA. El plan de un
+ * negocio es información comercial entre ella y MÍA, no una insignia
+ * pública — nunca aparece aquí (sigue viéndose en su propio panel y en
+ * Administración, donde sí corresponde). n.permisos, cuando existe
+ * (vistaPanel, la propia dueña), decide si "verificado" hay que cruzarlo
+ * con el plan; en los objetos públicos (vistaPublica) ya viene resuelto. */
+function insigniasNegocio(n) {
   const verificado = n.permisos ? (n.verificado && n.permisos.verificado) : n.verificado;
   const creado = n.creadoEn ? new Date(n.creadoEn) : null;
   const nuevo = creado && !isNaN(creado) && (Date.now() - creado.getTime()) < 30 * 24 * 60 * 60 * 1000;
-  const plan = n.planEfectivo || n.plan;
-  const etiquetaPlan = sinPlan ? null : plan === "crece" ? "Crece con MÍA" : plan === "membresia" ? "Membresía" : null;
   return (verificado ? '<span class="chip jade">✓ Verificado por MÍA</span>' : "") +
-    (nuevo ? '<span class="chip sol">🌱 Nuevo en MÍA</span>' : "") +
-    (etiquetaPlan ? '<span class="chip rosa">💎 ' + etiquetaPlan + "</span>" : "");
+    (nuevo ? '<span class="chip sol">🌱 Nuevo en MÍA</span>' : "");
 }
 
 /** Jerarquía de la tarjeta de descubrimiento: foto → nombre → insignias →
@@ -848,9 +846,8 @@ function tarjeta(n) {
     portadaHtml(n) +
     '<div class="cuerpo">' +
       "<h3>" + esc(n.nombre) + "</h3>" +
-      '<div class="fila g8">' + insigniasNegocio(n) +
-        '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
-      "</div>" +
+      (insigniasNegocio(n) ? '<div class="fila g8">' + insigniasNegocio(n) + "</div>" : "") +
+      '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
       '<p class="diminuto apagado" style="flex:1">' + esc(ciudadCompleta(n)) + "</p>" +
       '<div class="fila g8">' + estrellasHtml(n.calificacion) +
         (n.totalResenas ? '<span class="diminuto apagado">(' + n.totalResenas + ")</span>" : "") + "</div>" +
@@ -1451,7 +1448,7 @@ async function vistaProductoDetalle(id) {
         '<a class="fila g8" href="#/negocio/' + esc(n.slug) + '" style="text-decoration:none;color:inherit">' +
           (n.categoriaIcono ? n.categoriaIcono + " " : "") + "<strong>" + esc(n.nombre) + "</strong>" +
         "</a>" +
-        '<div class="fila g8">' + insigniasNegocio(n) + "</div>" +
+        (insigniasNegocio(n) ? '<div class="fila g8">' + insigniasNegocio(n) + "</div>" : "") +
         (n.ciudad ? '<p class="pequeno apagado">📍 ' + esc(ciudadCompleta(n)) + "</p>" : "") +
         (p.descripcion ? '<p class="pequeno" style="white-space:pre-wrap">' + esc(p.descripcion) + "</p>" : "") +
         (p.precio ? '<p class="mono" style="font-weight:700;font-size:1.3rem">' + pesos(p.precio) + "</p>" : "") +
@@ -2178,7 +2175,7 @@ function fichaPanel(n) {
             '<span class="chip ' + (n.planEfectivo !== n.plan ? "peligro" : "cobalto") + '">' +
               esc(PLANES[n.plan].nombre) +
               (n.membresiaVencida ? " · vencido" : !n.pagoConfirmado ? " · sin confirmar" : "") + "</span>" +
-            insigniasNegocio(n, { sinPlan: true }) +
+            insigniasNegocio(n) +
           "</div>" +
           "<h3>" + esc(n.nombre) + "</h3>" +
           '<p class="diminuto apagado">' + cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) +
