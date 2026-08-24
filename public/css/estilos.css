@@ -97,6 +97,10 @@ p{margin:0}
 .entre{justify-content:space-between}
 .arriba{align-items:flex-start}
 main{min-height:60vh;padding-bottom:78px}
+/* pintar() marca #app como ocupado mientras espera su fetch; el retraso
+   evita el parpadeo en navegaciones instantáneas y solo se nota cuando la
+   carga de verdad tarda. */
+#app[aria-busy="true"]{opacity:.55;transition:opacity .18s ease .12s}
 section.bloque{padding:36px 0}
 
 header.barra{position:sticky;top:0;z-index:40;background:var(--fondo);border-bottom:1px solid var(--linea);
@@ -391,8 +395,10 @@ footer{border-top:1px solid var(--linea);padding:26px 0 90px;background:var(--fo
   transition:transform .12s ease,background .12s ease,color .12s ease,border-color .12s ease}
 .btn-corazon svg{width:var(--icono-medio);height:var(--icono-medio)}
 .btn-corazon:hover{transform:scale(1.07)}
-.btn-corazon.activo{background:var(--acento-suave);border-color:transparent;color:var(--acento)}
+.btn-corazon.activo{background:var(--acento-suave);border-color:transparent;color:var(--acento);
+  animation:latido-corazon .32s ease}
 .btn-corazon.activo svg{fill:var(--acento)}
+@keyframes latido-corazon{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
 
 /* pantalla de acceso: elección grande de tipo de cuenta (paso 1 de /entrar) */
 .opcion-tipo{display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left;

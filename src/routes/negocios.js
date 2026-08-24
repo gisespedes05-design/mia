@@ -371,6 +371,7 @@ export function verProducto(ctx) {
   const negocio = obtenerNegocioPorId(p.negocio_id);
   if (!negocio || !esVisiblePara(negocio, ctx.usuario)) throw new ErrorHttp(404, 'Ese producto ya no existe.');
   const c = cat(negocio.categoria);
+  const reglas = reglasVigentes(negocio);
 
   return {
     id: p.id,
@@ -383,7 +384,8 @@ export function verProducto(ctx) {
       id: negocio.id, slug: negocio.slug, nombre: negocio.nombre,
       logo: negocio.logo ? `/subidas/${negocio.logo}` : null,
       categoriaIcono: c.icono, ciudad: negocio.ciudad, alcaldiaMunicipio: negocio.alcaldia_municipio || '',
-      verificado: Boolean(negocio.verificado),
+      verificado: Boolean(negocio.verificado) && reglas.permisos.verificado,
+      planEfectivo: reglas.planEfectivo, creadoEn: negocio.creado_en,
     },
   };
 }

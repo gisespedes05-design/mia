@@ -535,10 +535,16 @@ function vistaCuenta() {
   "</div>";
 }
 
-const vacio = (msg) => '<div class="tarjeta"><div class="estado-vacio">' +
+/** Estado vacío reutilizable. `msg` es lo único obligatorio — retrocompatible
+ * con todas las llamadas existentes. `titulo` y `accion` ({texto, href}) son
+ * opcionales para los casos donde vale la pena un título propio y un
+ * siguiente paso claro, en vez del genérico "Nada por aquí todavía". */
+const vacio = (msg, { titulo, accion } = {}) => '<div class="tarjeta"><div class="estado-vacio">' +
   '<div class="glifo">' + ICONO_VACIO + "</div>" +
-  "<h3>Nada por aquí todavía</h3>" +
-  '<p class="pequeno">' + esc(msg) + "</p></div></div>";
+  "<h3>" + esc(titulo || "Nada por aquí todavía") + "</h3>" +
+  '<p class="pequeno">' + esc(msg) + "</p>" +
+  (accion ? '<a class="btn" href="' + esc(accion.href) + '">' + esc(accion.texto) + "</a>" : "") +
+  "</div></div>";
 
 const escalon = (n, t, d) => '<div class="escalon"><span class="num">' + n + "</span>" +
   "<div><strong>" + esc(t) + '</strong><p class="pequeno apagado">' + esc(d) + "</p></div></div>";
@@ -554,14 +560,26 @@ const REDES_SOCIALES = {
   tiktok: { color: "#000", etiqueta: "TikTok",
     svg: '<svg viewBox="0 0 24 24" width="15" height="15" fill="#fff"><path d="M16.7 3h-3.2v12.4a2.6 2.6 0 1 1-1.9-2.5V9.5a5.9 5.9 0 1 0 5.1 5.85V9.9a7.9 7.9 0 0 0 4.3 1.28V8a4.7 4.7 0 0 1-4.3-5Z"/></svg>' },
 };
+/** Instagram/Facebook/TikTok, nunca WhatsApp: WhatsApp es una acción de
+ * contacto primaria (ver botonWhatsapp) — aquí compite con Instagram como
+ * un ícono más, que es justo lo que no queremos para WhatsApp. */
 const botonesRedesSociales = (n) => Object.keys(REDES_SOCIALES)
-  .filter((tipo) => n.redes[tipo])
+  .filter((tipo) => tipo !== "whatsapp" && n.redes[tipo])
   .map((tipo) => {
     const r = REDES_SOCIALES[tipo];
     return '<a class="red-social" style="background:' + r.color + '" target="_blank" rel="noopener" ' +
       'title="' + r.etiqueta + '" aria-label="' + r.etiqueta + '" onclick="registrarClic(' + n.id +
       ",'" + tipo + "')\" href=\"" + esc(n.redes[tipo]) + '">' + r.svg + "</a>";
   }).join("");
+
+/** WhatsApp como acción primaria de contacto (no un ícono social más):
+ * mismo evento registrarClic(id,'whatsapp') de siempre, mismo enlace —
+ * solo cambia dónde y cómo se ve. */
+const botonWhatsapp = (n) => n.redes.whatsapp
+  ? '<a class="btn" style="background:' + REDES_SOCIALES.whatsapp.color + ';color:#fff" target="_blank" rel="noopener" ' +
+    'onclick="registrarClic(' + n.id + ",'whatsapp')\" href=\"" + esc(n.redes.whatsapp) + '">' +
+    REDES_SOCIALES.whatsapp.svg + " WhatsApp</a>"
+  : "";
 
 /** Casillas de consentimiento: obligatoria la de privacidad, opcional la de noticias. */
 const consentimientosHtml = (prefijo) =>
@@ -678,7 +696,9 @@ function filaVerificada(n) {
 
 async function vistaInicio() {
   const { resultados } = await api.get("/api/negocios?porPagina=48");
-  const destacados = resultados.slice(0, 6);
+  const nuevas = [...resultados]
+    .sort((a, b) => String(b.creadoEn).localeCompare(String(a.creadoEn)))
+    .slice(0, 6);
   const verificados = resultados.filter((n) => n.verificado).slice(0, 5);
   const arts = (await api.get("/api/blog")).slice(0, 2);
 
@@ -732,9 +752,9 @@ async function vistaInicio() {
     "</div>" +
 
     '<div class="pila g16">' +
-      '<div class="fila entre g12"><h2>Negocios de la comunidad</h2>' +
+      '<div class="fila entre g12"><h2>🆕 Nuevas en MÍA</h2>' +
       '<a class="btn fantasma chico" href="#/directorio">Ver el directorio</a></div>' +
-      (destacados.length ? '<div class="rejilla">' + destacados.map(tarjeta).join("") + "</div>"
+      (nuevas.length ? '<div class="rejilla">' + nuevas.map(tarjeta).join("") + "</div>"
         : vacio("Todavía no hay negocios publicados.")) +
     "</div>" +
 
@@ -802,21 +822,36 @@ function buscarCercaDeTi() {
 }
 
 /* ============================================================== TARJETAS */
+/** Insignias reales de un negocio — nunca inventadas, solo las que tienen
+ * dato real detrás. n.permisos, cuando existe (vistaPanel, la propia
+ * dueña), decide si "verificado" hay que cruzarlo con el plan; en los
+ * objetos públicos (vistaPublica) ya viene resuelto. `sinPlan` se usa en
+ * "Mi negocio", donde ya hay un chip de plan propio con más detalle
+ * (vencido / sin confirmar) y no tiene sentido duplicarlo. */
+function insigniasNegocio(n, { sinPlan } = {}) {
+  const verificado = n.permisos ? (n.verificado && n.permisos.verificado) : n.verificado;
+  const creado = n.creadoEn ? new Date(n.creadoEn) : null;
+  const nuevo = creado && !isNaN(creado) && (Date.now() - creado.getTime()) < 30 * 24 * 60 * 60 * 1000;
+  const plan = n.planEfectivo || n.plan;
+  const etiquetaPlan = sinPlan ? null : plan === "crece" ? "Crece con MÍA" : plan === "membresia" ? "Membresía" : null;
+  return (verificado ? '<span class="chip jade">✓ Verificado por MÍA</span>' : "") +
+    (nuevo ? '<span class="chip sol">🌱 Nuevo en MÍA</span>' : "") +
+    (etiquetaPlan ? '<span class="chip rosa">💎 ' + etiquetaPlan + "</span>" : "");
+}
+
+/** Jerarquía de la tarjeta de descubrimiento: foto → nombre → insignias →
+ * categoría → ubicación → reseñas. Sin párrafo de descripción — la foto
+ * es la protagonista y el detalle completo vive en el perfil. */
 function tarjeta(n) {
   const c = cat(n.categoria);
   return '<a class="tarjeta tarjeta-negocio" href="#/negocio/' + esc(n.slug) + '">' +
     portadaHtml(n) +
     '<div class="cuerpo">' +
-      '<div class="fila g8">' +
-        (n.verificado ? '<span class="chip jade">Verificado</span>' : "") +
-        '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
-        (n.categoria2 ? '<span class="chip">' + esc(n.categoria2Icono) + " " + esc(n.categoria2Nombre) + "</span>" : "") +
-      "</div>" +
       "<h3>" + esc(n.nombre) + "</h3>" +
-      '<p class="diminuto apagado">' + esc((n.sub || []).slice(0, 3).join(" · ")) + "</p>" +
-      '<p class="diminuto apagado">' + esc(ciudadCompleta(n)) + "</p>" +
-      '<p class="pequeno" style="color:var(--texto2);flex:1">' + esc((n.descripcion || "").slice(0, 90)) +
-        ((n.descripcion || "").length > 90 ? "…" : "") + "</p>" +
+      '<div class="fila g8">' + insigniasNegocio(n) +
+        '<span class="chip">' + c.icono + " " + esc(c.nombre) + "</span>" +
+      "</div>" +
+      '<p class="diminuto apagado" style="flex:1">' + esc(ciudadCompleta(n)) + "</p>" +
       '<div class="fila g8">' + estrellasHtml(n.calificacion) +
         (n.totalResenas ? '<span class="diminuto apagado">(' + n.totalResenas + ")</span>" : "") + "</div>" +
     "</div></a>";
@@ -1249,7 +1284,7 @@ async function vistaNegocio(slug) {
 
   const contacto = [];
   if (n.telefono) contacto.push('<a class="btn linea" onclick="registrarClic(' + n.id + ',\'telefono\')" href="tel:' +
-    esc(n.telefono.replace(/\s/g, "")) + '">Llamar ' + esc(n.telefono) + "</a>");
+    esc(n.telefono.replace(/\s/g, "")) + '">📞 Llamar ' + esc(n.telefono) + "</a>");
   if (n.comoLlegar) contacto.push('<a class="btn linea" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' +
     encodeURIComponent(n.direccion + (n.ciudad ? ", " + ciudadCompleta(n) : "")) + '">¿Cómo llegar?</a>');
   const redesBotones = botonesRedesSociales(n);
@@ -1259,11 +1294,10 @@ async function vistaNegocio(slug) {
 
   return portadaHtml(n, true) +
   '<div class="envoltura bloque pila g24">' +
+    /* ------------------------------------------------------------ CABECERA */
     '<div class="fila arriba g16">' + logoHtml(n, true) +
       '<div class="pila g8" style="flex:1;min-width:220px">' +
-        '<div class="fila g8">' +
-          (n.verificado ? '<span class="chip jade">Perfil verificado</span>' : "") +
-          (n.plan === "crece" ? '<span class="chip cobalto">Crece con MÍA</span>' : "") +
+        '<div class="fila g8">' + insigniasNegocio(n) +
           (n.estado && n.estado !== "publicado" ? '<span class="chip ' + ESTADOS[n.estado].chip + '">' +
             esc(ESTADOS[n.estado].et) + "</span>" : "") +
         "</div>" +
@@ -1277,54 +1311,71 @@ async function vistaNegocio(slug) {
           (n.categoria2 ? '<a class="chip rosa" style="text-decoration:none" href="#/directorio/' +
             esc(n.categoria2) + '">' + esc(n.categoria2Icono) + " " + esc(n.categoria2Nombre) + "</a>" : "") +
           (n.sub || []).map((s) => '<span class="chip">' + esc(s) + "</span>").join("") + "</div>" +
-        (redesBotones ? '<div class="fila g8">' + redesBotones + "</div>" : "") +
       "</div>" +
     "</div>" +
 
-    '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.descripcion) + "</p>" +
-    (n.direccion ? '<p class="pequeno apagado">📍 ' + esc(n.direccion) +
-      (n.ciudad ? ", " + esc(ciudadCompleta(n)) : "") + "</p>" : "") +
-
-    '<div class="fila g8">' + contacto.join("") +
-      (YO && YO.rol === "usuario"
-        ? '<button class="btn ' + (esFav ? "" : "linea") + '" onclick="alternarFavorito(' + n.id + ',' + esFav + ')">' +
-          (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>" +
-        '<button class="btn ' + (esSeguidora ? "" : "linea") + '" onclick="alternarSeguir(' + n.id + ')">' +
-          (esSeguidora ? "🔔 Siguiendo" : "🔕 Seguir este negocio") + "</button>" : "") +
+    /* -------------------------------------------------------- SOBRE EL NEGOCIO */
+    '<div class="pila g12"><p class="eyebrow">Sobre el negocio</p>' +
+      '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.descripcion) + "</p>" +
+      (n.sobreNegocio ? '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.sobreNegocio) + "</p>" : "") +
     "</div>" +
-
-    (YO && YO.rol === "usuario" ? '<div class="tarjeta p20 pila g12"><p class="eyebrow">Escríbele a este negocio</p>' +
-      '<textarea id="msg_cuerpo" style="min-height:80px" placeholder="Escribe tu mensaje…"></textarea>' +
-      '<p id="msg_error" class="pequeno" style="color:var(--peligro)"></p>' +
-      '<div><button class="btn" onclick="enviarMensajeNegocio(' + n.id + ')">Enviar mensaje</button></div></div>'
-      : !YO ? '<div class="aviso">Para escribirle a este negocio ' +
-          '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
-
-    (n.sobreNegocio ? '<div class="pila g12"><p class="eyebrow">Sobre este negocio</p>' +
-      '<p style="max-width:66ch;white-space:pre-wrap">' + esc(n.sobreNegocio) + "</p></div>" : "") +
 
     (n.fotos.length > 1 ? '<div class="pila g12"><p class="eyebrow">Fotografías</p>' +
       '<div class="galeria">' + n.fotos.map((f) =>
         '<div class="foto">' + imagenHtml(f, n.nombre) + "</div>").join("") + "</div></div>" : "") +
 
-    (n.productos.length ? '<div class="pila g12"><p class="eyebrow">Productos y servicios</p>' +
+    /* ------------------------------------------------------------ PRODUCTOS */
+    (n.productos.length ? '<div class="pila g12"><p class="eyebrow">🛍️ Productos y servicios</p>' +
       (destacados.length ? '<div class="rejilla">' + destacados.map((x) =>
         fichaProducto(x, true, n.id, Boolean(YO && YO.rol === "usuario"), favoritoProductoIds.has(x.id))).join("") + "</div>" : "") +
       (normales.length ? '<div class="rejilla">' + normales.map((x) =>
         fichaProducto(x, false, n.id, Boolean(YO && YO.rol === "usuario"), favoritoProductoIds.has(x.id))).join("") + "</div>" : "") +
       "</div>" : "") +
 
-    (n.publicaciones.length ? '<div class="pila g12"><p class="eyebrow">Publicaciones</p>' +
+    /* --------------------------------------------------------- PUBLICACIONES */
+    (n.publicaciones.length ? '<div class="pila g12"><p class="eyebrow">✨ Publicaciones</p>' +
       '<div class="pila g12">' + n.publicaciones.map((x) => fichaPublicacion(x)).join("") +
       "</div></div>" : "") +
 
+    /* -------------------------------------------------------------- RESEÑAS */
     '<hr class="separador">' +
-    '<div class="pila g16"><p class="eyebrow">Reseñas de clientas</p>' +
+    '<div class="pila g16"><p class="eyebrow">⭐ Reseñas de clientas</p>' +
       (YO && YO.rol === "usuario" ? formularioResena(n, miReseña)
         : !YO ? '<div class="aviso">Para dejar una reseña ' +
             '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
       (n.resenas.length ? n.resenas.map((r) => bloqueResena(r, n)).join("")
         : '<p class="apagado pequeno">Este negocio todavía no tiene reseñas.</p>') +
+    "</div>" +
+
+    /* --------------------------------------------------------------- CONTACTO
+     * Al final y protagónico a propósito: es la última pregunta que se hace
+     * una clienta después de conocer el negocio, sus productos y sus
+     * reseñas — "¿le escribo?". WhatsApp sale de las redes sociales
+     * (donde competía con Instagram/TikTok) y se vuelve una acción primaria,
+     * junto con el mensaje directo y la llamada. */
+    '<hr class="separador">' +
+    '<div class="tarjeta p20 pila g16"><p class="eyebrow">¿Te interesa este negocio?</p>' +
+      (n.direccion ? '<p class="pequeno apagado">📍 ' + esc(n.direccion) +
+        (n.ciudad ? ", " + esc(ciudadCompleta(n)) : "") + "</p>" : "") +
+
+      (YO && YO.rol === "usuario" ? '<div class="pila g8">' +
+        '<p class="pequeno" style="font-weight:700">💬 Escríbele directo</p>' +
+        '<textarea id="msg_cuerpo" style="min-height:80px" placeholder="Escribe tu mensaje…"></textarea>' +
+        '<p id="msg_error" class="pequeno" style="color:var(--peligro)"></p>' +
+        '<div><button class="btn" onclick="enviarMensajeNegocio(' + n.id + ')">Enviar mensaje</button></div></div>'
+        : !YO ? '<div class="aviso">Para escribirle a este negocio ' +
+            '<a href="#/entrar" style="color:var(--acento);font-weight:700">entra con tu correo</a>.</div>' : "") +
+
+      '<div class="fila g8">' + botonWhatsapp(n) + contacto.join("") + "</div>" +
+
+      (YO && YO.rol === "usuario" ? '<div class="fila g8">' +
+        '<button class="btn ' + (esFav ? "" : "linea") + '" onclick="alternarFavorito(' + n.id + ',' + esFav + ')">' +
+          (esFav ? "♥ En tus favoritos" : "♡ Guardar en favoritos") + "</button>" +
+        '<button class="btn ' + (esSeguidora ? "" : "linea") + '" onclick="alternarSeguir(' + n.id + ')">' +
+          (esSeguidora ? "🔔 Siguiendo" : "🔕 Seguir este negocio") + "</button>" +
+      "</div>" : "") +
+
+      (redesBotones ? '<div class="fila g8">' + redesBotones + "</div>" : "") +
     "</div>" +
   "</div>";
 }
@@ -1399,8 +1450,8 @@ async function vistaProductoDetalle(id) {
         "<h1>" + esc(p.nombre) + "</h1>" +
         '<a class="fila g8" href="#/negocio/' + esc(n.slug) + '" style="text-decoration:none;color:inherit">' +
           (n.categoriaIcono ? n.categoriaIcono + " " : "") + "<strong>" + esc(n.nombre) + "</strong>" +
-          (n.verificado ? '<span class="chip jade">Verificado</span>' : "") +
         "</a>" +
+        '<div class="fila g8">' + insigniasNegocio(n) + "</div>" +
         (n.ciudad ? '<p class="pequeno apagado">📍 ' + esc(ciudadCompleta(n)) + "</p>" : "") +
         (p.descripcion ? '<p class="pequeno" style="white-space:pre-wrap">' + esc(p.descripcion) + "</p>" : "") +
         (p.precio ? '<p class="mono" style="font-weight:700;font-size:1.3rem">' + pesos(p.precio) + "</p>" : "") +
@@ -1624,16 +1675,19 @@ async function vistaFavoritos(sub) {
     cuerpo += negociosFav.length
       ? '<div class="pila g12"><p class="eyebrow">🏪 Negocios</p><div class="rejilla">' +
         negociosFav.map(tarjeta).join("") + "</div></div>"
-      : (tab === "negocios" ? vacio("Todavía no guardas ningún negocio. Toca ♡ en el perfil de un negocio para guardarlo.") : "");
+      : (tab === "negocios" ? vacio("Guarda los negocios que te gusten para encontrarlos fácilmente después.",
+          { titulo: "Todavía no tienes negocios guardados 💗", accion: { texto: "Explorar negocios", href: "#/directorio" } }) : "");
   }
   if (tab !== "negocios") {
     cuerpo += productosFav.length
       ? '<div class="pila g12"><p class="eyebrow">🛍️ Productos</p><div class="rejilla">' +
         productosFav.map(tarjetaProductoFavorito).join("") + "</div></div>"
-      : (tab === "productos" ? vacio("Todavía no guardas ningún producto. Toca el corazón en un producto que te guste.") : "");
+      : (tab === "productos" ? vacio("Toca el corazón en un producto que te guste para guardarlo aquí.",
+          { titulo: "Todavía no tienes productos guardados 💗", accion: { texto: "Explorar negocios", href: "#/directorio" } }) : "");
   }
   if (tab === "todos" && !negociosFav.length && !productosFav.length) {
-    cuerpo = vacio("Guarda negocios y productos que te interesen para encontrarlos fácilmente después.");
+    cuerpo = vacio("Guarda los negocios y productos que te gusten para encontrarlos fácilmente después.",
+      { titulo: "Todavía no tienes favoritos 💗", accion: { texto: "Explorar negocios", href: "#/directorio" } });
   }
 
   return '<div class="envoltura bloque pila g24">' +
@@ -2124,7 +2178,7 @@ function fichaPanel(n) {
             '<span class="chip ' + (n.planEfectivo !== n.plan ? "peligro" : "cobalto") + '">' +
               esc(PLANES[n.plan].nombre) +
               (n.membresiaVencida ? " · vencido" : !n.pagoConfirmado ? " · sin confirmar" : "") + "</span>" +
-            (n.verificado && n.permisos.verificado ? '<span class="chip jade">Verificado</span>' : "") +
+            insigniasNegocio(n, { sinPlan: true }) +
           "</div>" +
           "<h3>" + esc(n.nombre) + "</h3>" +
           '<p class="diminuto apagado">' + cat(n.categoria).icono + " " + esc(cat(n.categoria).nombre) +
